@@ -8,7 +8,8 @@
     "dev": "pnpm run build && pnpm run start"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*"
+    "@repo/typescript-config": "workspace:*",
+    "@types/ws": "^8.5.14"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +17,6 @@
   "type": "commonjs",
   "description": "",
   "dependencies": {
-    "@types/ws": "^8.5.14",
     "ws": "^8.18.0"
   }
 }
