@@ -17,6 +17,8 @@
   "type": "commonjs",
   "description": "",
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.8",
+    "jsonwebtoken": "^9.0.2",
     "ws": "^8.18.0"
   }
 }

@@ -94,9 +94,15 @@ importers:
 
   apps/ws:
     dependencies:
+      '@types/jsonwebtoken':
+        specifier: ^9.0.8
+        version: 9.0.8
       bufferutil:
         specifier: ^4.0.1
         version: 4.0.9
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.2
       utf-8-validate:
         specifier: ^5.0.2
         version: 5.0.10

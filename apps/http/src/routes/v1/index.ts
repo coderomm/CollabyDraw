@@ -5,6 +5,7 @@ import rateLimit from "express-rate-limit";
 import { compare, hash } from "../../utils/scrypt";
 import { SigninSchema, SignupSchema } from '../../utils/schema-types';
 import client from '@repo/db/client';
+import { roomRouter } from './room';
 
 export const router = Router();
 
@@ -87,3 +88,5 @@ router.post('/signin', async (req, res) => {
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
 });
+
+router.use('/room',roomRouter);

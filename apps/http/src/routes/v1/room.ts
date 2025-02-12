@@ -1,9 +1,9 @@
 import { Router } from "express";
 import client from "@repo/db/client";
 
-export const router = Router();
+export const roomRouter = Router();
 
-router.post("/create", async (req, res) => {
+roomRouter.post("/", async (req, res) => {
     try {
         const { name } = req.body;
 
