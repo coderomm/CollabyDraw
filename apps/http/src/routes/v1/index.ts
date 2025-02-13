@@ -1,9 +1,9 @@
+import client from '@repo/db/client';
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { compare, hash } from "../../utils/scrypt";
 import { SigninSchema, SignupSchema } from '@repo/common/types';
-import client from '@repo/db/client';
 import { roomRouter } from './room';
 import { JWT_SECRET } from "@repo/backend-common/config";
 
