@@ -1,5 +1,6 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { WebSocketServer } from 'ws';
+import { JWT_SECRET } from '@repo/backend-common/config';
 
 const wss = new WebSocketServer({ port: 8080 });
 
@@ -14,8 +15,13 @@ wss.on('connection', function connection(ws, req) {
         ws.close();
         return;
     }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    if (!decoded || !(decoded as JwtPayload).userId) {
+    const decoded = jwt.verify(token, JWT_SECRET || 'secret');
+
+    if (typeof decoded === 'string') {
+        ws.close();
+        return;
+    }
+    if (!decoded || !decoded.userId) {
         ws.close();
         return;
     }

@@ -1,15 +1,15 @@
-import 'dotenv/config'
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { compare, hash } from "../../utils/scrypt";
-import { SigninSchema, SignupSchema } from '../../utils/schema-types';
+import { SigninSchema, SignupSchema } from '@repo/common/types';
 import client from '@repo/db/client';
 import { roomRouter } from './room';
+import { JWT_SECRET } from "@repo/backend-common/config";
 
 export const router = Router();
 
-if (!process.env.JWT_SECRET || !process.env.FRONTEND_URL) {
+if (!JWT_SECRET) {
     console.error("❌ Missing required environment variables.");
     process.exit(1);
 }
@@ -28,7 +28,7 @@ router.post('/signup', async (req, res) => {
             return;
         }
 
-        const existingUser = await client.user.findFirst({ where: { email: parsedData.data.email } });
+        const existingUser = await client.user.findFirst({ where: { username: parsedData.data.username } });
         if (existingUser) {
             res.status(400).json({ message: "User already exists" });
             return;
@@ -37,7 +37,11 @@ router.post('/signup', async (req, res) => {
         const hashedPassword = await hash(parsedData.data.password);
 
         const user = await client.user.create({
-            data: { email: parsedData.data.email, password: hashedPassword, role: parsedData.data.role }
+            data: {
+                username: parsedData.data.username,
+                password: hashedPassword,
+                name: parsedData.data.name
+            }
         });
 
         res.json({ userId: user.id });
@@ -62,8 +66,7 @@ router.post('/signin', async (req, res) => {
         }
 
         const user = await client.user.findUnique({
-            where: { email: parsedData.data.email },
-            include: { avatar: true }
+            where: { username: parsedData.data.username },
         });
 
         if (!user) {
@@ -77,11 +80,11 @@ router.post('/signin', async (req, res) => {
             return;
         }
 
-        const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: '72h' });
+        const token = jwt.sign({ userId: user.id }, JWT_SECRET!, { expiresIn: '72h' });
 
         res.json({
             token,
-            user: { email: user.email, role: user.role }
+            user: { username: user.username }
         });
     } catch (error: any) {
         console.error("Signin error:", error);
@@ -89,4 +92,4 @@ router.post('/signin', async (req, res) => {
     }
 });
 
-router.use('/room',roomRouter);
+router.use('/room', roomRouter);

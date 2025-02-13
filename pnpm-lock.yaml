@@ -20,21 +20,12 @@ importers:
 
   apps/http:
     dependencies:
-      '@types/cors':
-        specifier: ^2.8.17
-        version: 2.8.17
       '@types/express-serve-static-core':
         specifier: ^5.0.6
         version: 5.0.6
       '@types/jsonwebtoken':
         specifier: ^9.0.8
         version: 9.0.8
-      cors:
-        specifier: ^2.8.5
-        version: 2.8.5
-      dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
       express:
         specifier: ^4.21.2
         version: 4.21.2
@@ -44,10 +35,13 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
-      zod:
-        specifier: ^3.24.2
-        version: 3.24.2
     devDependencies:
+      '@repo/backend-common':
+        specifier: workspace:*
+        version: link:../../packages/backend-common
+      '@repo/common':
+        specifier: workspace:*
+        version: link:../../packages/common
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -110,12 +104,34 @@ importers:
         specifier: ^8.18.0
         version: 8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     devDependencies:
+      '@repo/backend-common':
+        specifier: workspace:*
+        version: link:../../packages/backend-common
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@types/ws':
         specifier: ^8.5.14
         version: 8.5.14
+
+  packages/backend-common:
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^22.13.1
+        version: 22.13.1
+
+  packages/common:
+    dependencies:
+      zod:
+        specifier: ^3.24.2
+        version: 3.24.2
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
 
   packages/eslint-config:
     devDependencies:
@@ -476,9 +492,6 @@ packages:
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
 
-  '@types/cors@2.8.17':
-    resolution: {integrity: sha512-8CGDvrBj1zgo2qE+oS3pOCyYNqCPryMWY2bGfwA0dcfopWGgxs+78df0Rs3rc9THP4JkOhLsAa+15VdpAqkcUA==}
-
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
 
@@ -514,6 +527,9 @@ packages:
 
   '@types/node@22.13.0':
     resolution: {integrity: sha512-ClIbNe36lawluuvq3+YYhnIN2CELi+6q8NpnM7PYp4hBn/TatfboPgVSm2rwKRfnV2M+Ty9GWDFI64KEe+kysA==}
+
+  '@types/node@22.13.1':
+    resolution: {integrity: sha512-jK8uzQlrvXqEU91UxiK5J7pKHyzgnI1Qnl0QDHIgVGuolJhRb9EEl28Cj9b3rGR8B2lhFCtvIm5os8lFnO/1Ew==}
 
   '@types/qs@6.9.18':
     resolution: {integrity: sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==}
@@ -845,10 +861,6 @@ packages:
   core-js-pure@3.40.0:
     resolution: {integrity: sha512-AtDzVIgRrmRKQai62yuSIN5vNiQjcJakJb4fbhVw3ehxx7Lohphvw9SGNWKhLFqSxC4ilD0g/L1huAYFQU3Q6A==}
 
-  cors@2.8.5:
-    resolution: {integrity: sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==}
-    engines: {node: '>= 0.10'}
-
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
 
@@ -947,10 +959,6 @@ packages:
 
   dotenv@16.0.3:
     resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
-    engines: {node: '>=12'}
-
-  dotenv@16.4.7:
-    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -2688,10 +2696,6 @@ snapshots:
     dependencies:
       '@types/node': 22.13.0
 
-  '@types/cors@2.8.17':
-    dependencies:
-      '@types/node': 22.13.0
-
   '@types/estree@1.0.6': {}
 
   '@types/express-serve-static-core@5.0.6':
@@ -2734,6 +2738,10 @@ snapshots:
   '@types/ms@2.1.0': {}
 
   '@types/node@22.13.0':
+    dependencies:
+      undici-types: 6.20.0
+
+  '@types/node@22.13.1':
     dependencies:
       undici-types: 6.20.0
 
@@ -3146,11 +3154,6 @@ snapshots:
 
   core-js-pure@3.40.0: {}
 
-  cors@2.8.5:
-    dependencies:
-      object-assign: 4.1.1
-      vary: 1.1.2
-
   create-require@1.1.1: {}
 
   cross-spawn@7.0.6:
@@ -3248,8 +3251,6 @@ snapshots:
       no-case: 2.3.2
 
   dotenv@16.0.3: {}
-
-  dotenv@16.4.7: {}
 
   dunder-proto@1.0.1:
     dependencies:

@@ -1,20 +1,17 @@
 import { Router } from "express";
-import client from "@repo/db/client";
+import { CreateRoomSchema } from "@repo/common/types";
 
 export const roomRouter = Router();
 
 roomRouter.post("/", async (req, res) => {
     try {
-        const { name } = req.body;
-
-        if (!name) {
-            res.status(400).json({ message: "Room name is required" });
+        const parsedData = CreateRoomSchema.safeParse(req.body);
+        if (!parsedData.success) {
+            res.status(400).json({ message: "Create Room Schema Failed", errors: parsedData.error.format() });
             return;
         }
 
-        const room = await client.room.create({ data: { name } });
-
-        res.json({ roomId: room.id });
+        res.json({ roomId: "room.id" });
     } catch (error: any) {
         console.error("Create room error:", error);
         res.status(500).json({ message: "Internal server error", error: error.message });
