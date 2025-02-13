@@ -25,9 +25,8 @@ export const userMiddleware = (req: Request, res: Response, next: NextFunction) 
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string };
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
 
-        // @ts-ignore
         req.userId = decoded.userId;
         next();
     } catch (error: any) {

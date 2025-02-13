@@ -5,7 +5,8 @@ import rateLimit from "express-rate-limit";
 import { compare, hash } from "../../utils/scrypt";
 import { SigninSchema, SignupSchema } from '@repo/common/types';
 import { roomRouter } from './room';
-import { JWT_SECRET } from "@repo/backend-common/config";
+import { JWT_SECRET, saltRounds } from "@repo/backend-common/config";
+import bcrypt from 'bcrypt';
 
 export const router = Router();
 
@@ -34,7 +35,7 @@ router.post('/signup', async (req, res) => {
             return;
         }
 
-        const hashedPassword = await hash(parsedData.data.password);
+        const hashedPassword = await bcrypt.hash(parsedData.data.password, saltRounds);
 
         const user = await client.user.create({
             data: {
@@ -66,7 +67,9 @@ router.post('/signin', async (req, res) => {
         }
 
         const user = await client.user.findUnique({
-            where: { username: parsedData.data.username },
+            where: {
+                username: parsedData.data.username
+            }
         });
 
         if (!user) {
@@ -74,7 +77,7 @@ router.post('/signin', async (req, res) => {
             return;
         }
 
-        const isValid = await compare(parsedData.data.password, user.password!);
+        const isValid = await bcrypt.compare(user.password, parsedData.data.password);
         if (!isValid) {
             res.status(403).json({ message: "Invalid password" });
             return;
@@ -82,10 +85,7 @@ router.post('/signin', async (req, res) => {
 
         const token = jwt.sign({ userId: user.id }, JWT_SECRET!, { expiresIn: '72h' });
 
-        res.json({
-            token,
-            user: { username: user.username }
-        });
+        res.json({ token });
     } catch (error: any) {
         console.error("Signin error:", error);
         res.status(500).json({ message: "Internal server error", error: error.message });

@@ -8,10 +8,10 @@
     "dev": "pnpm run build && pnpm run start"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
     "@repo/backend-common": "workspace:*",
     "@repo/common": "workspace:*",
     "@repo/db": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "@types/express": "^5.0.0"
   },
   "keywords": [],
@@ -22,6 +22,7 @@
   "dependencies": {
     "@types/express-serve-static-core": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.8",
+    "bcrypt": "^5.1.1",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "jsonwebtoken": "^9.0.2"
