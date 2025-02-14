@@ -11,6 +11,12 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        // primary: "#6758ff",
+        // "primary-hover": "#5246cc",
+        // "primary-btn-text": "#ffffff",
+        // secondary: "#f3f2ff",
+        // "secondary-hover": "#e9e8ff",
+        // "secondary-btn-text": "#6758ff",
       },
     },
   },
