@@ -18,3 +18,7 @@ export const CreateRoomSchema = z.object({
 export const GetChatSchema = z.object({
     roomId: z.string()
 })
+
+export const GetRoomBySlug = z.object({
+    slug: z.string()
+})
