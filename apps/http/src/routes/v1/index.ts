@@ -29,7 +29,7 @@ router.post('/signup', async (req, res) => {
             return;
         }
 
-        const existingUser = await client.user.findFirst({ where: { username: parsedData.data.username } });
+        const existingUser = await client.user.findFirst({ where: { email: parsedData.data.email } });
         if (existingUser) {
             res.status(400).json({ message: "User already exists" });
             return;
@@ -39,7 +39,7 @@ router.post('/signup', async (req, res) => {
 
         const user = await client.user.create({
             data: {
-                username: parsedData.data.username,
+                email: parsedData.data.email,
                 password: hashedPassword,
                 name: parsedData.data.name
             }
@@ -68,7 +68,7 @@ router.post('/signin', async (req, res) => {
 
         const user = await client.user.findUnique({
             where: {
-                username: parsedData.data.username
+                email: parsedData.data.email
             }
         });
 

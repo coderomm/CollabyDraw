@@ -6,6 +6,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loadingLabel?: string;
   icon?: React.ReactNode;
   variant?: "primary" | "secondary" | "outline" | "ghost" | "link";
+  size?: "default" | "sm" | "lg" | "icon";
 }
 
 export const Button = (
@@ -17,14 +18,23 @@ export const Button = (
     className = "",
     children,
     variant = "primary",
+    size = "default",
     ...props
   }: ButtonProps) => {
+
   const variants = {
     primary: "bg-primary hover:bg-primary-hover text-primary-btn-text focus:primary",
     secondary: "bg-secondary hover:bg-secondary-hover text-secondary-btn-text focus:secondary",
     outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
     ghost: "hover:bg-accent hover:text-accent-foreground",
     link: "text-primary underline-offset-4 hover:underline",
+  };
+
+  const buttonsSizes = {
+    default: "h-9 px-4 py-2",
+    sm: "h-8 rounded-md px-3 text-xs",
+    lg: "h-10 rounded-md px-8",
+    icon: "h-9 w-9",
   };
 
   const loadingStyles = {
@@ -38,12 +48,7 @@ export const Button = (
   return (
     <button
       disabled={loading || props.disabled}
-      className={`text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 w-full py-2 px-4 rounded-md transition duration-200 flex items-center justify-center h-[40px]
-       ${loading || props.disabled ? loadingStyles[variant] : variants[variant]} 
-        ${loading ? loadingStyles.base : ""}
-        ${className}`}
-      {...props}
-    >
+      className={`flex items-center justify-center text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition duration-200 ${buttonsSizes[size]} ${loading || props.disabled ? loadingStyles[variant] : variants[variant]} ${loading ? loadingStyles.base : ""} ${className}`} {...props}>
       {loading ? (
         <span>{loadingLabel ? loadingLabel : 'Loading...'}</span>
       ) : (
