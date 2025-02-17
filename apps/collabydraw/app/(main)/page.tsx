@@ -1,5 +1,5 @@
 import { Button } from "@repo/ui/button"
-import { PenLine, Users, Share2 } from "lucide-react"
+import { PenLine, Users, Share2, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 export default function Home() {
@@ -13,10 +13,11 @@ export default function Home() {
           <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
             Create, collaborate, and share drawings in real-time. No installation required.
           </p>
-          <div className="space-x-4">
+          <div className="flex items-center justify-center gap-3">
             <Link href="/draw">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
                 Start Drawing
+                <Sparkles className="ml-2 h-4 w-4" />
               </Button>
             </Link>
             <Button size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10">

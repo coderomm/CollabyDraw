@@ -5,10 +5,7 @@ import { Button } from "./ui/button";
 
 export function SignOutButton() {
     return (
-        <Button
-            onClick={() => signOut({ callbackUrl: '/' })}
-            className="w-full text-left"
-        >
+        <Button size="sm" onClick={() => signOut({ callbackUrl: '/' })} className="w-full text-left">
             Sign Out
         </Button>
     );

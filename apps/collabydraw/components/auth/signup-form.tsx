@@ -38,7 +38,7 @@ export function SignUpForm() {
                 }
 
                 toast.success("Account created successfully")
-                router.push('/signin')
+                router.push('/auth/signin')
             } catch (error) {
                 toast.error("Something went wrong. Please try again.");
                 const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again.";
