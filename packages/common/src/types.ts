@@ -27,8 +27,12 @@ export const SigninSchema = z.object({
         .trim()
 });
 
+export const JoinRoomSchema = z.object({
+    roomName: z.string().min(3, 'Room name must be at least 3 characters'),
+});
+
 export const CreateRoomSchema = z.object({
-    name: z.string().min(3, { message: 'Room name must be at least 3 characters long.' }).trim(),
+    roomName: z.string().min(3, 'Room name must be at least 3 characters').trim(),
 });
 
 export const GetChatSchema = z.object({
@@ -38,3 +42,10 @@ export const GetChatSchema = z.object({
 export const GetRoomBySlug = z.object({
     slug: z.string()
 })
+
+export enum WS_DATA_TYPE {
+    JOIN = 'join_room',
+    LEAVE = 'leave_room',
+    CHAT = 'chat',
+    DRAW = 'draw'
+}

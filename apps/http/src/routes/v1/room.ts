@@ -15,7 +15,7 @@ roomRouter.post("/", userMiddleware, async (req, res) => {
 
         const room = await client.room.create({
             data: {
-                slug: parsedData.data.name,
+                slug: parsedData.data.roomName,
                 adminId: req.userId,
             }
         })
