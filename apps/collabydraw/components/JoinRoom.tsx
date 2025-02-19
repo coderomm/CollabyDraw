@@ -34,7 +34,7 @@ export function JoinRoom() {
     const handleJoinRoom = joinForm.handleSubmit((data) => {
         startTransition(async () => {
             try {
-                const result = await joinRoom(data.roomName);
+                const result = await joinRoom(data);
                 if (result.success) {
                     toast.success(`Joined room: ${result.roomName}`);
                     router.push(`/room/${data.roomName}`);
@@ -50,8 +50,8 @@ export function JoinRoom() {
 
     const handleCreateRoom = createForm.handleSubmit((data) => {
         startTransition(async () => {
-            try {
-                const result = await createRoom(data.roomName);
+            try {                
+                const result = await createRoom(data);
                 if (result.success) {
                     toast.success(`Created room: ${data.roomName} with code: ${result.room?.slug}`);
                     setIsCreateRoomOpen(false);
@@ -97,18 +97,20 @@ export function JoinRoom() {
                                 </FormItem>
                             )}
                         />
-                        <Button className="glow-effect" type="submit" disabled={isPending}>
-                            {isPending ? 'Joining...' : 'Join Room'}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="glow-effect"
-                            onClick={() => setIsCreateRoomOpen(true)}
-                            type="button"
-                            disabled={isPending}
-                        >
-                            Create Room
-                        </Button>
+                        <DialogFooter className="flex-row">
+                            <Button className="glow-effect" type="submit" disabled={isPending}>
+                                {isPending ? 'Joining...' : 'Join Room'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="glow-effect"
+                                onClick={() => setIsCreateRoomOpen(true)}
+                                type="button"
+                                disabled={isPending}
+                            >
+                                Create Room
+                            </Button>
+                        </DialogFooter>
                     </form>
                 </Form>
             </DialogContent>

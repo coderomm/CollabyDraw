@@ -1,13 +1,14 @@
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import client from '@repo/db/client';
 import Link from 'next/link';
 import RoomClientComponent from '@/components/RoomClientComponent';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/utils/auth';
 
 export async function generateMetadata({ params }: { params: { roomName: string } }) {
     const { roomName } = params;
 
-    const room = await client.room.findUnique({
+    const room = await client.room.findFirst({
         where: { slug: roomName },
     });
 
@@ -21,22 +22,22 @@ export async function generateMetadata({ params }: { params: { roomName: string 
 export default async function RoomPage({ params }: { params: { roomName: string } }) {
     const { roomName } = params;
 
-    const room = await client.room.findUnique({
+    const room = await client.room.findFirst({
         where: { slug: roomName },
-        include: {
-            participants: true,
-        },
     });
 
     if (!room) {
         notFound();
     }
 
-    // Get current user ID from cookies
-    const userId = cookies().get('userId')?.value;
-
-    if (!userId) {
-        // Redirect to join room if no user ID
+    const session = await getServerSession(authOptions);
+    const user = session?.user;
+    if (!user) {
+        console.error('User from session not found.');
+        return;
+    }
+    console.log('session = ', session);
+    if (!user.id) {
         return (
             <div className="flex flex-col items-center justify-center h-screen">
                 <h1 className="text-2xl mb-4">Session Expired</h1>
@@ -48,18 +49,11 @@ export default async function RoomPage({ params }: { params: { roomName: string 
         );
     }
 
-    // Check if user is a participant
-    const isParticipant = room.participants.some(participant => participant.userId === userId);
-
-    if (!isParticipant) {
-        // Add user to room participants
-        await db.roomParticipant.create({
-            data: {
-                userId,
-                roomId: room.id,
-            },
-        });
-    }
-
-    return <RoomClientComponent roomName={roomName} roomName={room.slug} userId={userId} />;
+    return <RoomClientComponent
+        roomId={room.id.toString()}
+        roomName={roomName}
+        userId={user.id}
+        userName={user.name || 'User'}
+        token={session.accessToken}
+    />;
 }

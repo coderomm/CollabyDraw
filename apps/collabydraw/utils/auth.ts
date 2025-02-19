@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import client from "@repo/db/client";
 import bcrypt from "bcrypt";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import jwt from 'jsonwebtoken';
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(client),
@@ -54,15 +55,33 @@ export const authOptions: NextAuthOptions = {
                 token.id = user.id;
                 token.email = user.email;
             }
+
+            token.accessToken = jwt.sign(
+                { id: token.id, email: token.email },
+                process.env.NEXTAUTH_SECRET || '',
+                { expiresIn: '3d' }
+            );
             return token;
         },
         async session({ session, token }) {
-            if (token && session && session.user) {
-                session.user.id = token.id;
-                session.user.email = token.email;
+            if (token && session.user) {
+                session.user.id = token.id as string;
+                session.user.email = token.email as string;
+                session.accessToken = token.accessToken as string;
             }
             return session;
         }
+    },
+    cookies: {
+        sessionToken: {
+            name: `__Secure-next-auth.session-token`,
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
     },
     secret: process.env.NEXTAUTH_SECRET,
 }

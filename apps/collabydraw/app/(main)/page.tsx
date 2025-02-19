@@ -13,7 +13,7 @@ export default function Home() {
           <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
             Create, collaborate, and share drawings in real-time. No installation required.
           </p>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-3">
             <Link href="/draw">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
                 Start Drawing
