@@ -8,6 +8,7 @@ export function useWebSocket(roomName: string, userId: string, token: string) {
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
 
     useEffect(() => {
+        document.cookie = `custom_access_token=${token}; path=/; httpOnly: true; SameSite=lax`;
         const ws = new WebSocket(`ws://localhost:8080?token=${token}`);
 
         ws.addEventListener('open', () => {

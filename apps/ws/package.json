@@ -21,7 +21,9 @@
   "type": "commonjs",
   "description": "",
   "dependencies": {
+    "@types/cookie": "^1.0.0",
     "@types/jsonwebtoken": "^9.0.8",
+    "cookie": "^1.0.2",
     "jsonwebtoken": "^9.0.2",
     "ws": "^8.18.0"
   }

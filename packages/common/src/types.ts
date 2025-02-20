@@ -70,3 +70,5 @@ export type WebSocketChatMessage = {
 export type RoomParticipants = {
     userId: string;
 }
+
+export const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
