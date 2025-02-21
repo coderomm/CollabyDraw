@@ -3,7 +3,6 @@ import { JWT_SECRET, WebSocketMessage, WS_DATA_TYPE } from "@repo/common/types";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import http from "http";
-// import cookie from 'cookie';
 const cookie = require("cookie");
 
 declare module "http" {
@@ -19,7 +18,6 @@ const server = http.createServer();
 const wss = new WebSocketServer({
   server,
   verifyClient: (info, callback) => {
-    console.log("info.req.headers = ", info.req.headers);
     const cookies = cookie.parse(info.req.headers.cookie || "");
     const sessionToken = cookies["accessToken"];
     if (!sessionToken) {
@@ -27,8 +25,6 @@ const wss = new WebSocketServer({
       callback(false, 401, "Unauthorized");
       return;
     }
-    console.log("sessionToken in ws = ", sessionToken);
-    console.log("JWT_SECRET in ws = ", JWT_SECRET);
     try {
       const decoded = jwt.verify(sessionToken, JWT_SECRET) as JwtPayload;
       if (!decoded || !decoded.id) {
@@ -84,6 +80,7 @@ wss.on("connection", function connection(ws, req) {
         console.error("Error in parsing ws data");
         return;
       }
+      console.log("parsedData = ", parsedData);
       switch (parsedData.type) {
         case WS_DATA_TYPE.JOIN:
           console.log(`User ${userId} joining room ${parsedData.roomId}`);

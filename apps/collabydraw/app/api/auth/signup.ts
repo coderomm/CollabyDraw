@@ -4,8 +4,6 @@ import bcrypt from "bcrypt";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === "POST") {
-        console.log("Incomming........")
-        console.log("DATABASE_URL = ", process.env.DATABASE_URL)
         const { name, email, password } = req.body;
 
         const existingUser = await client.user.findUnique({

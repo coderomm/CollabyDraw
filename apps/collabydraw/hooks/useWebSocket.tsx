@@ -1,22 +1,21 @@
 import { useEffect, useState } from 'react';
 import { RoomParticipants, WS_DATA_TYPE, WebSocketChatMessage, WebSocketMessage } from '@repo/common/types';
 
-export function useWebSocket(roomName: string, userId: string, token: string) {
+export function useWebSocket(roomId: string, userId: string, token: string) {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [messages, setMessages] = useState<WebSocketChatMessage[]>([]);
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
 
     useEffect(() => {
-        document.cookie = `custom_access_token=${token}; path=/; httpOnly: true; SameSite=lax`;
-        const ws = new WebSocket(`ws://localhost:8080?token=${token}`);
+        console.log('roomId = ' + roomId + ' userId = ' + userId + ' token = ' + token)
+        const ws = new WebSocket(`ws://localhost:8080`);
 
         ws.addEventListener('open', () => {
             setIsConnected(true);
             ws.send(JSON.stringify({
                 type: WS_DATA_TYPE.JOIN,
-                roomName,
-                userId: ''
+                roomId
             }));
         });
 
@@ -54,18 +53,18 @@ export function useWebSocket(roomName: string, userId: string, token: string) {
             if (ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: WS_DATA_TYPE.LEAVE,
-                    roomName
+                    roomId
                 }));
                 ws.close();
             }
         };
-    }, [roomName, token]);
+    }, [roomId, token]);
 
     const sendMessage = (content: string) => {
         if (socket?.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
                 type: WS_DATA_TYPE.CHAT,
-                roomName,
+                roomId,
                 message: content
             }));
         }

@@ -36,7 +36,6 @@ export default async function RoomPage({ params }: { params: { roomName: string 
         console.error('User from session not found.');
         return;
     }
-    console.log('session = ', session);
     if (!user.id) {
         return (
             <div className="flex flex-col items-center justify-center h-screen">
@@ -50,10 +49,8 @@ export default async function RoomPage({ params }: { params: { roomName: string 
     }
 
     return <RoomClientComponent
-        roomId={room.id.toString()}
         roomName={roomName}
         userId={user.id}
-        userName={user.name || 'User'}
         token={session.accessToken}
     />;
 }
