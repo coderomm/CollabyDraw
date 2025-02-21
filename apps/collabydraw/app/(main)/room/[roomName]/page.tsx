@@ -5,12 +5,16 @@ import RoomClientComponent from '@/components/RoomClientComponent';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/utils/auth';
 
-export async function generateMetadata({ params }: { params: { roomName: string } }) {
-    const { roomName } = params;
+export async function generateMetadata({ params }: { params: Promise<{ roomName: string }> }) {
+    const resolvedParams = params instanceof Promise ? await params : params;
+    const paramsRoomName = resolvedParams.roomName;
+    const decodedParam = decodeURIComponent(paramsRoomName)
+    console.log('decodedParam = ', decodedParam)
 
     const room = await client.room.findFirst({
-        where: { slug: roomName },
+        where: { slug: decodedParam },
     });
+    console.log('room = ', room)
 
     if (!room) return { title: 'Room Not Found' };
 
@@ -19,13 +23,16 @@ export async function generateMetadata({ params }: { params: { roomName: string 
     };
 }
 
-export default async function RoomPage({ params }: { params: { roomName: string } }) {
-    const { roomName } = params;
+export default async function RoomPage({ params }: { params: Promise<{ roomName: string }> }) {
+    const resolvedParams = params instanceof Promise ? await params : params;
+    const paramsRoomName = resolvedParams.roomName;
+    const decodedParam = decodeURIComponent(paramsRoomName)
+    console.log('decodedParam = ', decodedParam)
 
     const room = await client.room.findFirst({
-        where: { slug: roomName },
+        where: { slug: decodedParam },
     });
-
+    console.log('room2 = ', room)
     if (!room) {
         notFound();
     }
@@ -49,7 +56,7 @@ export default async function RoomPage({ params }: { params: { roomName: string 
     }
 
     return <RoomClientComponent
-        roomName={roomName}
+        roomName={room.slug}
         userId={user.id}
         token={session.accessToken}
     />;

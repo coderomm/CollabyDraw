@@ -116,7 +116,7 @@ wss.on("connection", function connection(ws, req) {
           await client.chat.create({
             data: {
               message: parsedData.message,
-              roomId: parseInt(parsedData.roomId),
+              roomId: parsedData.roomId,
               userId: userId,
             },
           });
