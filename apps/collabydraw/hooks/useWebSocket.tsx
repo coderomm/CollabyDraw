@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { RoomParticipants, WS_DATA_TYPE, WebSocketChatMessage, WebSocketMessage } from '@repo/common/types';
 
-export function useWebSocket(roomId: string, userId: string, token: string) {
+export function useWebSocket(roomName: string, roomId: string, userId: string, token: string) {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [messages, setMessages] = useState<WebSocketChatMessage[]>([]);
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
 
     useEffect(() => {
-        console.log('roomId = ' + roomId + ' userId = ' + userId + ' token = ' + token)
         const ws = new WebSocket(`ws://localhost:8080`);
 
         ws.addEventListener('open', () => {
@@ -21,6 +20,7 @@ export function useWebSocket(roomId: string, userId: string, token: string) {
 
         ws.addEventListener('message', (event) => {
             const data: WebSocketMessage = JSON.parse(event.data);
+            console.log('data in useWebsocket = ', data)
             switch (data.type) {
                 case WS_DATA_TYPE.CHAT:
                     if (data.message && data.timestamp) {
@@ -58,14 +58,14 @@ export function useWebSocket(roomId: string, userId: string, token: string) {
                 ws.close();
             }
         };
-    }, [roomId, token]);
+    }, [roomId, roomName, token, userId]);
 
     const sendMessage = (content: string) => {
         if (socket?.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
                 type: WS_DATA_TYPE.CHAT,
-                roomId,
-                message: content
+                message: content,
+                roomId
             }));
         }
     };

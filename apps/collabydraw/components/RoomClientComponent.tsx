@@ -20,10 +20,12 @@ import { WebSocketChatMessage } from '@repo/common/types';
 
 export default function RoomClientComponent({
   roomName,
+  roomId,
   userId,
   token
 }: {
   roomName: string;
+  roomId: string;
   userId: string;
   token: string;
 }) {
@@ -32,7 +34,7 @@ export default function RoomClientComponent({
     messages,
     participants,
     sendMessage
-  } = useWebSocket(roomName, userId, token);
+  } = useWebSocket(roomName, roomId, userId, token);
 
   const [input, setInput] = useState('');
   const [showDisconnectAlert, setShowDisconnectAlert] = useState(false);

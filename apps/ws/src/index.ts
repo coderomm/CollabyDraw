@@ -112,11 +112,10 @@ wss.on("connection", function connection(ws, req) {
 
         case WS_DATA_TYPE.CHAT:
           if (!parsedData.message || !parsedData.roomId) break;
-
           await client.chat.create({
             data: {
               message: parsedData.message,
-              roomId: parsedData.roomId,
+              roomId: Number(parsedData.roomId),
               userId: userId,
             },
           });

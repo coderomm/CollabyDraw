@@ -9,12 +9,10 @@ export async function generateMetadata({ params }: { params: Promise<{ roomName:
     const resolvedParams = params instanceof Promise ? await params : params;
     const paramsRoomName = resolvedParams.roomName;
     const decodedParam = decodeURIComponent(paramsRoomName)
-    console.log('decodedParam = ', decodedParam)
 
     const room = await client.room.findFirst({
         where: { slug: decodedParam },
     });
-    console.log('room = ', room)
 
     if (!room) return { title: 'Room Not Found' };
 
@@ -27,12 +25,10 @@ export default async function RoomPage({ params }: { params: Promise<{ roomName:
     const resolvedParams = params instanceof Promise ? await params : params;
     const paramsRoomName = resolvedParams.roomName;
     const decodedParam = decodeURIComponent(paramsRoomName)
-    console.log('decodedParam = ', decodedParam)
 
     const room = await client.room.findFirst({
         where: { slug: decodedParam },
     });
-    console.log('room2 = ', room)
     if (!room) {
         notFound();
     }
@@ -57,6 +53,7 @@ export default async function RoomPage({ params }: { params: Promise<{ roomName:
 
     return <RoomClientComponent
         roomName={room.slug}
+        roomId={room.id.toString()}
         userId={user.id}
         token={session.accessToken}
     />;
