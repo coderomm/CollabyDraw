@@ -52,9 +52,9 @@ export default async function RoomPage({ params }: { params: Promise<{ roomName:
     }
 
     return <RoomClientComponent
-        roomName={room.slug}
         roomId={room.id.toString()}
+        roomName={room.slug}
         userId={user.id}
-        token={session.accessToken}
+        userName={user.name || 'User-' + user.id}
     />;
 }

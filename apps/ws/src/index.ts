@@ -48,6 +48,7 @@ const wss = new WebSocketServer({
 
 type User = {
   userId: string;
+  userName: string;
   ws: WebSocket;
   rooms: string[];
 };
@@ -64,6 +65,7 @@ wss.on("connection", function connection(ws, req) {
   const userId = req.user.id;
   const user: User = {
     userId,
+    userName: userId,
     ws,
     rooms: [],
   };
@@ -91,6 +93,7 @@ wss.on("connection", function connection(ws, req) {
               type: WS_DATA_TYPE.USER_JOINED,
               userId: user.userId,
               roomId: parsedData.roomId,
+              userName: parsedData.userName,
             },
             [user.userId]
           );
@@ -104,6 +107,7 @@ wss.on("connection", function connection(ws, req) {
             {
               type: WS_DATA_TYPE.USER_LEFT,
               userId: user.userId,
+              userName: user.userName,
               roomId: parsedData.roomId,
             },
             [user.userId]
@@ -127,8 +131,9 @@ wss.on("connection", function connection(ws, req) {
             {
               type: WS_DATA_TYPE.CHAT,
               message: parsedData.message,
-              userId: userId,
               roomId: parsedData.roomId,
+              userId: userId,
+              userName: parsedData.userName,
               timestamp: new Date().toISOString(),
             },
             [userId]

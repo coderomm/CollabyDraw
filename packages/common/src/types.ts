@@ -58,6 +58,7 @@ export enum WS_DATA_TYPE {
 export type WebSocketMessage = {
   type: WS_DATA_TYPE;
   roomId: string;
+  roomName?: string;
   userId: string;
   userName?: string;
   message?: string;
@@ -73,6 +74,7 @@ export type WebSocketChatMessage = {
 
 export type RoomParticipants = {
   userId: string;
+  userName: string;
 };
 
 export const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
