@@ -5,6 +5,7 @@ import { Square, Circle, Minus, Type, Hand, Undo2, Redo2 } from "lucide-react"
 import { DrawingSidebar } from "@/components/drawing-sidebar"
 import { DrawingToolbar } from "@/components/drawing-toolbar"
 import { Button } from "@/components/ui/button"
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 
 const tools = [
     { icon: Square, name: "Rectangle" },
@@ -84,44 +85,51 @@ export default function DrawPage() {
     }
 
     return (
-        <div className="flex h-screen bg-background">
-            <DrawingSidebar />
-            <div className="flex-1">
-                <DrawingToolbar>
-                    <div className="flex items-center space-x-2">
-                        {tools.map((tool) => (
-                            <Button
-                                key={tool.name}
-                                variant={selectedTool === tool.name ? "secondary" : "ghost"}
-                                size="icon"
-                                onClick={() => setSelectedTool(tool.name)}
-                                className="text-primary hover:text-primary/90"
-                            >
-                                <tool.icon className="h-4 w-4" />
-                                <span className="sr-only">{tool.name}</span>
+        <>
+            <div className="flex h-screen bg-background">
+                <DrawingSidebar />
+                <div className="flex-1">
+                    <DrawingToolbar>
+                        <div className="flex items-center space-x-2">
+                            {tools.map((tool) => (
+                                <Button
+                                    key={tool.name}
+                                    variant={selectedTool === tool.name ? "secondary" : "ghost"}
+                                    size="icon"
+                                    onClick={() => setSelectedTool(tool.name)}
+                                    className="text-primary hover:text-primary/90"
+                                >
+                                    <tool.icon className="h-4 w-4" />
+                                    <span className="sr-only">{tool.name}</span>
+                                </Button>
+                            ))}
+                            <div className="h-6 w-px bg-border" />
+                            <Button variant="ghost" size="icon" className="text-primary hover:text-primary/90">
+                                <Undo2 className="h-4 w-4" />
+                                <span className="sr-only">Undo</span>
                             </Button>
-                        ))}
-                        <div className="h-6 w-px bg-border" />
-                        <Button variant="ghost" size="icon" className="text-primary hover:text-primary/90">
-                            <Undo2 className="h-4 w-4" />
-                            <span className="sr-only">Undo</span>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-primary hover:text-primary/90">
-                            <Redo2 className="h-4 w-4" />
-                            <span className="sr-only">Redo</span>
-                        </Button>
-                    </div>
-                </DrawingToolbar>
-                <canvas
-                    ref={canvasRef}
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    className="touch-none"
-                />
+                            <Button variant="ghost" size="icon" className="text-primary hover:text-primary/90">
+                                <Redo2 className="h-4 w-4" />
+                                <span className="sr-only">Redo</span>
+                            </Button>
+                        </div>
+                    </DrawingToolbar>
+                    <canvas
+                        ref={canvasRef}
+                        onMouseDown={startDrawing}
+                        onMouseMove={draw}
+                        onMouseUp={stopDrawing}
+                        onMouseLeave={stopDrawing}
+                        className="touch-none"
+                    />
+                </div>
             </div>
-        </div>
+            <div className="fixed bottom-3 left-3 z-50">
+                <SidebarProvider>
+                    <SidebarTrigger />
+                </SidebarProvider>
+            </div>
+        </>
     )
 }
 

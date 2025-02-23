@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "sonner";
 import { createRoom, joinRoom } from "@/actions/room";
 
-export function JoinRoom() {
+export function JoinCreateRoom() {
     const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
     const [isJoinRoomOpen, setIsJoinRoomOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
@@ -39,7 +39,7 @@ export function JoinRoom() {
                 if (result!.success) {
                     setIsJoinRoomOpen(false);
                     toast.success(`Joined room: ${result!.roomName}`);
-                    router.push(`/room/${data.roomName}`);
+                    router.push(`/chat-room/${data.roomName}`);
                 } else {
                     toast.error('Error: ' + result!.error);
                 }

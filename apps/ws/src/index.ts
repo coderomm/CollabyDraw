@@ -95,7 +95,7 @@ wss.on("connection", function connection(ws, req) {
               roomId: parsedData.roomId,
               userName: parsedData.userName,
             },
-            [user.userId]
+            []
           );
           break;
 

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import client from '@repo/db/client';
 import Link from 'next/link';
-import RoomClientComponent from '@/components/RoomClientComponent';
+import ChatRoom from '@/components/ChatRoom';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/utils/auth';
 
@@ -51,7 +51,7 @@ export default async function RoomPage({ params }: { params: Promise<{ roomName:
         );
     }
 
-    return <RoomClientComponent
+    return <ChatRoom
         roomId={room.id.toString()}
         roomName={room.slug}
         userId={user.id}

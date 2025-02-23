@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { Button } from "./ui/button";
 import { authOptions } from "@/utils/auth";
 import { UserMenu } from "./UserMenu";
-import { JoinRoom } from "./JoinRoom";
+import { JoinCreateRoom } from "./JoinCreateRoom";
 
 export default async function Header() {
     const session = await getServerSession(authOptions);
@@ -19,8 +19,8 @@ export default async function Header() {
                 <nav className="flex items-center space-x-4">
                     {session ? (
                         <>
-                            <JoinRoom />
-                            <UserMenu email={session.user.name} />
+                            <JoinCreateRoom />
+                            <UserMenu email={session.user.name || session.user.email} />
                         </>
                     ) : (
                         <>

@@ -9,18 +9,28 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
     const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
     const reconnectAttemptsRef = useRef(0);
     const MAX_RECONNECT_ATTEMPTS = 5;
+    const paramsRef = useRef({ roomId, roomName, userId, userName });
+
+    useEffect(() => {
+        paramsRef.current = { roomId, roomName, userId, userName };
+    }, [roomId, roomName, userId, userName]);
 
     const connectWebSocket = useCallback(() => {
-        if (socketRef.current) {
+        if (socketRef.current?.readyState === WebSocket.OPEN) {
+            return;
+        }
+        if (socketRef.current?.readyState === WebSocket.OPEN) {
             socketRef.current.close();
         }
 
         try {
             const ws = new WebSocket(`ws://localhost:8080`);
 
-            ws.addEventListener('open', () => {
+            // ws.addEventListener('open', () => {
+            const handleOpen = () => {
                 setIsConnected(true);
                 reconnectAttemptsRef.current = 0;
+                const { roomId, roomName, userId, userName } = paramsRef.current;
 
                 ws.send(JSON.stringify({
                     type: WS_DATA_TYPE.JOIN,
@@ -29,9 +39,10 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                     userId,
                     userName
                 }));
-            });
+            };
 
-            ws.addEventListener('message', (event) => {
+            // ws.addEventListener('message', (event) => {
+            const handleMessage = (event: MessageEvent) => {
                 try {
                     const data: WebSocketMessage = JSON.parse(event.data);
                     switch (data.type) {
@@ -47,12 +58,12 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                             break;
 
                         case WS_DATA_TYPE.USER_JOINED:
-                            console.log('USER_JOINED in useWebsocket = ', data)
                             setParticipants(prev => {
-                                if (!prev.some(p => p.userId === data.userId)) {
+                                const exists = prev.some(p => p.userId === data.userId);
+                                if (!exists && data.userId && data.userName) {
                                     return [...prev, {
-                                        userId: data.userId!,
-                                        userName: data.userName!
+                                        userId: data.userId,
+                                        userName: data.userName
                                     }];
                                 }
                                 return prev;
@@ -60,16 +71,16 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                             break;
 
                         case WS_DATA_TYPE.USER_LEFT:
-                            setParticipants(prev => prev.filter(user => user.userId !== data.userId!));
+                            setParticipants(prev => prev.filter(user => user.userId !== data.userId));
                             break;
                     }
                 } catch (err) {
                     console.error('Error processing message:', err);
                 }
-            });
+            };
 
-            ws.addEventListener('close', (event) => {
-                console.log(`WebSocket closed: ${event.code} ${event.reason}`);
+            // ws.addEventListener('close', (event) => {
+            const handleClose = (event: CloseEvent) => {
                 setIsConnected(false);
                 if (event.code !== 1000 && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
                     const delay = Math.min(1000 * 2 ** reconnectAttemptsRef.current, 30000);
@@ -80,17 +91,26 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                         connectWebSocket();
                     }, delay);
                 }
-            });
+            };
 
+            ws.addEventListener('open', handleOpen);
+            ws.addEventListener('message', handleMessage);
+            ws.addEventListener('close', handleClose);
             ws.addEventListener('error', (error) => {
                 console.error('WebSocket error:', error);
             });
 
             socketRef.current = ws;
+
+            return () => {
+                ws.removeEventListener('open', handleOpen);
+                ws.removeEventListener('message', handleMessage);
+                ws.removeEventListener('close', handleClose);
+            };
         } catch (error) {
             console.error('Failed to create WebSocket connection:', error);
         }
-    }, [roomId, roomName, userId, userName]);
+    }, []);
 
     useEffect(() => {
         connectWebSocket();
@@ -103,12 +123,12 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             if (socketRef.current?.readyState === WebSocket.OPEN) {
                 socketRef.current.send(JSON.stringify({
                     type: WS_DATA_TYPE.LEAVE,
-                    roomId
+                    roomId: paramsRef.current.roomId
                 }));
                 socketRef.current.close(1000, 'Component unmounted');
             }
         };
-    }, [connectWebSocket, roomId]);
+    }, [connectWebSocket]);
 
     const sendMessage = useCallback((content: string) => {
         if (!content?.trim()) {
@@ -116,6 +136,7 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             return;
         }
         if (socketRef.current?.readyState === WebSocket.OPEN) {
+            const { roomId, roomName, userId, userName } = paramsRef.current;
             socketRef.current.send(JSON.stringify({
                 type: WS_DATA_TYPE.CHAT,
                 message: content,
@@ -127,7 +148,7 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
         } else {
             console.warn('Cannot send message: WebSocket not connected');
         }
-    }, [roomId, roomName, userId, userName]);
+    }, []);
 
     return {
         isConnected,

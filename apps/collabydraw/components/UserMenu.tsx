@@ -26,7 +26,7 @@ export function UserMenu({ email }: UserMenuProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                    <Link href="/dashboard">Dashboard</Link>
+                    <Link href="/draw">Draw</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                     <Link href="/profile">Profile</Link>

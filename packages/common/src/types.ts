@@ -77,4 +77,15 @@ export type RoomParticipants = {
   userName: string;
 };
 
+export interface Room {
+  id: number;
+  name: string;
+}
+
+export interface RecentRooms {
+  id: number;
+  name: string;
+  visitedAt: string;
+}
+
 export const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";

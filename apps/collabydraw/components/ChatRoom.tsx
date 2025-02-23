@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { WebSocketChatMessage } from '@repo/common/types';
 
-export default function RoomClientComponent({
+export default function ChatRoom({
   roomName,
   roomId,
   userId,

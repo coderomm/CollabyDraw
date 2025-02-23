@@ -49,7 +49,7 @@ export function SignInForm() {
 
                 toast.success("Signed in successfully");
 
-                router.push("/dashboard");
+                router.push("/draw");
                 router.refresh();
             } catch (error) {
                 toast.error("Something went wrong. Please try again.");
