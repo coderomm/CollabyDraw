@@ -24,9 +24,8 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
         }
 
         try {
-            const ws = new WebSocket(`ws://localhost:8080`);
+            const ws = new WebSocket(`${process.env.WS_URL}`);
 
-            // ws.addEventListener('open', () => {
             const handleOpen = () => {
                 setIsConnected(true);
                 reconnectAttemptsRef.current = 0;
@@ -41,7 +40,6 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                 }));
             };
 
-            // ws.addEventListener('message', (event) => {
             const handleMessage = (event: MessageEvent) => {
                 try {
                     const data: WebSocketMessage = JSON.parse(event.data);
@@ -79,7 +77,6 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                 }
             };
 
-            // ws.addEventListener('close', (event) => {
             const handleClose = (event: CloseEvent) => {
                 setIsConnected(false);
                 if (event.code !== 1000 && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {

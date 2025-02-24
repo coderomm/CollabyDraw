@@ -38,8 +38,8 @@ export const CreateRoomSchema = z.object({
   roomName: z.string().trim().min(3, "Room name must be at least 3 characters"),
 });
 
-export const GetChatSchema = z.object({
-  roomId: z.string(),
+export const GetChatsSchema = z.object({
+  roomName: z.string().trim().min(3, "Room name must be at least 3 characters"),
 });
 
 export const GetRoomBySlug = z.object({
@@ -87,5 +87,27 @@ export interface RecentRooms {
   name: string;
   visitedAt: string;
 }
+
+export type Shape =
+  | {
+      type: "rect";
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }
+  | {
+      type: "circle";
+      centerX: number;
+      centerY: number;
+      radius: number;
+    }
+  | {
+      type: "pencil";
+      startX: number;
+      startY: number;
+      endX: number;
+      endY: number;
+    };
 
 export const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
