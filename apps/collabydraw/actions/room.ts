@@ -82,3 +82,45 @@ export async function createRoom(data: { roomName: string }) {
     return { success: false, error: "Failed to create room" };
   }
 }
+
+export async function getRoom(data: { roomName: string }) {
+  try {
+    const validatedRoomName = JoinRoomSchema.parse(data);
+
+    const room = await client.room.findUnique({
+      where: { slug: validatedRoomName.roomName },
+      include: { Chat: true },
+    });
+
+    if (!room) {
+      return { success: false, error: "Room not found" };
+    }
+
+    const session = await getServerSession(authOptions);
+    const cookieToken = session?.accessToken;
+
+    if (!cookieToken) {
+      console.error("session.accessToken not found in join room server action");
+      return;
+    }
+
+    (await cookies()).set("accessToken", cookieToken, {
+      maxAge: 60 * 60 * 24 * 7,
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      secure: false,
+    });
+
+    return {
+      success: true,
+      room: room,
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: "Invalid room code format" };
+    }
+    console.error("Failed to join room:", error);
+    return { success: false, error: "Failed to join room" };
+  }
+}

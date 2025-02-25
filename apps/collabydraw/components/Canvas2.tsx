@@ -13,7 +13,7 @@ interface CanvasProps {
     onShapeDelete: (shapeId: string) => void
 }
 
-export function Canvas({ selectedTool, shapes, onShapeAdd, onShapeUpdate, onShapeDelete }: CanvasProps) {
+export function Canvas2({ selectedTool, shapes, onShapeAdd, onShapeUpdate, onShapeDelete }: CanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [isDrawing, setIsDrawing] = useState(false)
     const [currentPoints, setCurrentPoints] = useState<Point[]>([])

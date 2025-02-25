@@ -53,6 +53,7 @@ export enum WS_DATA_TYPE {
   USER_JOINED = "USER_JOINED",
   USER_LEFT = "USER_LEFT",
   DRAW = "DRAW",
+  ERASER = "ERASER"
 }
 
 export type WebSocketMessage = {

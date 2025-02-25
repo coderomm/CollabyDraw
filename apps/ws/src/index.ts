@@ -82,9 +82,21 @@ wss.on("connection", function connection(ws, req) {
         console.error("Error in parsing ws data");
         return;
       }
-      console.log("parsedData = ", parsedData);
+
+      if (parsedData.userName && user.userName === userId) {
+        user.userName = parsedData.userName;
+      }
+
+      console.log(
+        `Received ${parsedData.type} message from user ${userId} in room ${parsedData.roomId}`
+      );
+
       switch (parsedData.type) {
         case WS_DATA_TYPE.JOIN:
+          if (!parsedData.roomId) {
+            console.error("No roomId provided for JOIN message");
+            return;
+          }
           console.log(`User ${userId} joining room ${parsedData.roomId}`);
           user.rooms.push(parsedData.roomId);
           broadcastToRoom(
@@ -94,12 +106,14 @@ wss.on("connection", function connection(ws, req) {
               userId: user.userId,
               roomId: parsedData.roomId,
               userName: parsedData.userName,
+              timestamp: new Date().toISOString(),
             },
             []
           );
           break;
 
         case WS_DATA_TYPE.LEAVE:
+          if (!parsedData.roomId) return;
           console.log(`User ${userId} leaving room ${parsedData.roomId}`);
           user.rooms = user.rooms.filter((r) => r !== parsedData.roomId);
           broadcastToRoom(
@@ -115,7 +129,10 @@ wss.on("connection", function connection(ws, req) {
           break;
 
         case WS_DATA_TYPE.CHAT:
-          if (!parsedData.message || !parsedData.roomId) break;
+          if (!parsedData.message || !parsedData.roomId) {
+            console.error("Missing message or roomId for CHAT");
+            return;
+          }
           await client.chat.create({
             data: {
               message: parsedData.message,
@@ -137,6 +154,44 @@ wss.on("connection", function connection(ws, req) {
               timestamp: new Date().toISOString(),
             },
             [userId]
+          );
+          break;
+
+        case WS_DATA_TYPE.DRAW:
+        case WS_DATA_TYPE.ERASER:
+          if (!parsedData.roomId || !parsedData.message) {
+            console.error(`Missing roomId or data for ${parsedData.type}`);
+            return;
+          }
+
+          // Save drawing data to database
+          try {
+            await client.chat.create({
+              data: {
+                message: parsedData.message,
+                roomId: Number(parsedData.roomId),
+                userId: userId,
+              },
+            });
+          } catch (err) {
+            console.error(
+              `Error saving ${parsedData.type} data to database:`,
+              err
+            );
+          }
+
+          // Broadcast to room
+          broadcastToRoom(
+            parsedData.roomId,
+            {
+              type: parsedData.type,
+              message: parsedData.message,
+              roomId: parsedData.roomId,
+              userId: userId,
+              userName: user.userName,
+              timestamp: new Date().toISOString(),
+            },
+            [] // Include sender so they get confirmation
           );
           break;
 
