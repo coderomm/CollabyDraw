@@ -45,7 +45,7 @@ export class Game {
   private sendMessage: (data: string) => void;
   private existingShape: Shape[];
   private clicked: boolean;
-  private room: unknown;
+  private roomName: string;
   private activeTool: ShapeType = "grab";
   private startX: number = 0;
   private startY: number = 0;
@@ -62,7 +62,7 @@ export class Game {
     canvas: HTMLCanvasElement,
     roomId: string,
     sendMessage: (data: string) => void,
-    room: string,
+    roomName: string,
     onScaleChangeCallback: (scale: number) => void,
     initialShapes: Shape[] = []
   ) {
@@ -75,7 +75,7 @@ export class Game {
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = document.body.clientHeight;
     this.onScaleChangeCallback = onScaleChangeCallback;
-    this.room = room;
+    this.roomName = roomName;
     this.init();
     // this.initHandler();
     this.initMouseHandler();
@@ -83,12 +83,14 @@ export class Game {
 
   async init() {
     try {
-      const getRoomResult = await getRoom(this.room);
+      const getRoomResult = await getRoom({ roomName: this.roomName });
       if (getRoomResult?.success && getRoomResult.room?.Chat) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         getRoomResult.room.Chat.forEach((shape: any) => {
           try {
-            const shapes = JSON.parse(shape.data);
-            this.existingShape.push(shapes.shape);
+            const parsedShapes = JSON.parse(shape.message);
+            const parsedShapeData = JSON.parse(parsedShapes.data);
+            this.existingShape.push(parsedShapeData.shape);
           } catch (e) {
             console.error("Error parsing shape data:", e);
           }
@@ -171,7 +173,7 @@ export class Game {
     );
 
     this.existingShape.map((shape: Shape) => {
-      if (shape.type == "rect") {
+      if (shape.type === "rect") {
         this.drawRect(
           shape.x,
           shape.y,

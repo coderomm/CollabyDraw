@@ -50,13 +50,16 @@ export const Toolbar = ({ activeTool, setActiveTool }: ToolbarProps) => {
         <div className="w-fit h-16 py-2 px-4 fixed top-5 left-[50%] -translate-x-[50%]">
             <div className="flex bg-[#232329] px-4 py-1 rounded-md gap-3 h-full">
                 {Tool.map((tool) => {
-                    return (<><ToolButton active={activeTool === tool.tool} onClick={() => setActiveTool(tool.tool)} icon={tool.icon} shortcut={tool.shortcut} tool={tool.tool} />
-                        {tool.tool === "grab" ? (<Separator orientation="vertical" className="bg-white/20 mx-1" />) : null}
-                    </>)
+                    return (
+                        <div key={tool.tool} className="flex items-center">
+                            <ToolButton active={activeTool === tool.tool} onClick={() => setActiveTool(tool.tool)} icon={tool.icon} shortcut={tool.shortcut} tool={tool.tool} />
+                            {tool.tool === "grab" ? (<Separator orientation="vertical" className="bg-white/20 mx-1" />) : null}
+                        </div>
+                    )
                 }
                 )}
             </div>
             <p className="text-white/30 mt-1 absolute w-full mx-auto scale-[0.8] text-sm text-center">To zoom, use scroll or pinch!</p>
-        </div>
+        </div >
     )
 }

@@ -1,27 +1,11 @@
-import { notFound } from 'next/navigation';
 import client from '@repo/db/client';
-import Link from 'next/link';
+import { Canvas } from "@/components/canvas/Canvas";
+import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/utils/auth';
-import { RoomCanvas } from '@/components/canvas/RoomCanavs';
+import Link from 'next/link';
 
-export async function generateMetadata({ params }: { params: Promise<{ roomName: string }> }) {
-    const resolvedParams = params instanceof Promise ? await params : params;
-    const paramsRoomName = resolvedParams.roomName;
-    const decodedParam = decodeURIComponent(paramsRoomName)
-
-    const room = await client.room.findFirst({
-        where: { slug: decodedParam },
-    });
-
-    if (!room) return { title: 'Room Not Found' };
-
-    return {
-        title: `${room.slug} - Collaboration Room`,
-    };
-}
-
-export default async function DrawCanvasPage({ params }: { params: Promise<{ roomName: string }> }) {
+export default async function CanvasPage({ params }: { params: Promise<{ roomName: string }> }) {
     const resolvedParams = params instanceof Promise ? await params : params;
     const paramsRoomName = resolvedParams.roomName;
     const decodedParam = decodeURIComponent(paramsRoomName)
@@ -51,10 +35,12 @@ export default async function DrawCanvasPage({ params }: { params: Promise<{ roo
         );
     }
 
-    return <RoomCanvas
-        roomId={room.id.toString()}
-        roomName={room.slug}
-        userId={user.id}
-        userName={user.name || 'User-' + user.id}
-    />;
+    return (
+        <Canvas
+            roomId={room.id.toString()}
+            roomName={room.slug}
+            userId={user.id}
+            userName={user.name || 'User-' + user.id}
+        />
+    )
 }

@@ -46,15 +46,20 @@ type Shape =
     };
 
 export function Canvas({ roomName, roomId, userId, userName }: { roomName: string; roomId: string; userId: string; userName: string; }) {
-    const canvasRef = useRef<HTMLCanvasElement>(null)
-    const [game, setGame] = useState<Game>()
-    const [scale, setScale] = useState<number>(1)
-    const [activeTool, setActiveTool] = useState<ShapeType>("grab")
-    const [strokeFill, setStrokeFill] = useState<strokeFill>("rgba(211, 211, 211)")
-    const [strokeWidth, setStrokeWidth] = useState<strokeWidth>(1)
-    const [bgFill, setBgFill] = useState<bgFill>("rgba(0, 0, 0, 0)")
-    const [grabbing, setGrabbing] = useState(false)
-    const [existingShapes, setExistingShapes] = useState<Shape[]>([])
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [game, setGame] = useState<Game>();
+    const [scale, setScale] = useState<number>(1);
+    const [activeTool, setActiveTool] = useState<ShapeType>("grab");
+    const [strokeFill, setStrokeFill] = useState<strokeFill>("rgba(211, 211, 211)");
+    const [strokeWidth, setStrokeWidth] = useState<strokeWidth>(1);
+    const [bgFill, setBgFill] = useState<bgFill>("rgba(0, 0, 0, 0)");
+    const [grabbing, setGrabbing] = useState(false);
+    const [existingShapes, setExistingShapes] = useState<Shape[]>([]);
+    const paramsRef = useRef({ roomId, roomName, userId, userName });
+    const activeToolRef = useRef(activeTool);
+    const strokeFillRef = useRef(strokeFill);
+    const strokeWidthRef = useRef(strokeWidth);
+    const bgFillRef = useRef(bgFill);
 
     const { isConnected, messages, sendMessage } = useWebSocket(
         roomId,
@@ -64,10 +69,15 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
     );
 
     useEffect(() => {
+        paramsRef.current = { roomId, roomName, userId, userName };
+    }, [roomId, roomName, userId, userName]);
+
+    useEffect(() => {
         if (messages.length > 0) {
             try {
                 // Process all messages that contain drawing data
                 messages.forEach((message) => {
+                    // console.log('message = ', message);
                     try {
                         const data = JSON.parse(message.content);
                         if (data.type === "draw") {
@@ -94,7 +104,27 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
         game?.setStrokeWidth(strokeWidth)
         game?.setStrokeFill(strokeFill)
         game?.setBgFill(bgFill)
-    })
+    });
+
+    useEffect(() => {
+        activeToolRef.current = activeTool;
+        game?.setTool(activeTool);
+    }, [activeTool, game]);
+
+    useEffect(() => {
+        strokeWidthRef.current = strokeWidth;
+        game?.setStrokeWidth(strokeWidth);
+    }, [strokeWidth, game]);
+
+    useEffect(() => {
+        strokeFillRef.current = strokeFill;
+        game?.setStrokeFill(strokeFill);
+    }, [strokeFill, game]);
+
+    useEffect(() => {
+        bgFillRef.current = bgFill;
+        game?.setBgFill(bgFill);
+    }, [bgFill, game]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -121,56 +151,57 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
                     break;
             }
         };
-
         document.addEventListener("keydown", handleKeyDown);
-
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
     }, [setActiveTool]);
 
-    // Handle WebSocket messages for the Game class
     const handleSendDrawing = useCallback((msgData: string) => {
         if (isConnected) {
             sendMessage(msgData);
         }
     }, [isConnected, sendMessage]);
 
-
     useEffect(() => {
         if (canvasRef.current) {
-            const g = new Game(
+            const game = new Game(
                 canvasRef.current,
-                roomId,
+                paramsRef.current.roomId,
                 handleSendDrawing,
-                roomName,
+                paramsRef.current.roomName,
                 (newScale) => setScale(newScale),
                 existingShapes
             )
-            setGame(g)
+            setGame(game);
 
-            if (activeTool === "grab") {
-                const handleGrab = () => {
-                    setGrabbing((prev) => !prev)
-                }
+            game.setTool(activeToolRef.current);
+            game.setStrokeWidth(strokeWidthRef.current);
+            game.setStrokeFill(strokeFillRef.current);
+            game.setBgFill(bgFillRef.current);
 
-                document.addEventListener("mousedown", handleGrab)
-                document.addEventListener("mouseup", handleGrab)
-
-                return () => {
-                    document.removeEventListener("mousedown", handleGrab)
-                    document.removeEventListener("mouseup", handleGrab)
-                }
-
-            }
             return () => {
-                g.destroy()
-
+                game.destroy();
             }
         }
 
-    }, [activeTool, canvasRef, existingShapes, handleSendDrawing, roomId, roomName])
+    }, [canvasRef, existingShapes, handleSendDrawing]);
 
+    useEffect(() => {
+        if (activeTool === "grab") {
+            const handleGrab = () => {
+                setGrabbing((prev) => !prev)
+            }
+
+            document.addEventListener("mousedown", handleGrab)
+            document.addEventListener("mouseup", handleGrab)
+
+            return () => {
+                document.removeEventListener("mousedown", handleGrab)
+                document.removeEventListener("mouseup", handleGrab)
+            }
+        }
+    }, [activeTool]);
 
     useEffect(() => {
         if (game?.outputScale) {
@@ -191,7 +222,8 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
                 strokeWidth={strokeWidth}
                 setStrokeWidth={setStrokeWidth}
                 bgFill={bgFill}
-                setBgFill={setBgFill} />
+                setBgFill={setBgFill}
+            />
             <Scale scale={scale} />
             <canvas ref={canvasRef} />
         </div>
