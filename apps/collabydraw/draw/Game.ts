@@ -1,42 +1,5 @@
 import { getRoom } from "@/actions/room";
-import { ShapeType } from "@/types/canvas";
-
-type Shape =
-  | {
-      type: "rect";
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      strokeWidth: number;
-      strokeFill: string;
-      bgFill: string;
-    }
-  | {
-      type: "ellipse";
-      centerX: number;
-      centerY: number;
-      radX: number;
-      radY: number;
-      strokeWidth: number;
-      strokeFill: string;
-      bgFill: string;
-    }
-  | {
-      type: "line";
-      fromX: number;
-      fromY: number;
-      toX: number;
-      toY: number;
-      strokeWidth: number;
-      strokeFill: string;
-    }
-  | {
-      type: "pen";
-      points: { x: number; y: number }[];
-      strokeWidth: number;
-      strokeFill: string;
-    };
+import { Shape, ToolType } from "@/types/canvas";
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -46,7 +9,7 @@ export class Game {
   private existingShape: Shape[];
   private clicked: boolean;
   private roomName: string;
-  private activeTool: ShapeType = "grab";
+  private activeTool: ToolType = "grab";
   private startX: number = 0;
   private startY: number = 0;
   private panX: number = 0;
@@ -101,7 +64,7 @@ export class Game {
     } catch (error) {
       console.error("Error in init:", error);
     }
-    console.log(this.existingShape);
+    // console.log(this.existingShape);
     this.clearCanvas();
   }
 
@@ -130,7 +93,7 @@ export class Game {
     this.canvas.addEventListener("wheel", this.mouseWheelHandler);
   }
 
-  setTool(tool: ShapeType) {
+  setTool(tool: ToolType) {
     this.activeTool = tool;
   }
 
@@ -173,7 +136,7 @@ export class Game {
     );
 
     this.existingShape.map((shape: Shape) => {
-      if (shape.type === "rect") {
+      if (shape.type === "rectangle") {
         this.drawRect(
           shape.x,
           shape.y,
@@ -189,6 +152,16 @@ export class Game {
           shape.centerY,
           shape.radX,
           shape.radY,
+          shape.strokeWidth,
+          shape.strokeFill,
+          shape.bgFill
+        );
+      } else if (shape.type === "diamond") {
+        this.drawDiamond(
+          shape.centerX,
+          shape.centerY,
+          shape.width,
+          shape.height,
           shape.strokeWidth,
           shape.strokeFill,
           shape.bgFill
@@ -266,6 +239,21 @@ export class Game {
           this.strokeFill,
           this.bgFill
         );
+      } else if (activeTool === "diamond") {
+        const width = Math.abs(x - this.startX) * 2;
+        const height = Math.abs(y - this.startY) * 2;
+        const centerX = this.startX;
+        const centerY = this.startY;
+
+        this.drawDiamond(
+          centerX,
+          centerY,
+          width,
+          height,
+          this.strokeWidth,
+          this.strokeFill,
+          this.bgFill
+        );
       } else if (activeTool === "line") {
         this.drawLine(
           this.startX,
@@ -307,11 +295,10 @@ export class Game {
     }
   };
 
-  // Collision Detection => Chat GPT
   isPointInShape(x: number, y: number, shape: Shape): boolean {
     const tolerance = 5;
 
-    if (shape.type === "rect") {
+    if (shape.type === "rectangle") {
       const startX = Math.min(shape.x, shape.x + shape.width);
       const endX = Math.max(shape.x, shape.x + shape.width);
       const startY = Math.min(shape.y, shape.y + shape.height);
@@ -330,6 +317,17 @@ export class Game {
         (dx * dx) / ((shape.radX + tolerance) * (shape.radX + tolerance)) +
         (dy * dy) / ((shape.radY + tolerance) * (shape.radY + tolerance));
       return normalized <= 1;
+    } else if (shape.type === "diamond") {
+      // Normalize the point to diamond's coordinate system
+      const dx = Math.abs(x - shape.centerX);
+      const dy = Math.abs(y - shape.centerY);
+
+      // Check if the point is inside the diamond
+      return (
+        dx / (shape.width / 2 + tolerance) +
+          dy / (shape.height / 2 + tolerance) <=
+        1
+      );
     } else if (shape.type === "line") {
       const lineLength = Math.hypot(
         shape.toX - shape.fromX,
@@ -450,6 +448,38 @@ export class Game {
     this.ctx.stroke();
   }
 
+  drawDiamond(
+    centerX: number,
+    centerY: number,
+    width: number,
+    height: number,
+    strokeWidth: number,
+    strokeFill: string,
+    bgFill: string
+  ) {
+    strokeWidth = strokeWidth || 1;
+    strokeFill = strokeFill || "rgba(255, 255, 255)";
+    bgFill = bgFill || "rgba(18, 18, 18)";
+
+    // Calculate the four points of the diamond
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(centerX, centerY - halfHeight); // Top point
+    this.ctx.lineTo(centerX + halfWidth, centerY); // Right point
+    this.ctx.lineTo(centerX, centerY + halfHeight); // Bottom point
+    this.ctx.lineTo(centerX - halfWidth, centerY); // Left point
+    this.ctx.closePath();
+
+    this.ctx.fillStyle = bgFill;
+    this.ctx.strokeStyle = strokeFill;
+    this.ctx.lineWidth = strokeWidth;
+
+    this.ctx.fill();
+    this.ctx.stroke();
+  }
+
   drawLine(
     fromX: number,
     fromY: number,
@@ -518,7 +548,7 @@ export class Game {
     let shape: Shape | null = null;
     if (this.activeTool === "rectangle") {
       shape = {
-        type: "rect",
+        type: "rectangle",
         x: this.startX,
         y: this.startY,
         width,
@@ -539,6 +569,22 @@ export class Game {
         centerY,
         radX,
         radY,
+        strokeWidth: this.strokeWidth,
+        strokeFill: this.strokeFill,
+        bgFill: this.bgFill,
+      };
+    } else if (this.activeTool === "diamond") {
+      const width = Math.abs(x - this.startX) * 2;
+      const height = Math.abs(y - this.startY) * 2;
+      const centerX = this.startX;
+      const centerY = this.startY;
+
+      shape = {
+        type: "diamond",
+        centerX,
+        centerY,
+        width,
+        height,
         strokeWidth: this.strokeWidth,
         strokeFill: this.strokeFill,
         bgFill: this.bgFill,

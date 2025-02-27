@@ -4,37 +4,67 @@ import {
     MousePointer2,
     Square,
     Circle,
-    Diamond,
-    ArrowRight,
     Minus,
     Pencil,
-    Type,
     Eraser,
     Undo2,
     Redo2,
+    Diamond,
 } from "lucide-react"
-import type { ShapeType } from "@/types/canvas"
+import type { Tool, ToolType } from "@/types/canvas"
 
 interface ToolbarProps {
-    selectedTool: ShapeType
-    onToolSelect: (tool: ShapeType) => void
+    selectedTool: ToolType
+    onToolSelect: (tool: ToolType) => void
     onUndo: () => void
     onRedo: () => void
     canUndo: boolean
     canRedo: boolean
 }
 
-const tools = [
-    { type: "selection", icon: <MousePointer2 className="h-4 w-4" />, label: "Select" },
-    { type: "rectangle", icon: <Square className="h-4 w-4" />, label: "Rectangle" },
-    { type: "diamond", icon: <Diamond className="h-4 w-4" />, label: "Diamond" },
-    { type: "ellipse", icon: <Circle className="h-4 w-4" />, label: "Ellipse" },
-    { type: "arrow", icon: <ArrowRight className="h-4 w-4" />, label: "Arrow" },
-    { type: "line", icon: <Minus className="h-4 w-4" />, label: "Line" },
-    { type: "pen", icon: <Pencil className="h-4 w-4" />, label: "Pen" },
-    { type: "text", icon: <Type className="h-4 w-4" />, label: "Text" },
-    { type: "eraser", icon: <Eraser className="h-4 w-4" />, label: "Eraser" },
-] as const
+const tools: Tool[] = [{
+    type: "grab",
+    icon: <MousePointer2 />,
+    shortcut: 1,
+    label: 'Grab'
+},
+{
+    type: "rectangle",
+    icon: <Square />,
+    shortcut: 2,
+    label: 'Rectangle'
+},
+{
+    type: "ellipse",
+    icon: <Circle />,
+    shortcut: 3,
+    label: 'Ellipse'
+},
+{
+    type: "diamond",
+    icon: <Diamond />,
+    shortcut: 4,
+    label: 'Diamond'
+},
+{
+    type: "line",
+    icon: <Minus />,
+    shortcut: 5,
+    label: 'Line'
+},
+{
+    type: "pen",
+    icon: <Pencil />,
+    shortcut: 6,
+    label: 'Arrow'
+},
+{
+    type: "eraser",
+    icon: <Eraser />,
+    shortcut: 7,
+    label: 'Eraser'
+}
+]
 
 export function Toolbar2({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, canRedo }: ToolbarProps) {
     return (

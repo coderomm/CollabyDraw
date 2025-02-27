@@ -4,9 +4,9 @@ export type Point = {
   y: number;
 };
 
-export type ShapeType =
-  | "selection"
+export type ToolType =
   | "grab"
+  | "selection"
   | "rectangle"
   | "diamond"
   | "ellipse"
@@ -18,23 +18,32 @@ export type ShapeType =
 
 export type StrokeStyle = "solid" | "dashed" | "dotted";
 
-// export type Shape = {
-//   id: string;
-//   type: ShapeType;
-//   points: Point[];
-//   strokeColor: string;
-//   fillColor: string;
-//   strokeWidth: number;
-//   strokeStyle: StrokeStyle;
-//   opacity: number;
-//   sloppiness: number;
-//   roughness: number;
-//   zIndex: number;
-// };
+export type Tool = {
+  type: ToolType;
+  icon: React.ReactNode;
+  label: string;
+  shortcut: number;
+};
+
+export type strokeWidth = 1 | 2 | 4;
+
+export type strokeFill =
+  | "rgba(211, 211, 211)"
+  | "rgba(242, 154, 158)"
+  | "rgba(77, 161, 83)"
+  | "rgba(98, 177, 247)"
+  | "rgba(183, 98, 42)";
+
+export type bgFill =
+  | "rgba(0, 0, 0, 0)"
+  | "rgba(89, 49, 49)"
+  | "rgba(23, 61, 16)"
+  | "rgba(30, 70, 101)"
+  | "rgba(49, 37, 7)";
 
 export type Shape =
   | {
-      type: "rect";
+      type: "rectangle";
       x: number;
       y: number;
       width: number;
@@ -54,6 +63,16 @@ export type Shape =
       bgFill: string;
     }
   | {
+      type: "diamond";
+      centerX: number;
+      centerY: number;
+      width: number;
+      height: number;
+      strokeWidth: number;
+      strokeFill: string;
+      bgFill: string;
+    }
+  | {
       type: "line";
       fromX: number;
       fromY: number;
@@ -63,30 +82,8 @@ export type Shape =
       strokeFill: string;
     }
   | {
-      type: "pencil";
+      type: "pen";
       points: { x: number; y: number }[];
       strokeWidth: number;
       strokeFill: string;
     };
-
-export type Tool = {
-  type: ShapeType;
-  icon: React.ReactNode;
-  label: string;
-};
-
-export type strokeWidth = 1 | 2 | 4;
-
-export type strokeFill =
-  | "rgba(211, 211, 211)"
-  | "rgba(242, 154, 158)"
-  | "rgba(77, 161, 83)"
-  | "rgba(98, 177, 247)"
-  | "rgba(183, 98, 42)";
-
-export type bgFill =
-  | "rgba(0, 0, 0, 0)"
-  | "rgba(89, 49, 49)"
-  | "rgba(23, 61, 16)"
-  | "rgba(30, 70, 101)"
-  | "rgba(49, 37, 7)";

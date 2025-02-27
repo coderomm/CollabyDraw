@@ -153,7 +153,7 @@ wss.on("connection", function connection(ws, req) {
               userName: parsedData.userName,
               timestamp: new Date().toISOString(),
             },
-            [userId]
+            []
           );
           break;
 

@@ -89,26 +89,4 @@ export interface RecentRooms {
   visitedAt: string;
 }
 
-export type Shape =
-  | {
-      type: "rect";
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    }
-  | {
-      type: "circle";
-      centerX: number;
-      centerY: number;
-      radius: number;
-    }
-  | {
-      type: "pencil";
-      startX: number;
-      startY: number;
-      endX: number;
-      endY: number;
-    };
-
 export const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";

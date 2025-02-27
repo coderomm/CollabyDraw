@@ -1,55 +1,19 @@
 "use client"
 
 import { Game } from "@/draw/Game";
-import { bgFill, ShapeType, strokeFill, strokeWidth } from "@/types/canvas"
+import { bgFill, Shape, strokeFill, strokeWidth, ToolType } from "@/types/canvas"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Toolbar } from "../toolbar";
+// import { Toolbar } from "../toolbar";
 import { Sidebar } from "./Sidebar";
 import { Scale } from "../Scale";
 import { useWebSocket } from "@/hooks/useWebSocket";
-
-type Shape =
-    | {
-        type: "rect";
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        strokeWidth: number;
-        strokeFill: string;
-        bgFill: string;
-    }
-    | {
-        type: "ellipse";
-        centerX: number;
-        centerY: number;
-        radX: number;
-        radY: number;
-        strokeWidth: number;
-        strokeFill: string;
-        bgFill: string;
-    }
-    | {
-        type: "line";
-        fromX: number;
-        fromY: number;
-        toX: number;
-        toY: number;
-        strokeWidth: number;
-        strokeFill: string;
-    }
-    | {
-        type: "pen";
-        points: { x: number; y: number }[];
-        strokeWidth: number;
-        strokeFill: string;
-    };
+import { Toolbar2 } from "../Toolbar2";
 
 export function Canvas({ roomName, roomId, userId, userName }: { roomName: string; roomId: string; userId: string; userName: string; }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [game, setGame] = useState<Game>();
     const [scale, setScale] = useState<number>(1);
-    const [activeTool, setActiveTool] = useState<ShapeType>("grab");
+    const [activeTool, setActiveTool] = useState<ToolType>("grab");
     const [strokeFill, setStrokeFill] = useState<strokeFill>("rgba(211, 211, 211)");
     const [strokeWidth, setStrokeWidth] = useState<strokeWidth>(1);
     const [bgFill, setBgFill] = useState<bgFill>("rgba(0, 0, 0, 0)");
@@ -77,7 +41,7 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
             try {
                 // Process all messages that contain drawing data
                 messages.forEach((message) => {
-                    // console.log('message = ', message);
+                    console.log('message = ', message);
                     try {
                         const data = JSON.parse(message.content);
                         if (data.type === "draw") {
@@ -127,6 +91,12 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
     }, [bgFill, game]);
 
     useEffect(() => {
+        if (game && existingShapes.length >= 0) {
+            game.updateShapes(existingShapes);
+        }
+    }, [game, existingShapes]);
+
+    useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             switch (e.key) {
                 case "1":
@@ -171,7 +141,7 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
                 handleSendDrawing,
                 paramsRef.current.roomName,
                 (newScale) => setScale(newScale),
-                existingShapes
+                []
             )
             setGame(game);
 
@@ -180,12 +150,16 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
             game.setStrokeFill(strokeFillRef.current);
             game.setBgFill(bgFillRef.current);
 
+            // if (existingShapes.length > 0) {
+            //     game.updateShapes(existingShapes);
+            // }
+
             return () => {
                 game.destroy();
             }
         }
 
-    }, [canvasRef, existingShapes, handleSendDrawing]);
+    }, [canvasRef, handleSendDrawing]);
 
     useEffect(() => {
         if (activeTool === "grab") {
@@ -209,13 +183,18 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
         }
     }, [game?.outputScale]);
 
+    const noUse = () =>{
+        console.log('no use');
+    }
+
     return (
         <div className={`h-screen overflow-hidden 
             ${(activeTool === "grab") ?
                 (grabbing ? "cursor-grabbing" : "cursor-grab") :
                 "cursor-crosshair"} `}>
 
-            <Toolbar activeTool={activeTool} setActiveTool={setActiveTool} />
+            {/* <Toolbar activeTool={activeTool} setActiveTool={setActiveTool} /> */}
+            <Toolbar2 selectedTool={activeTool} onToolSelect={setActiveTool} canRedo={false} canUndo={false} onRedo={noUse} onUndo={noUse} />
             <Sidebar activeTool={activeTool}
                 strokeFill={strokeFill}
                 setStrokeFill={setStrokeFill}
