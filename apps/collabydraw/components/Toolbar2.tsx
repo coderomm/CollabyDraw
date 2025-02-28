@@ -1,17 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import {
-    MousePointer2,
-    Square,
-    Circle,
-    Minus,
-    Pencil,
-    Eraser,
-    Undo2,
-    Redo2,
-    Diamond,
-} from "lucide-react"
-import type { Tool, ToolType } from "@/types/canvas"
+import type { ToolType } from "@/types/canvas"
+import { tools } from "@/types/Tools"
+import { Redo2, Undo2 } from "lucide-react"
 
 interface ToolbarProps {
     selectedTool: ToolType
@@ -21,50 +12,6 @@ interface ToolbarProps {
     canUndo: boolean
     canRedo: boolean
 }
-
-const tools: Tool[] = [{
-    type: "grab",
-    icon: <MousePointer2 />,
-    shortcut: 1,
-    label: 'Grab'
-},
-{
-    type: "rectangle",
-    icon: <Square />,
-    shortcut: 2,
-    label: 'Rectangle'
-},
-{
-    type: "ellipse",
-    icon: <Circle />,
-    shortcut: 3,
-    label: 'Ellipse'
-},
-{
-    type: "diamond",
-    icon: <Diamond />,
-    shortcut: 4,
-    label: 'Diamond'
-},
-{
-    type: "line",
-    icon: <Minus />,
-    shortcut: 5,
-    label: 'Line'
-},
-{
-    type: "pen",
-    icon: <Pencil />,
-    shortcut: 6,
-    label: 'Arrow'
-},
-{
-    type: "eraser",
-    icon: <Eraser />,
-    shortcut: 7,
-    label: 'Eraser'
-}
-]
 
 export function Toolbar2({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, canRedo }: ToolbarProps) {
     return (
@@ -78,9 +25,11 @@ export function Toolbar2({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, 
                                     variant={selectedTool === tool.type ? "secondary" : "ghost"}
                                     size="icon"
                                     onClick={() => onToolSelect(tool.type)}
+                                    className="xl:relative"
                                 >
                                     {tool.icon}
                                     <span className="sr-only">{tool.label}</span>
+                                    <span className="hidden xl:block absolute -bottom-1 right-1 text-[11px] text-black/60">{tool.shortcut}</span>
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>{tool.label}</TooltipContent>
@@ -88,9 +37,9 @@ export function Toolbar2({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, 
                     ))}
                 </div>
 
-                <div className="w-px h-6 bg-border mx-1" />
-
-                <div className="flex items-center gap-1">
+                {/* <div className="w-px h-6 bg-border mx-1" /> */}
+                {/* add flex, remove hidden */}
+                <div className="items-center gap-1 hidden">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" onClick={onUndo} disabled={!canUndo}>
