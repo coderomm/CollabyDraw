@@ -1,13 +1,14 @@
 "use client"
 
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { Game } from "@/draw/Game";
-import { bgFill, Shape, strokeFill, strokeWidth, ToolType } from "@/types/canvas"
-import { useCallback, useEffect, useRef, useState } from "react"
-// import { Toolbar } from "../toolbar";
+import { bgFill, Shape, strokeFill, strokeWidth, ToolType } from "@/types/canvas";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Scale } from "../Scale";
-import { useWebSocket } from "@/hooks/useWebSocket";
 import { Toolbar2 } from "../Toolbar2";
+import { Sidebar as MobSidebar } from "../sidebar";
+import { MobileNavbar } from "../mobile-navbar";
 
 export function Canvas({ roomName, roomId, userId, userName }: { roomName: string; roomId: string; userId: string; userName: string; }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,6 +25,8 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
     const strokeFillRef = useRef(strokeFill);
     const strokeWidthRef = useRef(strokeWidth);
     const bgFillRef = useRef(bgFill);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [canvasColor, setCanvasColor] = useState("#ffffff");
 
     const { isConnected, messages, sendMessage } = useWebSocket(
         roomId,
@@ -39,7 +42,6 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
     useEffect(() => {
         if (messages.length > 0) {
             try {
-                // Process all messages that contain drawing data
                 messages.forEach((message) => {
                     console.log('message = ', message);
                     try {
@@ -150,10 +152,6 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
             game.setStrokeFill(strokeFillRef.current);
             game.setBgFill(bgFillRef.current);
 
-            // if (existingShapes.length > 0) {
-            //     game.updateShapes(existingShapes);
-            // }
-
             return () => {
                 game.destroy();
             }
@@ -183,7 +181,7 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
         }
     }, [game?.outputScale]);
 
-    const noUse = () =>{
+    const noUse = () => {
         console.log('no use');
     }
 
@@ -193,7 +191,6 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
                 (grabbing ? "cursor-grabbing" : "cursor-grab") :
                 "cursor-crosshair"} `}>
 
-            {/* <Toolbar activeTool={activeTool} setActiveTool={setActiveTool} /> */}
             <Toolbar2 selectedTool={activeTool} onToolSelect={setActiveTool} canRedo={false} canUndo={false} onRedo={noUse} onUndo={noUse} />
             <Sidebar activeTool={activeTool}
                 strokeFill={strokeFill}
@@ -203,7 +200,19 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
                 bgFill={bgFill}
                 setBgFill={setBgFill}
             />
+            <MobSidebar
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+                canvasColor={canvasColor}
+                setCanvasColor={setCanvasColor}
+            />
             <Scale scale={scale} />
+            <MobileNavbar
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                canvasColor={canvasColor}
+                setCanvasColor={setCanvasColor}
+            />
             <canvas ref={canvasRef} />
         </div>
     )

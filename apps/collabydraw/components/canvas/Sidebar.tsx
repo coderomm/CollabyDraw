@@ -1,9 +1,9 @@
 import React from "react";
 import { Separator } from "../ui/separator";
-import { bgFill, ShapeType, strokeFill, strokeWidth } from "@/types/canvas";
+import { bgFill, ToolType, strokeFill, strokeWidth } from "@/types/canvas";
 
 interface SidebarProps {
-    activeTool: ShapeType;
+    activeTool: ToolType;
     strokeFill: strokeFill;
     setStrokeFill: React.Dispatch<React.SetStateAction<strokeFill>>;
     strokeWidth: strokeWidth;
@@ -93,9 +93,6 @@ export const Sidebar = ({
                                 onClick={() => setStrokeWidth(strokeWidth)}
                             />
                         ))}
-
-
-
 
                     </div>
                 </div>
