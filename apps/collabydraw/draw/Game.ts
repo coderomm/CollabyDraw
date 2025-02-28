@@ -391,6 +391,7 @@ export class Game {
       normalizedHeight / 2
     );
 
+    // RoundRect : https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/roundRect
     // RoundRect : https://stackoverflow.com/a/3368118
     this.ctx.beginPath();
     this.ctx.moveTo(posX + radius, posY);
@@ -461,15 +462,87 @@ export class Game {
     strokeFill = strokeFill || "rgba(255, 255, 255)";
     bgFill = bgFill || "rgba(18, 18, 18)";
 
+    const cornerRadiusPercentage: number = 15;
+
     // Calculate the four points of the diamond
     const halfWidth = width / 2;
     const halfHeight = height / 2;
 
+    const normalizedWidth = Math.abs(halfWidth);
+    const normalizedHeight = Math.abs(halfHeight);
+
+    // Calculate the shortest side length along the diamond perimeter
+    // (the distance between adjacent corners)
+    const sideLength = Math.min(
+      Math.sqrt(Math.pow(normalizedWidth, 2) + Math.pow(normalizedHeight, 2)),
+      2 * normalizedWidth,
+      2 * normalizedHeight
+    );
+
+    // Calculate radius based on percentage of the minimum side length
+    // with a safe upper limit to prevent overlap
+    let radius = (sideLength * cornerRadiusPercentage) / 100;
+
+    // Additional constraint: radius should never be more than 40% of the shortest dimension
+    // to prevent corners from overlapping
+    const maxRadius = Math.min(normalizedWidth, normalizedHeight) * 0.4;
+    radius = Math.min(radius, maxRadius);
+
+    const topPoint = { x: centerX, y: centerY - halfHeight };
+    const rightPoint = { x: centerX + halfWidth, y: centerY };
+    const bottomPoint = { x: centerX, y: centerY + halfHeight };
+    const leftPoint = { x: centerX - halfWidth, y: centerY };
+    // const radius = 10
+
+    this.ctx.save();
+
     this.ctx.beginPath();
-    this.ctx.moveTo(centerX, centerY - halfHeight); // Top point
-    this.ctx.lineTo(centerX + halfWidth, centerY); // Right point
-    this.ctx.lineTo(centerX, centerY + halfHeight); // Bottom point
-    this.ctx.lineTo(centerX - halfWidth, centerY); // Left point
+    // this.ctx.moveTo(centerX, centerY - halfHeight); // Top point
+    // this.ctx.lineTo(centerX + halfWidth, centerY); // Right point
+    // this.ctx.lineTo(centerX, centerY + halfHeight); // Bottom point
+    // this.ctx.lineTo(centerX - halfWidth, centerY); // Left point
+    // Calculate distance between points for the offset calculation
+    const distTopLeft = Math.sqrt(
+      Math.pow(topPoint.x - leftPoint.x, 2) +
+        Math.pow(topPoint.y - leftPoint.y, 2)
+    );
+
+    // Start at a point before the first corner (moving from left point toward top point)
+    // This is important for arcTo to work correctly
+    const startX =
+      leftPoint.x + ((topPoint.x - leftPoint.x) * radius) / distTopLeft;
+    const startY =
+      leftPoint.y + ((topPoint.y - leftPoint.y) * radius) / distTopLeft;
+
+    this.ctx.moveTo(startX, startY);
+
+    // Apply arcTo for each corner
+    // Top corner
+    this.ctx.arcTo(topPoint.x, topPoint.y, rightPoint.x, rightPoint.y, radius);
+
+    // Right corner
+    this.ctx.arcTo(
+      rightPoint.x,
+      rightPoint.y,
+      bottomPoint.x,
+      bottomPoint.y,
+      radius
+    );
+
+    // Bottom corner
+    this.ctx.arcTo(
+      bottomPoint.x,
+      bottomPoint.y,
+      leftPoint.x,
+      leftPoint.y,
+      radius
+    );
+
+    // Left corner
+    this.ctx.arcTo(leftPoint.x, leftPoint.y, topPoint.x, topPoint.y, radius);
+
+    // Close the path by connecting back to start
+    this.ctx.lineTo(startX, startY);
     this.ctx.closePath();
 
     this.ctx.fillStyle = bgFill;
