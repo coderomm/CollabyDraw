@@ -1,9 +1,9 @@
 import client from '@repo/db/client';
-import { Canvas } from "@/components/canvas/Canvas";
 import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/utils/auth';
 import Link from 'next/link';
+import { CanvasSheet } from '@/components/canvas/CanvasSheet';
 
 export default async function CanvasPage({ params }: { params: Promise<{ roomName: string }> }) {
     const resolvedParams = params instanceof Promise ? await params : params;
@@ -36,7 +36,7 @@ export default async function CanvasPage({ params }: { params: Promise<{ roomNam
     }
 
     return (
-        <Canvas
+        <CanvasSheet
             roomId={room.id.toString()}
             roomName={room.slug}
             userId={user.id}

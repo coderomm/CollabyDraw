@@ -9,8 +9,10 @@ import { Scale } from "../Scale";
 import { Toolbar2 } from "../Toolbar2";
 import { Sidebar as MobSidebar } from "../sidebar";
 import { MobileNavbar } from "../mobile-navbar";
+import { Button } from "../ui/button";
+import { Menu } from "lucide-react";
 
-export function Canvas({ roomName, roomId, userId, userName }: { roomName: string; roomId: string; userId: string; userName: string; }) {
+export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: string; roomId: string; userId: string; userName: string; }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [game, setGame] = useState<Game>();
     const [scale, setScale] = useState<number>(1);
@@ -26,7 +28,8 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
     const strokeWidthRef = useRef(strokeWidth);
     const bgFillRef = useRef(bgFill);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [canvasColor, setCanvasColor] = useState("#ffffff");
+    const [canvasColor, setCanvasColor] = useState("#FFFF00");
+    const canvasColorRef = useRef(canvasColor);
 
     const { isConnected, messages, sendMessage } = useWebSocket(
         roomId,
@@ -70,6 +73,7 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
         game?.setStrokeWidth(strokeWidth)
         game?.setStrokeFill(strokeFill)
         game?.setBgFill(bgFill)
+        game?.setCanvasBgColor(canvasColor)
     });
 
     useEffect(() => {
@@ -97,6 +101,14 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
             game.updateShapes(existingShapes);
         }
     }, [game, existingShapes]);
+
+    useEffect(() => {
+        if (game && canvasColorRef.current !== canvasColor) {
+            canvasColorRef.current = canvasColor;
+            game.setCanvasBgColor(canvasColor);
+            console.log('Updated canvasColor =', canvasColor);
+        }
+    }, [canvasColor, game]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -140,6 +152,7 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
             const game = new Game(
                 canvasRef.current,
                 paramsRef.current.roomId,
+                canvasColorRef.current,
                 handleSendDrawing,
                 paramsRef.current.roomName,
                 (newScale) => setScale(newScale),
@@ -181,24 +194,32 @@ export function Canvas({ roomName, roomId, userId, userName }: { roomName: strin
         }
     }, [game?.outputScale]);
 
-    const noUse = () => {
-        console.log('no use');
-    }
-
     return (
         <div className={`h-screen overflow-hidden 
             ${(activeTool === "grab") ?
                 (grabbing ? "cursor-grabbing" : "cursor-grab") :
                 "cursor-crosshair"} `}>
 
-            <Toolbar2 selectedTool={activeTool} onToolSelect={setActiveTool} canRedo={false} canUndo={false} onRedo={noUse} onUndo={noUse} />
+            <div className="fixed top-4 left-4 flex items-center justify-center">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="mr-2 bg-[#ececf4] bxs p-2.5 rounded-md"
+                    data-sidebar-trigger
+                >
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Toggle sidebar</span>
+                </Button>
+            </div>
+
+            <Toolbar2 selectedTool={activeTool} onToolSelect={setActiveTool} canRedo={false} canUndo={false} onRedo={() => { }} onUndo={() => { }} />
             <Sidebar activeTool={activeTool}
                 strokeFill={strokeFill}
                 setStrokeFill={setStrokeFill}
                 strokeWidth={strokeWidth}
                 setStrokeWidth={setStrokeWidth}
                 bgFill={bgFill}
-                
                 setBgFill={setBgFill}
             />
             <MobSidebar

@@ -5,6 +5,7 @@ export class Game {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private roomId: string;
+  private canvasBgColor: string;
   private sendMessage: (data: string) => void;
   private existingShape: Shape[];
   private clicked: boolean;
@@ -24,6 +25,7 @@ export class Game {
   constructor(
     canvas: HTMLCanvasElement,
     roomId: string,
+    canvasBgColor: string,
     sendMessage: (data: string) => void,
     roomName: string,
     onScaleChangeCallback: (scale: number) => void,
@@ -31,6 +33,7 @@ export class Game {
   ) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d")!;
+    this.canvasBgColor = canvasBgColor;
     this.roomId = roomId;
     this.sendMessage = sendMessage;
     this.clicked = false;
@@ -40,7 +43,6 @@ export class Game {
     this.onScaleChangeCallback = onScaleChangeCallback;
     this.roomName = roomName;
     this.init();
-    // this.initHandler();
     this.initMouseHandler();
   }
 
@@ -64,27 +66,8 @@ export class Game {
     } catch (error) {
       console.error("Error in init:", error);
     }
-    // console.log(this.existingShape);
     this.clearCanvas();
   }
-
-  // initHandler() {
-  //   this.socket.onmessage = (event) => {
-  //     const data = JSON.parse(event.data);
-
-  //     if (data.type === "draw") {
-  //       const parsedShape = JSON.parse(data.data);
-  //       this.existingShape.push(parsedShape.shape);
-  //       this.clearCanvas();
-  //     } else if (data.type === "eraser") {
-  //       const parsedShape = JSON.parse(data.data);
-  //       this.existingShape = this.existingShape.filter(
-  //         (shape) => JSON.stringify(shape) !== JSON.stringify(parsedShape.shape)
-  //       );
-  //       this.clearCanvas();
-  //     }
-  //   };
-  // }
 
   initMouseHandler() {
     this.canvas.addEventListener("mousedown", this.mouseDownHandler);
@@ -117,6 +100,16 @@ export class Game {
     this.clearCanvas();
   }
 
+  setCanvasBgColor(color: string) {
+    this.ctx.fillStyle = color;
+    console.log("this.canvasColor is = ", color);
+    this.clearCanvas();
+    if (this.canvasBgColor !== color) {
+      this.canvasBgColor = color;
+      this.clearCanvas();
+    }
+  }
+
   clearCanvas() {
     this.ctx.setTransform(this.scale, 0, 0, this.scale, this.panX, this.panY);
     this.ctx.clearRect(
@@ -125,7 +118,8 @@ export class Game {
       this.canvas.width / this.scale,
       this.canvas.height / this.scale
     );
-    this.ctx.fillStyle = "rgba(18, 18, 18)";
+    this.ctx.fillStyle = this.canvasBgColor;
+    // this.setCanvasBgColor(this.canvasBgColor);
     this.ctx.fillRect(
       // Adjusts the offset of the canvas
       -this.panX / this.scale,
