@@ -1,5 +1,9 @@
 import { getRoom } from "@/actions/room";
+import { _generateElementShape } from "@/lib/Shape";
 import { Shape, ToolType } from "@/types/canvas";
+import { ExcalidrawElement, Radians } from "@/types/element-types";
+import { RoughGenerator } from "roughjs/bin/generator";
+import rough from "roughjs/bin/rough";
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -21,7 +25,7 @@ export class Game {
   private strokeWidth: number = 1;
   private strokeFill: string = "rgba(255, 255, 255)";
   private bgFill: string = "rgba(18, 18, 18)";
-
+  private static rg = new RoughGenerator();
   constructor(
     canvas: HTMLCanvasElement,
     roomId: string,
@@ -456,95 +460,142 @@ export class Game {
     strokeFill = strokeFill || "rgba(255, 255, 255)";
     bgFill = bgFill || "rgba(18, 18, 18)";
 
-    const cornerRadiusPercentage: number = 15;
+    const isNew: boolean = false;
 
-    // Calculate the four points of the diamond
-    const halfWidth = width / 2;
-    const halfHeight = height / 2;
+    if (isNew) {
+      const element: ExcalidrawElement = {
+        id: "100",
+        x: centerX - width / 2,
+        y: centerY - height / 2,
+        strokeColor: strokeFill,
+        backgroundColor: bgFill,
+        fillStyle: "cross-hatch",
+        strokeWidth: strokeWidth,
+        strokeStyle: "dotted",
+        roundness: { type: 1, value: 51 },
+        roughness: 1,
+        opacity: 1,
+        width: width,
+        height: height,
+        angle: (Math.PI / 2) as Radians,
+        seed: 1,
+        version: 1,
+        versionNonce: 1,
+        index: null,
+        isDeleted: false,
+        groupIds: [],
+        frameId: null,
+        boundElements: null,
+        updated: 111111,
+        link: null,
+        locked: false,
+        type: "diamond",
+      };
+      const rc = rough.canvas(this.canvas);
+      this.ctx.lineJoin = "round";
+      this.ctx.lineCap = "round";
+      const shape = _generateElementShape(element, Game.rg);
+      if (shape === null) {
+        console.error("_generateElementShape returned null");
+      }
+      rc.draw(shape!);
+    } else {
+      const cornerRadiusPercentage: number = 15;
 
-    const normalizedWidth = Math.abs(halfWidth);
-    const normalizedHeight = Math.abs(halfHeight);
+      // Calculate the four points of the diamond
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
 
-    // Calculate the shortest side length along the diamond perimeter
-    // (the distance between adjacent corners)
-    const sideLength = Math.min(
-      Math.sqrt(Math.pow(normalizedWidth, 2) + Math.pow(normalizedHeight, 2)),
-      2 * normalizedWidth,
-      2 * normalizedHeight
-    );
+      const normalizedWidth = Math.abs(halfWidth);
+      const normalizedHeight = Math.abs(halfHeight);
 
-    // Calculate radius based on percentage of the minimum side length
-    // with a safe upper limit to prevent overlap
-    let radius = (sideLength * cornerRadiusPercentage) / 100;
+      // Calculate the shortest side length along the diamond perimeter
+      // (the distance between adjacent corners)
+      const sideLength = Math.min(
+        Math.sqrt(Math.pow(normalizedWidth, 2) + Math.pow(normalizedHeight, 2)),
+        2 * normalizedWidth,
+        2 * normalizedHeight
+      );
 
-    // Additional constraint: radius should never be more than 40% of the shortest dimension
-    // to prevent corners from overlapping
-    const maxRadius = Math.min(normalizedWidth, normalizedHeight) * 0.4;
-    radius = Math.min(radius, maxRadius);
+      // Calculate radius based on percentage of the minimum side length
+      // with a safe upper limit to prevent overlap
+      let radius = (sideLength * cornerRadiusPercentage) / 100;
 
-    const topPoint = { x: centerX, y: centerY - halfHeight };
-    const rightPoint = { x: centerX + halfWidth, y: centerY };
-    const bottomPoint = { x: centerX, y: centerY + halfHeight };
-    const leftPoint = { x: centerX - halfWidth, y: centerY };
-    // const radius = 10
+      // Additional constraint: radius should never be more than 40% of the shortest dimension
+      // to prevent corners from overlapping
+      const maxRadius = Math.min(normalizedWidth, normalizedHeight) * 0.4;
+      radius = Math.min(radius, maxRadius);
 
-    this.ctx.save();
+      const topPoint = { x: centerX, y: centerY - halfHeight };
+      const rightPoint = { x: centerX + halfWidth, y: centerY };
+      const bottomPoint = { x: centerX, y: centerY + halfHeight };
+      const leftPoint = { x: centerX - halfWidth, y: centerY };
+      // const radius = 10
 
-    this.ctx.beginPath();
-    // this.ctx.moveTo(centerX, centerY - halfHeight); // Top point
-    // this.ctx.lineTo(centerX + halfWidth, centerY); // Right point
-    // this.ctx.lineTo(centerX, centerY + halfHeight); // Bottom point
-    // this.ctx.lineTo(centerX - halfWidth, centerY); // Left point
-    // Calculate distance between points for the offset calculation
-    const distTopLeft = Math.sqrt(
-      Math.pow(topPoint.x - leftPoint.x, 2) +
-        Math.pow(topPoint.y - leftPoint.y, 2)
-    );
+      this.ctx.save();
 
-    // Start at a point before the first corner (moving from left point toward top point)
-    // This is important for arcTo to work correctly
-    const startX =
-      leftPoint.x + ((topPoint.x - leftPoint.x) * radius) / distTopLeft;
-    const startY =
-      leftPoint.y + ((topPoint.y - leftPoint.y) * radius) / distTopLeft;
+      this.ctx.beginPath();
+      // this.ctx.moveTo(centerX, centerY - halfHeight); // Top point
+      // this.ctx.lineTo(centerX + halfWidth, centerY); // Right point
+      // this.ctx.lineTo(centerX, centerY + halfHeight); // Bottom point
+      // this.ctx.lineTo(centerX - halfWidth, centerY); // Left point
+      // Calculate distance between points for the offset calculation
+      const distTopLeft = Math.sqrt(
+        Math.pow(topPoint.x - leftPoint.x, 2) +
+          Math.pow(topPoint.y - leftPoint.y, 2)
+      );
 
-    this.ctx.moveTo(startX, startY);
+      // Start at a point before the first corner (moving from left point toward top point)
+      // This is important for arcTo to work correctly
+      const startX =
+        leftPoint.x + ((topPoint.x - leftPoint.x) * radius) / distTopLeft;
+      const startY =
+        leftPoint.y + ((topPoint.y - leftPoint.y) * radius) / distTopLeft;
 
-    // Apply arcTo for each corner
-    // Top corner
-    this.ctx.arcTo(topPoint.x, topPoint.y, rightPoint.x, rightPoint.y, radius);
+      this.ctx.moveTo(startX, startY);
 
-    // Right corner
-    this.ctx.arcTo(
-      rightPoint.x,
-      rightPoint.y,
-      bottomPoint.x,
-      bottomPoint.y,
-      radius
-    );
+      // Apply arcTo for each corner
+      // Top corner
+      this.ctx.arcTo(
+        topPoint.x,
+        topPoint.y,
+        rightPoint.x,
+        rightPoint.y,
+        radius
+      );
 
-    // Bottom corner
-    this.ctx.arcTo(
-      bottomPoint.x,
-      bottomPoint.y,
-      leftPoint.x,
-      leftPoint.y,
-      radius
-    );
+      // Right corner
+      this.ctx.arcTo(
+        rightPoint.x,
+        rightPoint.y,
+        bottomPoint.x,
+        bottomPoint.y,
+        radius
+      );
 
-    // Left corner
-    this.ctx.arcTo(leftPoint.x, leftPoint.y, topPoint.x, topPoint.y, radius);
+      // Bottom corner
+      this.ctx.arcTo(
+        bottomPoint.x,
+        bottomPoint.y,
+        leftPoint.x,
+        leftPoint.y,
+        radius
+      );
 
-    // Close the path by connecting back to start
-    this.ctx.lineTo(startX, startY);
-    this.ctx.closePath();
+      // Left corner
+      this.ctx.arcTo(leftPoint.x, leftPoint.y, topPoint.x, topPoint.y, radius);
 
-    this.ctx.fillStyle = bgFill;
-    this.ctx.strokeStyle = strokeFill;
-    this.ctx.lineWidth = strokeWidth;
+      // Close the path by connecting back to start
+      this.ctx.lineTo(startX, startY);
+      this.ctx.closePath();
 
-    this.ctx.fill();
-    this.ctx.stroke();
+      this.ctx.fillStyle = bgFill;
+      this.ctx.strokeStyle = strokeFill;
+      this.ctx.lineWidth = strokeWidth;
+
+      this.ctx.fill();
+      this.ctx.stroke();
+    }
   }
 
   drawLine(

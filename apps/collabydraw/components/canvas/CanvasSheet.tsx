@@ -28,7 +28,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
     const strokeWidthRef = useRef(strokeWidth);
     const bgFillRef = useRef(bgFill);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [canvasColor, setCanvasColor] = useState("#FFFF00");
+    const [canvasColor, setCanvasColor] = useState("#000000");
     const canvasColorRef = useRef(canvasColor);
 
     const { isConnected, messages, sendMessage } = useWebSocket(
