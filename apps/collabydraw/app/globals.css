@@ -63,6 +63,23 @@ body {
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --w-bg: #232329;
+    --w-text: #e3e3e8;
+    --w-button-hover-bg: 245, 10%, 21%;
+    --w-border-color: 245, 10%, 21%;
+    --color-promo: #a8a5ff;
+    --RadioGroup-choice-color-on: hsl(0, 0%, 7%);
+    --RadioGroup-choice-background-on: #a8a5ff;
+    --RadioGroup-background: #232329;
+    --RadioGroup-border: #31303b;
+    --RadioGroup-choice-color-off: #a8a5ff;
+    --RadioGroup-choice-color-off-hover: #bbb8ff;
+    --RadioGroup-choice-background-off: #232329;
+    --RadioGroup-choice-background-off-active: #31303b;
+    --RadioGroup-choice-color-on: #121212;
+    --RadioGroup-choice-background-on: rgb(168 165 255);
+    --RadioGroup-choice-background-on-hover: #bbb8ff;
   }
 
   .dark {
@@ -135,10 +152,39 @@ body {
   }
 }
 
+/* Add custom scrollbar styles */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    @apply w-1;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full transition-colors;
+  }
+}
+
 :root {
   --color-surface-lowest: #ffffff;
 }
 
+::-webkit-scrollbar-button {
+  display: none;
+}
+
 .bxs {
   box-shadow: 0 0 0 1px var(--color-surface-lowest);
+}
+
+.RadioGroup__choice {
+  color: var(--RadioGroup-choice-color-on);
+  background: var(--RadioGroup-choice-background-on);
+}
+
+.RadioGroup__choice {
+  color: var(--RadioGroup-choice-color-on);
+  background: var(--RadioGroup-choice-background-on);
 }

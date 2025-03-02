@@ -96,9 +96,9 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
             </div>
 
             {/* Hex input */}
-            <div className="rounded-md border bg-muted/50 p-2">
+            <div className="rounded-lg border bg-[#343a40] hover:bg-[#495057] outline-none border-none p-2">
                 <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">#</span>
+                    <span className="text-sm text-w-text">#</span>
                     {isEditing ? (
                         <div className="flex flex-1 items-center">
                             <Input
@@ -113,11 +113,11 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
                         </div>
                     ) : (
                         <div className="flex flex-1 items-center justify-between">
-                            <span className="text-sm font-mono">{value.replace("#", "")}</span>
+                            <span className="text-sm font-mono text-w-text">{value.replace("#", "")}</span>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 rounded-full hover:bg-accent"
+                                className="text-[var(--RadioGroup-choice-color-on)] bg-[var(--RadioGroup-choice-background-on)] hover:bg-[var(--RadioGroup-choice-background-on-hover)] border-none rounded-lg flex items-center justify-center w-8 h-6 select-none tracking-wide transition-all duration-75 ease-out"
                                 onClick={() => setIsEditing(true)}
                             >
                                 <Edit className="h-4 w-4" />

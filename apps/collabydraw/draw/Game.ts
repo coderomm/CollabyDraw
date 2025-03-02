@@ -530,7 +530,6 @@ export class Game {
       const rightPoint = { x: centerX + halfWidth, y: centerY };
       const bottomPoint = { x: centerX, y: centerY + halfHeight };
       const leftPoint = { x: centerX - halfWidth, y: centerY };
-      // const radius = 10
 
       this.ctx.save();
 
