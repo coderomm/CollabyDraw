@@ -80,6 +80,13 @@ body {
     --RadioGroup-choice-color-on: #121212;
     --RadioGroup-choice-background-on: rgb(168 165 255);
     --RadioGroup-choice-background-on-hover: #bbb8ff;
+    --surface-box-shadow: #ffffff;
+    --d-btn-hover-bg: #31303b;
+    --l-btn-hover-bg: #f1f0ff;
+    --color-surface-low: #ececf4;
+    --icon-fill-color: #1b1b1f;
+    --color-on-primary-container: #030064;
+    --color-surface-primary-container: #e0dfff;
   }
 
   .dark {
@@ -115,6 +122,8 @@ body {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --surface-box-shadow: #121212;
+    --shadow-island: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
   }
 }
 
@@ -139,7 +148,6 @@ body {
     @apply bg-background text-foreground;
   }
 }
-
 
 
 @layer base {
@@ -167,16 +175,18 @@ body {
   }
 }
 
-:root {
-  --color-surface-lowest: #ffffff;
-}
-
 ::-webkit-scrollbar-button {
   display: none;
 }
 
-.bxs {
-  box-shadow: 0 0 0 1px var(--color-surface-lowest);
+.surface-box-shadow,
+.menu-btn-box-shadow {
+  box-shadow: 0 0 0 1px #ffffff;
+}
+
+.dark .surface-box-shadow,
+.dark .menu-btn-box-shadow {
+  box-shadow: 0 0 0 1px #121212;
 }
 
 .RadioGroup__choice {
@@ -187,4 +197,61 @@ body {
 .RadioGroup__choice {
   color: var(--RadioGroup-choice-color-on);
   background: var(--RadioGroup-choice-background-on);
+}
+
+.excalidraw .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  margin-top: .5rem;
+}
+
+.excalidraw .dropdown-menu--mobile {
+  left: 0;
+  width: 100%;
+  row-gap: .75rem;
+}
+
+.excalidraw .App-toolbar-content .dropdown-menu--mobile {
+  bottom: 55px;
+  top: auto;
+}
+
+.excalidraw .Stack {
+  --gap: 0;
+  display: grid;
+  gap: calc(var(--space-factor)* var(--gap));
+}
+
+.excalidraw .Stack_vertical {
+  grid-template-columns: auto;
+  grid-auto-flow: row;
+  grid-auto-rows: min-content;
+}
+
+.excalidraw .dropdown-menu--mobile .dropdown-menu-container {
+  padding: 8px;
+  box-sizing: border-box;
+  box-shadow: var(--shadow-island);
+  border-radius: var(--border-radius-lg);
+  position: relative;
+  transition: box-shadow .5s ease-in-out;
+}
+
+.excalidraw .dropdown-menu .dropdown-menu-container {
+  background-color: var(--island-bg-color);
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  --gap: 2;
+}
+
+.Island {
+  background-color: #ffffff;
+  box-shadow: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
+  transition: box-shadow .5s ease-in-out;
+}
+
+.dark .Island {
+  background-color: var(--w-bg);
+  box-shadow: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
+  transition: box-shadow .5s ease-in-out;
 }

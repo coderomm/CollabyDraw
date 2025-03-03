@@ -41,6 +41,42 @@ export type bgFill =
   | "rgba(30, 70, 101)"
   | "rgba(49, 37, 7)";
 
+export type canvasBg =
+  | "rgba(0, 0, 0, 0)"
+  | "rgba(89, 49, 49)"
+  | "rgba(23, 61, 16)"
+  | "rgba(30, 70, 101)"
+  | "rgba(49, 37, 7)";
+
+export type DEFAULT_CANVAS_BACKGROUND_LIGHT =
+  | "#ffffff"
+  | "#f8f9fa"
+  | "#f5faff"
+  | "#fffce8"
+  | "#fdf8f6";
+
+export type DEFAULT_CANVAS_BACKGROUND_DARK =
+  | "#121212"
+  | "#161718"
+  | "#13171c"
+  | "#181605"
+  | "#1b1615";
+
+export const canvasBgLight: DEFAULT_CANVAS_BACKGROUND_LIGHT[] = [
+  "#ffffff",
+  "#fffce8",
+  "#fdf8f6",
+  "#f8f9fa",
+  "#f5faff",
+];
+export const canvasBgDark: DEFAULT_CANVAS_BACKGROUND_DARK[] = [
+  "#121212",
+  "#13171c",
+  "#161718",
+  "#181605",
+  "#1b1615",
+];
+
 export type Shape =
   | {
       type: "rectangle";

@@ -65,7 +65,11 @@ export default {
         "w-text": "var(--w-text)",
         "w-button-hover-bg": "hsl(var(--w-button-hover-bg))",
         "w-border-color": "hsl(var(--w-border-color))",
+        "d-btn-hover-bg": "var(--d-btn-hover-bg)",
         "color-promo": "var(--color-promo)",
+        "light-btn-bg": "var(--color-surface-low)",
+        "light-btn-hover-bg": "var(--l-btn-hover-bg)",
+        "icon-fill-color-d":"var(--icon-fill-color)",
       },
       borderRadius: {
         lg: "var(--radius)",

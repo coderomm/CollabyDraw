@@ -7,27 +7,26 @@ import { Check, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { canvasBgDark, canvasBgLight, DEFAULT_CANVAS_BACKGROUND_DARK, DEFAULT_CANVAS_BACKGROUND_LIGHT } from "@/types/canvas"
+import { useTheme } from "next-themes"
 
 interface ColorPickerProps {
     value: string
     onChange: (color: string) => void
 }
 
-// Predefined colors
-const predefinedColors = [
-    "#000000", // Black
-    "#343a40", // Dark gray
-    "#6c757d", // Gray
-    "#606c38", // Olive
-    "#7f5539", // Brown
-    "#ffffff", // White
-]
+type canvasBgType = DEFAULT_CANVAS_BACKGROUND_LIGHT[] | DEFAULT_CANVAS_BACKGROUND_DARK[];
 
 export function ColorPicker({ value, onChange }: ColorPickerProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [inputValue, setInputValue] = useState(value)
+    const { theme } = useTheme()
+    const [canvasBg, setCanvasBg] = useState<canvasBgType>(theme === "dark" ? canvasBgDark : canvasBgLight);
 
-    // Update input value when the external value changes
+    useEffect(() => {
+        setCanvasBg(theme === "dark" ? canvasBgDark : canvasBgLight);
+    }, [theme])
+
     useEffect(() => {
         setInputValue(value)
     }, [value])
@@ -45,13 +44,11 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
     }
 
     const handleInputSubmit = () => {
-        // Basic validation for hex color
         const isValidHex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(inputValue)
 
         if (isValidHex) {
             onChange(inputValue)
         } else {
-            // Reset to current value if invalid
             setInputValue(value)
         }
 
@@ -71,7 +68,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
         <div className="space-y-3">
             {/* Color swatches */}
             <div className="grid grid-cols-6 gap-2">
-                {predefinedColors.map((color) => (
+                {canvasBg.map((color) => (
                     <button
                         key={color}
                         className={cn(
@@ -86,7 +83,6 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
                             <Check
                                 className={cn(
                                     "h-4 w-4 mx-auto",
-                                    // Ensure check is visible on any background
                                     color === "#ffffff" ? "text-black" : "text-white",
                                 )}
                             />
@@ -96,9 +92,9 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
             </div>
 
             {/* Hex input */}
-            <div className="rounded-lg border bg-[#343a40] hover:bg-[#495057] outline-none border-none p-2">
+            <div className="rounded-lg border dark:bg-[#343a40] dark:hover:bg-[#495057] outline-none border-none p-2">
                 <div className="flex items-center gap-2">
-                    <span className="text-sm text-w-text">#</span>
+                    <span className="text-sm dark:text-w-text">#</span>
                     {isEditing ? (
                         <div className="flex flex-1 items-center">
                             <Input
@@ -113,11 +109,11 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
                         </div>
                     ) : (
                         <div className="flex flex-1 items-center justify-between">
-                            <span className="text-sm font-mono text-w-text">{value.replace("#", "")}</span>
+                            <span className="text-sm font-mono dark:text-w-text">{value.replace("#", "")}</span>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="text-[var(--RadioGroup-choice-color-on)] bg-[var(--RadioGroup-choice-background-on)] hover:bg-[var(--RadioGroup-choice-background-on-hover)] border-none rounded-lg flex items-center justify-center w-8 h-6 select-none tracking-wide transition-all duration-75 ease-out"
+                                className="dark:text-[var(--RadioGroup-choice-color-on)] dark:bg-[var(--RadioGroup-choice-background-on)] dark:hover:bg-[var(--RadioGroup-choice-background-on-hover)] border-none rounded-lg flex items-center justify-center w-8 h-6 select-none tracking-wide transition-all duration-75 ease-out"
                                 onClick={() => setIsEditing(true)}
                             >
                                 <Edit className="h-4 w-4" />

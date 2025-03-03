@@ -16,7 +16,7 @@ interface ToolbarProps {
 export function Toolbar2({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, canRedo }: ToolbarProps) {
     return (
         <TooltipProvider delayDuration={0}>
-            <div className="fixed top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 bg-white rounded-lg border shadow-lg">
+            <div className="fixed top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 rounded-lg Island">
                 <div className="flex items-center gap-1">
                     {tools.map((tool) => (
                         <Tooltip key={tool.type}>
@@ -25,7 +25,7 @@ export function Toolbar2({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, 
                                     variant={selectedTool === tool.type ? "secondary" : "ghost"}
                                     size="icon"
                                     onClick={() => onToolSelect(tool.type)}
-                                    className="xl:relative"
+                                    className={`xl:relative text-icon-fill-color-d hover:bg-light-btn-hover-bg ${selectedTool === tool.type ? 'bg-[var(--color-surface-primary-container)] text-[var(--color-on-primary-container)]' : ''}`}
                                 >
                                     {tool.icon}
                                     <span className="sr-only">{tool.label}</span>
