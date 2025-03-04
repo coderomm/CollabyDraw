@@ -112,9 +112,14 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
         if (game && canvasColorRef.current !== canvasColor) {
             canvasColorRef.current = canvasColor;
             game.setCanvasBgColor(canvasColor);
-            console.log('Updated canvasColor =', canvasColor);
         }
     }, [canvasColor, game]);
+
+    useEffect(() => {
+        if (game) {
+            game.setScale(scale);
+        }
+    }, [scale, game]);    
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -234,7 +239,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                 canvasColor={canvasColor}
                 setCanvasColor={setCanvasColor}
             />
-            <Scale scale={scale} />
+            <Scale scale={scale} setScale={setScale} />
             <MobileNavbar
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}

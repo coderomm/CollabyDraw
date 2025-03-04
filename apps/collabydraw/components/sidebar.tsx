@@ -100,7 +100,7 @@ export function Sidebar({ isOpen, onClose, canvasColor, setCanvasColor }: Sideba
                     </Button>
 
                     {/* Menu items */}
-                    <div className="flex-1 overflow-auto py-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-[#343a40] hover:scrollbar-thumb-[#495057] dark:scrollbar-thumb-muted-foreground/20 dark:hover:scrollbar-thumb-muted-foreground/30">
+                    <div className="flex-1 overflow-auto py-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-scrollbar-thumb hover:scrollbar-hover-scrollbar-thumb-hover">
                         <nav className="grid gap-1 px-2">
                             <SidebarItem icon={Command} label="Command palette" shortcut="Ctrl+/" />
                             <SidebarItem icon={Search} label="Find on canvas" shortcut="Ctrl+F" />

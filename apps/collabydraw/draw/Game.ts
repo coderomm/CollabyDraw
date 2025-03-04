@@ -782,4 +782,17 @@ export class Game {
       this.onScaleChangeCallback(scale);
     }
   }
+
+  setScale(newScale: number) {
+    const rect = this.canvas.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    this.panX -= centerX * (newScale - this.scale);
+    this.panY -= centerY * (newScale - this.scale);
+
+    this.scale = newScale;
+    this.onScaleChange(this.scale);
+    this.clearCanvas();
+  }
 }

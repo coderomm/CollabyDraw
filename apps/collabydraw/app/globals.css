@@ -85,8 +85,15 @@ body {
     --l-btn-hover-bg: #f1f0ff;
     --color-surface-low: #ececf4;
     --icon-fill-color: #1b1b1f;
+    --icon-fill-color-d: #e0dfff;
+    --text-primary-color: #1b1b1f;
     --color-on-primary-container: #030064;
     --color-surface-primary-container: #e0dfff;
+    --d-selected-tool-bg:#403e6a;
+    --scrollbar-thumb:#ced4da;
+    --scrollbar-thumb-hover: #adb5bd;
+    --color-slider-track: #ccccff;
+    --color-slider-thumb: #3d3d3d;
   }
 
   .dark {
@@ -254,4 +261,26 @@ body {
   background-color: var(--w-bg);
   box-shadow: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
   transition: box-shadow .5s ease-in-out;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 3px
+}
+
+select::-webkit-scrollbar {
+  width: 10px
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover)
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-thumb)
 }

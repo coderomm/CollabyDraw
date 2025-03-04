@@ -1,54 +1,58 @@
-import { Minus, Plus } from "lucide-react"
-import { Button } from "./ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import { Minus, Plus } from "lucide-react";
+import { Button } from "./ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
-export const Scale = ({ scale }: { scale: number }) => {
+export const Scale = ({
+    scale,
+    setScale
+}: { scale: number; setScale: React.Dispatch<React.SetStateAction<number>> }) => {
+
+    const zoomIn = () => {
+        setScale((prevScale: number) => Math.min(prevScale * 1.1, 5));
+    };
+
+    const zoomOut = () => {
+        setScale(prevScale => Math.max(prevScale * 0.9, 0.2));
+    };
+
+    const resetScale = () => {
+        setScale(1);
+    };
+
     return (
-        <TooltipProvider delayDuration={0}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                        variant={selectedTool === tool.type ? "secondary" : "ghost"}
-                        size="icon"
-                        onClick={() => onToolSelect(tool.type)}
-                        className={`xl:relative text-icon-fill-color-d hover:bg-light-btn-hover-bg ${selectedTool === tool.type ? 'bg-[var(--color-surface-primary-container)] text-[var(--color-on-primary-container)]' : ''}`}
-                    >
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent></TooltipContent>
-            </Tooltip>
-            <div className="w-fit py-2 px-4 fixed bottom-10 left-10">
-                <div className="flex bg-[#232329] px-4 py-2 rounded-md gap-3">
-                    <p className="text-white">{Math.round(scale * 100)}%</p>
-                </div>
-            </div>
-            <div className="flex items-center border rounded-md overflow-hidden">
-                <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={zoomOut} className="h-8 w-8 rounded-none">
-                                <Minus className="h-4 w-4" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent></TooltipContent>
-                    </Tooltip>
-                    <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div className="px-3 py-1 border-l border-r min-w-[70px] text-center">{Math.round(scale * 100)}%</div>
-                            </TooltipTrigger>
-                            <TooltipContent></TooltipContent>
-                        </Tooltip>
-                        <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={zoomIn} className="h-8 w-8 rounded-none">
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent></TooltipContent>
-                            </Tooltip>
-                        </div>
-                    </TooltipProvider>
-                    )
-}
+        <div className="fixed bottom-4 left-4 rounded-lg flex items-center bg-white dark:bg-w-bg surface-box-shadow">
+            <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={zoomOut} className="w-9 h-9 rounded-l-lg rounded-r-none bg-light-btn-bg text-text-primary-color dark:bg-w-bg dark:hover:bg-d-btn-hover-bg dark:text-w-text select-none">
+                            <Minus className="h-4 w-4" />
+                        </Button> 
+                    </TooltipTrigger>
+                    <TooltipContent className="dark:bg-w-bg dark:text-white">Zoom Out</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={resetScale} className="w-14 px-3 h-9 rounded-none bg-light-btn-bg text-text-primary-color dark:bg-w-bg dark:hover:bg-d-btn-hover-bg dark:text-w-text select-none">
+                            {Math.round(scale * 100)}%
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="dark:bg-w-bg dark:text-white">Reset Scale</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={zoomIn} className="w-9 h-9 rounded-r-lg rounded-l-none bg-light-btn-bg text-text-primary-color dark:bg-w-bg dark:hover:bg-d-btn-hover-bg dark:text-w-text select-none">
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="dark:bg-w-bg dark:text-white">Zoom In</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
+    );
+};
