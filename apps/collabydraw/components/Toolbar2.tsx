@@ -29,7 +29,7 @@ export function Toolbar2({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, 
                                 >
                                     {tool.icon}
                                     <span className="sr-only">{tool.label}</span>
-                                    <span className="hidden xl:block absolute -bottom-1 right-1 text-[11px] text-black/60">{tool.shortcut}</span>
+                                    <span className="hidden xl:block absolute -bottom-1 right-1 text-[11px] text-black/60 dark:text-icon-fill-color-d">{tool.shortcut}</span>
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>{tool.label}</TooltipContent>

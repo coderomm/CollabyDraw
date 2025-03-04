@@ -66,8 +66,8 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 
     return (
         <div className="space-y-3">
-            {/* Color swatches */}
-            <div className="grid grid-cols-6 gap-2">
+            {/* Color swatches ` */}
+            <div className="flex items-center justify-between">
                 {canvasBg.map((color) => (
                     <button
                         key={color}

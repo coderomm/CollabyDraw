@@ -32,15 +32,10 @@ interface SidebarProps {
     setCanvasColor: (color: string) => void
 }
 
-export function MenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: SidebarProps) {
+export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: SidebarProps) {
     const [clearDialogOpen, setClearDialogOpen] = useState(false)
     const { theme, setTheme } = useTheme()
 
-    useEffect(() => {
-        console.log('current theme = ', theme)
-    }, [theme])
-
-    // Close sidebar when clicking outside on mobile
     useEffect(() => {
         const handleOutsideClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement
@@ -65,6 +60,7 @@ export function MenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: Side
 
     return (
         <>
+
             {/* Clear Canvas Confirmation Dialog */}
             <ConfirmDialog
                 open={clearDialogOpen}
@@ -76,22 +72,19 @@ export function MenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: Side
             />
 
             {/* Sidebar */}
+            {/* fixed inset-y-0 left-0 z-50 w-72 border-r bg-background dark:bg-w-bg transition-transform duration-300 ease-in-out md:z-30 */}
             <aside
                 data-sidebar
-                className={cn(
-                    "fixed inset-y-0 left-0 z-50 w-72 border-r bg-background dark:bg-w-bg transition-transform duration-300 ease-in-out md:z-30",
-                    isOpen ? "translate-x-0" : "-translate-x-full",
-                )}
-            >
-                <div className="flex h-full flex-col">
+                className={cn("absolute top-full bg-background dark:bg-w-bg rounded-lg transition-transform duration-300 ease-in-out md:z-30 mt-2")}>
+                <div className="flex h-[calc(100vh-150px)] flex-col Island rounded-lg">
                     {/* Close button - mobile only */}
-                    <Button variant="ghost" size="icon" className="absolute right-4 top-4 md:hidden" onClick={onClose}>
+                    <Button variant="ghost" size="icon" className="absolute right-4 top-4 hidden" onClick={onClose}>
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close sidebar</span>
                     </Button>
 
                     {/* Menu items */}
-                    <div className="flex-1 overflow-auto py-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-[#343a40] hover:scrollbar-thumb-[#495057] dark:scrollbar-thumb-muted-foreground/20 dark:hover:scrollbar-thumb-muted-foreground/30">
+                    <div className="flex-1 overflow-auto py-1 custom-scrollbar">
                         <nav className="grid gap-1 px-2">
                             <SidebarItem icon={Command} label="Command palette" shortcut="Ctrl+/" />
                             <SidebarItem icon={Search} label="Find on canvas" shortcut="Ctrl+F" />

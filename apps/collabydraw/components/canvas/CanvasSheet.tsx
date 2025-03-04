@@ -12,6 +12,7 @@ import { MobileNavbar } from "../mobile-navbar";
 import { Button } from "../ui/button";
 import { Menu } from "lucide-react";
 import { useTheme } from "next-themes";
+import { MainMenuStack } from "../menu-stack";
 
 export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: string; roomId: string; userId: string; userName: string; }) {
     const { theme } = useTheme()
@@ -119,7 +120,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
         if (game) {
             game.setScale(scale);
         }
-    }, [scale, game]);    
+    }, [scale, game]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -212,16 +213,26 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                 "cursor-crosshair"} `}>
 
             <div className="fixed top-4 left-4 flex items-center justify-center">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="mr-2 bg-[#ececf4] dark:bg-w-bg dark:hover:bg-w-button-hover-bg border-none surface-box-shadow p-2.5 rounded-lg"
-                    data-sidebar-trigger
-                >
-                    <Menu className="h-5 w-5" />
-                    <span className="sr-only">Toggle sidebar</span>
-                </Button>
+                <div className="relative">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="mr-2 bg-[#ececf4] dark:bg-w-bg dark:hover:bg-w-button-hover-bg border-none surface-box-shadow p-2.5 rounded-lg"
+                        data-sidebar-trigger
+                    >
+                        <Menu className="h-5 w-5" />
+                        <span className="sr-only">Toggle sidebar</span>
+                    </Button>
+                    {sidebarOpen && (
+                        <MainMenuStack
+                            isOpen={sidebarOpen}
+                            onClose={() => setSidebarOpen(false)}
+                            canvasColor={canvasColor}
+                            setCanvasColor={setCanvasColor}
+                        />
+                    )}
+                </div>
             </div>
 
             <Toolbar2 selectedTool={activeTool} onToolSelect={setActiveTool} canRedo={false} canUndo={false} onRedo={() => { }} onUndo={() => { }} />
@@ -233,12 +244,13 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                 bgFill={bgFill}
                 setBgFill={setBgFill}
             />
-            <MobSidebar
+            {/* <MobSidebar
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
                 canvasColor={canvasColor}
                 setCanvasColor={setCanvasColor}
-            />
+            /> */}
+
             <Scale scale={scale} setScale={setScale} />
             <MobileNavbar
                 sidebarOpen={sidebarOpen}

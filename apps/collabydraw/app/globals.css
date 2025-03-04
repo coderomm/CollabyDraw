@@ -89,8 +89,8 @@ body {
     --text-primary-color: #1b1b1f;
     --color-on-primary-container: #030064;
     --color-surface-primary-container: #e0dfff;
-    --d-selected-tool-bg:#403e6a;
-    --scrollbar-thumb:#ced4da;
+    --d-selected-tool-bg: #403e6a;
+    --scrollbar-thumb: #ced4da;
     --scrollbar-thumb-hover: #adb5bd;
     --color-slider-track: #ccccff;
     --color-slider-thumb: #3d3d3d;
@@ -168,7 +168,7 @@ body {
 }
 
 /* Add custom scrollbar styles */
-@layer utilities {
+/* @layer utilities {
   .scrollbar-thin::-webkit-scrollbar {
     @apply w-1;
   }
@@ -180,10 +180,53 @@ body {
   .scrollbar-thin::-webkit-scrollbar-thumb {
     @apply rounded-full transition-colors;
   }
+} */
+
+/* For WebKit browsers (Chrome, Edge, Safari, Opera) */
+@supports (-webkit-appearance: none) {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    /* Adjust width */
+    height: 8px;
+    /* For horizontal scrollbar */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    /* Track background */
+    background: transparent;
+    border-radius: 50px;
+    /* Rounded corners */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #ced4da;
+    /* Scrollbar color */
+    border-radius: 50px;
+    /* Rounded corners */
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #343a40;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #f1f1f1;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #403e6a;
+  }
 }
 
-::-webkit-scrollbar-button {
-  display: none;
+/* Firefox-specific scrollbar styling */
+@-moz-document url-prefix() {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    /* "auto" | "thin" | "none" */
+    scrollbar-color: transparent #ced4da;
+    /* thumb color | track color */
+  }
 }
 
 .surface-box-shadow,
@@ -204,51 +247,6 @@ body {
 .RadioGroup__choice {
   color: var(--RadioGroup-choice-color-on);
   background: var(--RadioGroup-choice-background-on);
-}
-
-.excalidraw .dropdown-menu {
-  position: absolute;
-  top: 100%;
-  margin-top: .5rem;
-}
-
-.excalidraw .dropdown-menu--mobile {
-  left: 0;
-  width: 100%;
-  row-gap: .75rem;
-}
-
-.excalidraw .App-toolbar-content .dropdown-menu--mobile {
-  bottom: 55px;
-  top: auto;
-}
-
-.excalidraw .Stack {
-  --gap: 0;
-  display: grid;
-  gap: calc(var(--space-factor)* var(--gap));
-}
-
-.excalidraw .Stack_vertical {
-  grid-template-columns: auto;
-  grid-auto-flow: row;
-  grid-auto-rows: min-content;
-}
-
-.excalidraw .dropdown-menu--mobile .dropdown-menu-container {
-  padding: 8px;
-  box-sizing: border-box;
-  box-shadow: var(--shadow-island);
-  border-radius: var(--border-radius-lg);
-  position: relative;
-  transition: box-shadow .5s ease-in-out;
-}
-
-.excalidraw .dropdown-menu .dropdown-menu-container {
-  background-color: var(--island-bg-color);
-  max-height: calc(100vh - 150px);
-  overflow-y: auto;
-  --gap: 2;
 }
 
 .Island {
