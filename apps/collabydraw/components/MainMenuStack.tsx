@@ -105,7 +105,7 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: 
                     <div className="border-t p-4">
                         <div className="mb-4 w-full flex items-center justify-between gap-x-2">
                             <h3 className="mb-2 text-sm font-medium dark:text-w-text flex items-center w-full text-ellipsis overflow-hidden whitespace-nowrap">Theme</h3>
-                            <div className="flex gap-1 box-border flex-row items-start p-[3px] rounded-[10px] dark:bg-w-bg border border-[var(--RadioGroup-border)]">
+                            <div className="flex gap-1 cu box-border flex-row items-start p-[3px] rounded-[10px] dark:bg-w-bg border border-[var(--RadioGroup-border)]">
                                 <Button onClick={() => setTheme("light")} variant="outline" size="icon" className={`${theme === 'light' ? 'text-[var(--RadioGroup-choice-color-on)] bg-[var(--RadioGroup-choice-background-on)] hover:bg-[var(--RadioGroup-choice-background-on-hover)]' : 'dark:text-[var(--RadioGroup-choice-color-off)] dark:bg-[var(--RadioGroup-choice-background-off)] hover:text-[var(--RadioGroup-choice-color-off-hover)] dark:hover:bg-transparent'} border-none rounded-lg flex items-center justify-center w-8 h-6 select-none tracking-wide transition-all duration-75 ease-out`}>
                                     <Sun className="h-4 w-4" />
                                     <span className="sr-only">Light mode</span>

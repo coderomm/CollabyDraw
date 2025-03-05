@@ -2,17 +2,17 @@
 
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { Game } from "@/draw/Game";
-import { bgFill, canvasBgDark, canvasBgLight, Shape, strokeFill, strokeWidth, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgDark, canvasBgLight, Shape, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sidebar } from "./Sidebar";
+// import { Sidebar } from "./Sidebar";
 import { Scale } from "../Scale";
 import { Toolbar2 } from "../Toolbar2";
-import { Sidebar as MobSidebar } from "../sidebar";
 import { MobileNavbar } from "../mobile-navbar";
 import { Button } from "../ui/button";
 import { Menu } from "lucide-react";
 import { useTheme } from "next-themes";
-import { MainMenuStack } from "../menu-stack";
+import { MainMenuStack } from "../MainMenuStack";
+import { ToolMenuStack } from "../ToolMenuStack";
 
 export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: string; roomId: string; userId: string; userName: string; }) {
     const { theme } = useTheme()
@@ -20,9 +20,9 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
     const [game, setGame] = useState<Game>();
     const [scale, setScale] = useState<number>(1);
     const [activeTool, setActiveTool] = useState<ToolType>("grab");
-    const [strokeFill, setStrokeFill] = useState<strokeFill>("rgba(211, 211, 211)");
-    const [strokeWidth, setStrokeWidth] = useState<strokeWidth>(1);
-    const [bgFill, setBgFill] = useState<bgFill>("rgba(0, 0, 0, 0)");
+    const [strokeFill, setStrokeFill] = useState<StrokeFill>("#f08c00");
+    const [strokeWidth, setStrokeWidth] = useState<StrokeWidth>(1);
+    const [bgFill, setBgFill] = useState<BgFill>("#00000000");
     const [grabbing, setGrabbing] = useState(false);
     const [existingShapes, setExistingShapes] = useState<Shape[]>([]);
     const paramsRef = useRef({ roomId, roomName, userId, userName });
@@ -232,18 +232,26 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                             setCanvasColor={setCanvasColor}
                         />
                     )}
+                    <ToolMenuStack activeTool={activeTool}
+                        strokeFill={strokeFill}
+                        setStrokeFill={setStrokeFill}
+                        strokeWidth={strokeWidth}
+                        setStrokeWidth={setStrokeWidth}
+                        bgFill={bgFill}
+                        setBgFill={setBgFill}
+                    />
                 </div>
             </div>
 
             <Toolbar2 selectedTool={activeTool} onToolSelect={setActiveTool} canRedo={false} canUndo={false} onRedo={() => { }} onUndo={() => { }} />
-            <Sidebar activeTool={activeTool}
+            {/* <Sidebar activeTool={activeTool}
                 strokeFill={strokeFill}
                 setStrokeFill={setStrokeFill}
                 strokeWidth={strokeWidth}
                 setStrokeWidth={setStrokeWidth}
                 bgFill={bgFill}
                 setBgFill={setBgFill}
-            />
+            /> */}
             {/* <MobSidebar
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}

@@ -16,8 +16,6 @@ export type ToolType =
   | "text"
   | "eraser";
 
-export type StrokeStyle = "solid" | "dashed" | "dotted";
-
 export type Tool = {
   type: ToolType;
   icon: React.ReactNode;
@@ -25,57 +23,48 @@ export type Tool = {
   shortcut: number;
 };
 
-export type strokeWidth = 1 | 2 | 4;
+export type StrokeWidth = 1 | 2 | 4;
+export type StrokeStyle = "solid" | "dashed" | "dotted";
+export type StrokeFill =
+  | "#1e1e1e"
+  | "#e03131"
+  | "#2f9e44"
+  | "#1971c2"
+  | "#f08c00";
+  
+export type BgFill =
+  | "#00000000"
+  | "#ffc9c9"
+  | "#b2f2bb"
+  | "#a5d8ff"
+  | "#ffec99";
 
-export type strokeFill =
-  | "rgba(211, 211, 211)"
-  | "rgba(242, 154, 158)"
-  | "rgba(77, 161, 83)"
-  | "rgba(98, 177, 247)"
-  | "rgba(183, 98, 42)";
+// export type canvasBg =
+//   | "rgba(0, 0, 0, 0)"
+//   | "rgba(89, 49, 49)"
+//   | "rgba(23, 61, 16)"
+//   | "rgba(30, 70, 101)"
+//   | "rgba(49, 37, 7)";
 
-export type bgFill =
-  | "rgba(0, 0, 0, 0)"
-  | "rgba(89, 49, 49)"
-  | "rgba(23, 61, 16)"
-  | "rgba(30, 70, 101)"
-  | "rgba(49, 37, 7)";
-
-export type canvasBg =
-  | "rgba(0, 0, 0, 0)"
-  | "rgba(89, 49, 49)"
-  | "rgba(23, 61, 16)"
-  | "rgba(30, 70, 101)"
-  | "rgba(49, 37, 7)";
-
-export type DEFAULT_CANVAS_BACKGROUND_LIGHT =
-  | "#ffffff"
-  | "#f8f9fa"
-  | "#f5faff"
-  | "#fffce8"
-  | "#fdf8f6";
-
-export type DEFAULT_CANVAS_BACKGROUND_DARK =
-  | "#121212"
-  | "#161718"
-  | "#13171c"
-  | "#181605"
-  | "#1b1615";
-
-export const canvasBgLight: DEFAULT_CANVAS_BACKGROUND_LIGHT[] = [
+export const canvasBgLight = [
   "#ffffff",
-  "#fffce8",
-  "#fdf8f6",
   "#f8f9fa",
   "#f5faff",
-];
-export const canvasBgDark: DEFAULT_CANVAS_BACKGROUND_DARK[] = [
+  "#fffce8",
+  "#fdf8f6",
+] as const;
+
+export const canvasBgDark = [
   "#121212",
-  "#13171c",
   "#161718",
+  "#13171c",
   "#181605",
   "#1b1615",
-];
+] as const;
+
+export type DEFAULT_CANVAS_BACKGROUND_LIGHT = (typeof canvasBgLight)[number];
+
+export type DEFAULT_CANVAS_BACKGROUND_DARK = (typeof canvasBgDark)[number];
 
 export type Shape =
   | {

@@ -1,15 +1,15 @@
 import React from "react";
 import { Separator } from "../ui/separator";
-import { bgFill, ToolType, strokeFill, strokeWidth } from "@/types/canvas";
+import { ToolType, StrokeFill, StrokeWidth, BgFill } from "@/types/canvas";
 
 interface SidebarProps {
     activeTool: ToolType;
-    strokeFill: strokeFill;
-    setStrokeFill: React.Dispatch<React.SetStateAction<strokeFill>>;
-    strokeWidth: strokeWidth;
-    setStrokeWidth: React.Dispatch<React.SetStateAction<strokeWidth>>;
-    bgFill: bgFill;
-    setBgFill: React.Dispatch<React.SetStateAction<bgFill>>;
+    strokeFill: StrokeFill;
+    setStrokeFill: React.Dispatch<React.SetStateAction<StrokeFill>>;
+    strokeWidth: StrokeWidth;
+    setStrokeWidth: React.Dispatch<React.SetStateAction<StrokeWidth>>;
+    bgFill: BgFill;
+    setBgFill: React.Dispatch<React.SetStateAction<BgFill>>;
 }
 
 export const Sidebar = ({
@@ -20,23 +20,11 @@ export const Sidebar = ({
     bgFill,
     setBgFill,
 }: SidebarProps) => {
-    const strokeFills: strokeFill[] = [
-        "rgba(211, 211, 211)",
-        "rgba(242, 154, 158)",
-        "rgba(77, 161, 83)",
-        "rgba(98, 177, 247)",
-        "rgba(183, 98, 42)",
-    ];
+    const strokeFills: StrokeFill[] = ["#1971c2", "#1e1e1e", "#2f9e44", "#e03131", "#f08c00"];
 
-    const strokeWidths: strokeWidth[] = [1, 2, 4]
+    const strokeWidths: StrokeWidth[] = [1, 2, 4]
 
-    const bgFills: bgFill[] = [
-        "rgba(0, 0, 0, 0)",
-        "rgba(89, 49, 49)",
-        "rgba(23, 61, 16)",
-        "rgba(30, 70, 101)",
-        "rgba(49, 37, 7)",
-    ];
+    const bgFills: BgFill[] = ["#00000000", "#a5d8ff", "#b2f2bb", "#ffc9c9", "#ffec99"];
 
     if (activeTool === "eraser" || activeTool === "grab") {
         return;
@@ -59,8 +47,6 @@ export const Sidebar = ({
                         <Separator orientation="vertical" className="bg-white/20 mx-2" />
 
                         <ColorFillIndicator color={strokeFill} />
-
-
                     </div>
                 </div>
 
@@ -86,11 +72,11 @@ export const Sidebar = ({
                 <div>
                     <p className="text-sm text-white/70 mb-1">Stroke Width</p>
                     <div className="flex gap-2 h-7 items-center">
-                        {strokeWidths.map((strokeWidth, index) => (
+                        {strokeWidths.map((sw, index) => (
                             <StrokeWidthIndicator
                                 key={index}
-                                strokeWidth={strokeWidth}
-                                onClick={() => setStrokeWidth(strokeWidth)}
+                                strokeWidth={sw}
+                                onClick={() => setStrokeWidth(sw)}
                             />
                         ))}
 
@@ -105,7 +91,7 @@ const ColorFillIndicator = ({
     color,
     onClick,
 }: {
-    color: strokeFill;
+    color: StrokeFill;
     onClick?: () => void;
 }) => {
     return (
@@ -123,12 +109,12 @@ const ColorBgIndicator = ({
     color,
     onClick,
 }: {
-    color: bgFill;
+    color: BgFill;
     onClick?: () => void;
 }) => {
     return (
         <div
-            className={"w-[1.4rem] h-[1.4rem] rounded-sm cursor-pointer hover:border border-white/70 transition-all " + `${color === "rgba(0, 0, 0, 0)" ? "border border-white/30" : ""}`}
+            className={"w-[1.4rem] h-[1.4rem] rounded-sm cursor-pointer hover:border border-white/70 transition-all " + `${color === "#00000000" ? "border border-white/30" : ""}`}
             style={{ backgroundColor: color }}
             onClick={onClick}
         ></div>
@@ -136,7 +122,7 @@ const ColorBgIndicator = ({
 };
 
 
-const StrokeWidthIndicator = ({ strokeWidth, onClick }: { strokeWidth: strokeWidth, onClick?: () => void }) => {
+const StrokeWidthIndicator = ({ strokeWidth, onClick }: { strokeWidth: StrokeWidth, onClick?: () => void }) => {
     return <div
         className={"w-[1.4rem] h-[1.4rem] rounded-sm cursor-pointer hover:border-white-70 border-white/10 border transition-all flex items-center"}
         onClick={onClick}
