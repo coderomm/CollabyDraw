@@ -3,11 +3,12 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Check } from "lucide-react"
+import { Check, Edit, Paintbrush } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { BgFill, StrokeFill } from "@/types/canvas"
 import { Separator } from "./ui/separator"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 interface ColorBoardProps {
     mode: "Shape" | "CanvasSheet"
@@ -24,8 +25,6 @@ export function ColorBoard({
     bgFill,
     setBgFill
 }: ColorBoardProps) {
-    const [isStrokeFillEditing, setIsStrokeFillEditing] = useState(false)
-    const [isBgFillEditing, setIsBgFillEditing] = useState(false)
     const [strokeFillInputValue, setStrokeFillInputValue] = useState(strokeFill)
     const [bgFillInputValue, setBgFillInputValue] = useState(bgFill)
 
@@ -72,8 +71,6 @@ export function ColorBoard({
         } else {
             setStrokeFillInputValue(strokeFill)
         }
-
-        setIsStrokeFillEditing(false)
     }
 
     const handleBgFillInputSubmit = () => {
@@ -84,8 +81,6 @@ export function ColorBoard({
         } else {
             setBgFillInputValue(bgFill)
         }
-
-        setIsBgFillEditing(false)
     }
 
     const handleStrokeFillKeyDown = (e: React.KeyboardEvent) => {
@@ -93,7 +88,6 @@ export function ColorBoard({
             handleStrokeFillInputSubmit()
         } else if (e.key === "Escape") {
             setStrokeFillInputValue(strokeFill)
-            setIsStrokeFillEditing(false)
         }
     }
 
@@ -102,125 +96,150 @@ export function ColorBoard({
             handleBgFillInputSubmit()
         } else if (e.key === "Escape") {
             setBgFillInputValue(bgFill)
-            setIsBgFillEditing(false)
         }
     }
 
     return (
-        <div className="space-y-3">
+        <div className="">
             {/* Color swatches for shape stroke & bg */}
             {mode === 'Shape' && (
                 <>
                     {/* Stroke Fill Section */}
-                    <div className="flex gap-2 h-7 items-center">
-                        <div className="flex items-center justify-between">
-                            {strokeFills.map((color) => (
-                                <button
-                                    key={color}
-                                    className={cn(
-                                        "h-8 w-8 rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring",
-                                        color === strokeFill && "ring-2 ring-ring ring-offset-2 ring-offset-background",
-                                    )}
-                                    style={{ backgroundColor: color }}
-                                    onClick={() => handleStrokeFillColorChange(color)}
-                                    aria-label={`Select stroke color ${color}`}
-                                >
-                                    {color === strokeFill && (
-                                        <Check className={cn("h-4 w-4 mx-auto")} />
-                                    )}
-                                </button>
-                            ))}
-                            <Separator orientation="vertical" className="bg-white/20 mx-2" />
-
-                            <StrokeFillIndicator
-                                color={strokeFill}
-                                onClick={() => setIsStrokeFillEditing(true)}
-                            />
+                    <div className="">
+                        <ItemLabel label="Stroke" />
+                        <div className="">
+                            <div className="color-picker-container grid grid-cols-[1fr_20px_1.625rem] py-1 px-0 items-center">
+                                <div className="flex items-center justify-between">
+                                    {strokeFills.map((color) => (
+                                        <button
+                                            key={color}
+                                            className={cn(
+                                                "w-[1.35rem] h-[1.35rem] rounded-md border transition-all hover:scale-110 focus:outline-none color-picker__button",
+                                                color === strokeFill && "active",
+                                            )}
+                                            style={{ backgroundColor: color }}
+                                            onClick={() => handleStrokeFillColorChange(color)}
+                                            aria-label={`Select stroke color ${color}`}
+                                        >
+                                            {color === strokeFill && (
+                                                <Check className={cn("h-4 w-4 mx-auto")} />
+                                            )}
+                                            <div className="color-picker__button-outline"></div>
+                                        </button>
+                                    ))}
+                                </div>
+                                <Separator orientation="vertical" className="bg-default-border-color mx-auto" />
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <button
+                                            className={cn(
+                                                "w-[1.625rem] h-[1.625rem] rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring left-5 -top-5",
+                                                "ring-2 ring-ring ring-offset-2 ring-offset-background",
+                                            )}
+                                            style={{ backgroundColor: strokeFill }}
+                                            aria-label={`Selected background color ${strokeFill}`}
+                                        >
+                                            <Check className={cn("h-4 w-4 mx-auto")} />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                        side="right"
+                                        align="start"
+                                        className="left-5 -top-5 bg-background dark:bg-w-bg rounded-lg transition-transform duration-300 ease-in-out md:z-30 Island"
+                                    >
+                                        <PopoverArrow />
+                                        <div className="w-[200px]">
+                                            <ItemLabel label="Hex code" />
+                                            <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center border border-[var(--color-primary-darkest)] dark:border-default-border-color rounded-lg px-3 py-0 m-2">
+                                                <div className="py-0 px-1">#</div>
+                                                <Input
+                                                    type="text"
+                                                    className="w-full m-0 text-[0.875rem] bg-transparent text-text-primary-color border-0 outline-none !ring-0 shadow-none h-8 tracking-[0.4px] p-0 appearance-none"
+                                                    value={strokeFillInputValue.replace("#", "")}
+                                                    onChange={handleStrokeFillInputChange}
+                                                    onBlur={handleStrokeFillInputSubmit}
+                                                    onKeyDown={handleStrokeFillKeyDown}
+                                                    maxLength={7}
+                                                    autoFocus
+                                                />
+                                                <Separator orientation="vertical" className="bg-default-border-color mx-auto" />
+                                                <button className="w-5 h-5 cursor-pointer p-1 -mr-1 -ml-0.5 rounded-md text-icon-fill-color flex items-center justify-center">
+                                                    <Edit className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
                         </div>
                     </div>
 
                     {/* Background Fill Section */}
-                    <div className="flex gap-2 h-7 items-center">
-                        <div className="flex items-center justify-between">
-                            {bgFills.map((color) => (
-                                <button
-                                    key={color}
-                                    className={cn(
-                                        "h-8 w-8 rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring",
-                                        color === bgFill && "ring-2 ring-ring ring-offset-2 ring-offset-background",
-                                    )}
-                                    style={{ backgroundColor: color }}
-                                    onClick={() => handleBgFillColorChange(color)}
-                                    aria-label={`Select background color ${color}`}
-                                >
-                                    {color === bgFill && (
-                                        <Check className={cn("h-4 w-4 mx-auto")} />
-                                    )}
-                                </button>
-                            ))}
-                            <Separator orientation="vertical" className="bg-white/20 mx-2" />
-
-                            <BGFillIndicator
-                                color={bgFill}
-                                onClick={() => setIsBgFillEditing(true)}
-                            />
-                        </div>
-                    </div>
-                </>
-            )}
-
-            {/* Hex input sections */}
-            {mode === 'Shape' && (
-                <>
-                    {/* Stroke Fill Hex Input */}
-                    <div className="rounded-lg border dark:bg-[#343a40] dark:hover:bg-[#495057] outline-none border-none p-2 mb-2">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm dark:text-w-text">Stroke #</span>
-                            {isStrokeFillEditing ? (
-                                <div className="flex flex-1 items-center">
-                                    <Input
-                                        value={strokeFillInputValue.replace("#", "")}
-                                        onChange={handleStrokeFillInputChange}
-                                        onBlur={handleStrokeFillInputSubmit}
-                                        onKeyDown={handleStrokeFillKeyDown}
-                                        className="h-8 flex-1 bg-background"
-                                        maxLength={7}
-                                        autoFocus
-                                    />
+                    <div className="">
+                        <ItemLabel label="Background" />
+                        <div className="relative">
+                            <div className="color-picker-container grid grid-cols-[1fr_20px_1.625rem] py-1 px-0 items-center">
+                                <div className="flex items-center justify-between">
+                                    {bgFills.map((color) => (
+                                        <button
+                                            key={color}
+                                            className={cn(
+                                                "w-[1.35rem] h-[1.35rem] rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring color-picker__button",
+                                                color === bgFill && "ring-2 ring-ring ring-offset-2 ring-offset-background active",
+                                            )}
+                                            style={{ backgroundColor: color }}
+                                            onClick={() => handleBgFillColorChange(color)}
+                                            aria-label={`Select background color ${color}`}
+                                        >
+                                            {color === bgFill && (
+                                                <Check className={cn("h-4 w-4 mx-auto")} />
+                                            )}
+                                            <div className="color-picker__button-outline"></div>
+                                        </button>
+                                    ))}
                                 </div>
-                            ) : (
-                                <div className="flex flex-1 items-center justify-between">
-                                    <span className="text-sm font-mono dark:text-w-text">
-                                        {strokeFill.replace("#", "")}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Background Fill Hex Input */}
-                    <div className="rounded-lg border dark:bg-[#343a40] dark:hover:bg-[#495057] outline-none border-none p-2">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm dark:text-w-text">BG #</span>
-                            {isBgFillEditing ? (
-                                <div className="flex flex-1 items-center">
-                                    <Input
-                                        value={bgFillInputValue.replace("#", "")}
-                                        onChange={handleBgFillInputChange}
-                                        onBlur={handleBgFillInputSubmit}
-                                        onKeyDown={handleBgFillKeyDown}
-                                        className="h-8 flex-1 bg-background"
-                                        maxLength={7}
-                                        autoFocus
-                                    />
-                                </div>
-                            ) : (
-                                <div className="flex flex-1 items-center justify-between">
-                                    <span className="text-sm font-mono dark:text-w-text">
-                                        {bgFill.replace("#", "")}
-                                    </span>
-                                </div>
-                            )}
+                                <Separator orientation="vertical" className="bg-default-border-color mx-auto" />
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <button
+                                            className={cn(
+                                                "w-[1.625rem] h-[1.625rem] rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring",
+                                                "ring-2 ring-ring ring-offset-2 ring-offset-background",
+                                            )}
+                                            style={{ backgroundColor: bgFill }}
+                                            aria-label={`Selected background color ${bgFill}`}
+                                        >
+                                            <Check className={cn("h-4 w-4 mx-auto")} />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                        side="right"
+                                        align="start"
+                                        className="w-auto p-4 bg-background dark:bg-w-bg rounded-lg shadow-md border border-default-border-color"
+                                    >
+                                        <div className="w-[200px]">
+                                            <ItemLabel label="Hex code" />
+                                            <div className="grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center border border-default-border-color rounded-lg px-3 py-0 mt-1">
+                                                <div className="py-0 px-1">#</div>
+                                                <Input
+                                                    type="text"
+                                                    className="w-full m-0 text-[0.875rem] bg-transparent text-text-primary-color border-0 outline-none h-8 tracking-[0.4px] p-0 appearance-none"
+                                                    value={bgFillInputValue.replace("#", "")}
+                                                    onChange={handleBgFillInputChange}
+                                                    onBlur={handleBgFillInputSubmit}
+                                                    onKeyDown={handleBgFillKeyDown}
+                                                    maxLength={7}
+                                                    autoFocus
+                                                />
+                                                <Separator orientation="vertical" className="bg-default-border-color mx-auto" />
+                                                <button className="w-5 h-5 cursor-pointer p-1 -mr-1 -ml-0.5 rounded-md text-icon-fill-color">
+                                                    <Paintbrush className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
                         </div>
                     </div>
                 </>
@@ -229,36 +248,54 @@ export function ColorBoard({
     )
 }
 
-const StrokeFillIndicator = ({ color, onClick }: { color: StrokeFill; onClick?: () => void; }) => {
-    return (
-        <button
-            key={color}
-            className={cn(
-                "h-8 w-8 rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring",
-                "ring-2 ring-ring ring-offset-2 ring-offset-background",
-            )}
-            style={{ backgroundColor: color }}
-            onClick={onClick}
-            aria-label={`Selected stroke color ${color}`}
-        >
-            <Check className={cn("h-4 w-4 mx-auto")} />
-        </button>
-    )
-}
+// const StrokeFillIndicator = ({ color, onClick }: { color: StrokeFill; onClick?: () => void; }) => {
+//     return (
+//         <button
+//             key={color}
+//             className={cn(
+//                 "w-[1.625rem] h-[1.625rem] rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring",
+//                 "ring-2 ring-ring ring-offset-2 ring-offset-background",
+//             )}
+//             style={{ backgroundColor: color }}
+//             onClick={onClick}
+//             aria-label={`Selected stroke color ${color}`}
+//         >
+//             <Check className={cn("h-4 w-4 mx-auto")} />
+//         </button>
+//     )
+// }
 
-const BGFillIndicator = ({ color, onClick }: { color: BgFill; onClick?: () => void; }) => {
+// const BGFillIndicator = ({ color, onClick }: { color: BgFill; onClick?: () => void; }) => {
+//     return (
+//         <button
+//             key={color}
+//             className={cn(
+//                 "w-[1.625rem] h-[1.625rem] rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring",
+//                 "ring-2 ring-ring ring-offset-2 ring-offset-background",
+//             )}
+//             style={{ backgroundColor: color }}
+//             onClick={onClick}
+//             aria-label={`Selected background color ${color}`}
+//         >
+//             <Check className={cn("h-4 w-4 mx-auto")} />
+//         </button>
+//     )
+// }
+
+const ItemLabel = ({ label }: { label: string }) => {
     return (
-        <button
-            key={color}
-            className={cn(
-                "h-8 w-8 rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring",
-                "ring-2 ring-ring ring-offset-2 ring-offset-background",
-            )}
-            style={{ backgroundColor: color }}
-            onClick={onClick}
-            aria-label={`Selected background color ${color}`}
-        >
-            <Check className={cn("h-4 w-4 mx-auto")} />
-        </button>
+        <h3 className="m-0 mb-1 text-sm font-normal text-text-primary-color dark:text-w-text">
+            {label}
+        </h3>
+    );
+};
+
+const PopoverArrow = () => {
+    return (
+        <span className="absolute left-0 origin-[0px 0px] -transform translate-y-1/2 rotate-90 -translate-x-1/2 top-6">
+            <svg className="fill-white drop-shadow-md" width="20" height="10" viewBox="0 0 30 10" preserveAspectRatio="none">
+                <polygon points="0,0 30,0 15,10"></polygon>
+            </svg>
+        </span>
     )
 }

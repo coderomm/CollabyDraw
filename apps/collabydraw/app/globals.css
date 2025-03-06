@@ -94,6 +94,17 @@ body {
     --scrollbar-thumb-hover: #adb5bd;
     --color-slider-track: #ccccff;
     --color-slider-thumb: #3d3d3d;
+    --button-bg: #f2f2f7;
+    --default-border-color: #f1f0ff;
+
+    --color-selection: #6965db;
+    --color-icon-white: #ffffff;
+    --color-primary: #6965db;
+    --color-primary-darker: #5b57d1;
+    --color-primary-darkest: #4a47b1;
+    --color-primary-light: #e3e2fe;
+    --color-primary-light-darker: #d7d5ff;
+    --color-primary-hover: #5753d0;
   }
 
   .dark {
@@ -166,21 +177,6 @@ body {
     @apply bg-background text-foreground;
   }
 }
-
-/* Add custom scrollbar styles */
-/* @layer utilities {
-  .scrollbar-thin::-webkit-scrollbar {
-    @apply w-1;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply rounded-full transition-colors;
-  }
-} */
 
 /* For WebKit browsers (Chrome, Edge, Safari, Opera) */
 @supports (-webkit-appearance: none) {
@@ -281,4 +277,49 @@ select::-webkit-scrollbar {
 
 ::-webkit-scrollbar-thumb:active {
   background: var(--scrollbar-thumb)
+}
+
+button {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.color-picker__button {
+  --radius: .25rem;
+  padding: 0;
+  margin: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid #d6d6d6;
+  border-radius: 4px;
+  filter: none;
+  background-position: left center;
+  position: relative;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.color-picker__button:hover:after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  box-shadow: 0 0 0 1px #d6d6d6;
+  border-radius: 5px;
+  filter: none;
+}
+
+.color-picker__button.active .color-picker__button-outline {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  box-shadow: 0 0 0 1px #4a47b1;
+  z-index: 1;
+  border-radius: 5px;
+  filter: none;
 }

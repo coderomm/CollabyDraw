@@ -78,6 +78,7 @@ export default {
         "scrollbar-thumb-hover": "var(--scrollbar-thumb-hover)",
         "color-slider-track": "var(--color-slider-track)",
         "color-slider-thumb": "var(--color-slider-thumb)",
+        "default-border-color": "var(--default-border-color)",
       },
       borderRadius: {
         lg: "var(--radius)",
