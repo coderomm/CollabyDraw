@@ -106,7 +106,6 @@ export class Game {
 
   setCanvasBgColor(color: string) {
     this.ctx.fillStyle = color;
-    console.log("this.canvasColor is = ", color);
     this.clearCanvas();
     if (this.canvasBgColor !== color) {
       this.canvasBgColor = color;

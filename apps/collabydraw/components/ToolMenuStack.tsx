@@ -3,6 +3,9 @@
 import type React from "react"
 import { BgFill, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas"
 import { ColorBoard } from "./color-board"
+import ItemLabel from "./ItemLabel";
+import { Input } from "./ui/input";
+import { cn } from "@/lib/utils";
 
 interface SidebarProps {
     activeTool: ToolType;
@@ -18,6 +21,7 @@ export function ToolMenuStack({
     activeTool,
     strokeFill,
     setStrokeFill,
+    strokeWidth,
     setStrokeWidth,
     bgFill,
     setBgFill,
@@ -31,9 +35,8 @@ export function ToolMenuStack({
 
     return (
         <>
-            <div className="ToolMenuStack absolute top-full w-52 p-3 h-[calc(100vh-150px)] overflow-auto custom-scrollbar bg-background dark:bg-w-bg rounded-lg transition-transform duration-300 ease-in-out md:z-30 mt-2 Island">
+            <aside className="ToolMenuStack absolute top-full w-56 p-3 h-[calc(100vh-150px)] overflow-auto custom-scrollbar bg-background dark:bg-w-bg rounded-lg transition-transform duration-300 ease-in-out z-10 mt-2 Island">
                 <div className="flex flex-col gap-y-3">
-                    {/* Theme and color picker */}
                     <ColorBoard
                         mode="Shape"
                         bgFill={bgFill}
@@ -42,41 +45,38 @@ export function ToolMenuStack({
                         setStrokeFill={setStrokeFill}
                     />
 
-                    {/* Stroke picker */}
-                    <div className="border-t p-4">
+                    <div className="">
                         <ItemLabel label="Stroke width" />
-                        <div className="flex gap-2 h-7 items-center">
+                        <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
                             {strokeWidths.map((sw, index) => (
                                 <StrokeWidthIndicator
                                     key={index}
-                                    strokeWidth={sw}
+                                    strokeWidth={strokeWidth}
+                                    strokeWidthProp={sw}
                                     onClick={() => setStrokeWidth(sw)}
                                 />
                             ))}
                         </div>
                     </div>
                 </div>
-            </div>
+            </aside>
         </>
     )
 }
 
-const StrokeWidthIndicator = ({ strokeWidth, onClick }: { strokeWidth: StrokeWidth, onClick?: () => void }) => {
-    return <div
-        className={"w-[1.35rem] h-[1.35rem] rounded-sm cursor-pointer hover:border-white-70 border-white/10 border transition-all flex items-center"}
-        onClick={onClick}
-    >
-        <div
-            style={{ height: `${strokeWidth}px` }}
-            className="w-full bg-white/80"
-        />
-    </div>
-}
-
-const ItemLabel = ({ label }: { label: string }) => {
+const StrokeWidthIndicator = ({ strokeWidth, strokeWidthProp, onClick }: { strokeWidth: StrokeWidth, strokeWidthProp: StrokeWidth, onClick?: () => void }) => {
     return (
-        <h3 className="m-0 mb-1 text-sm font-normal text-text-primary-color dark:text-w-text">
-            {label}
-        </h3>
-    );
-};
+            <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
+            strokeWidth === strokeWidthProp ? 'bg-selected-tool-bg-light dark:bg-selected-tool-bg-dark dark:border-selected-tool-bg-dark' : ''
+        )}
+            title={strokeWidthProp === 1 ? 'Thin' : strokeWidthProp === 2 ? 'Bold' : 'Extra bold'}
+            onClick={onClick}
+        >
+            <Input type="radio" checked={strokeWidth === strokeWidthProp} name="stroke-width" className="opacity-0 absolute pointer-events-none" />
+            <div
+                style={{ height: `${strokeWidthProp*2}px` }}
+                className="w-4 rounded-[10px] bg-color-on-primary-container dark:bg-icon-fill-color-d"
+            />
+        </label>
+    )
+}

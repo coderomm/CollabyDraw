@@ -107,7 +107,7 @@ export function Sidebar({ isOpen, onClose, canvasColor, setCanvasColor }: Sideba
                             <SidebarItem icon={HelpCircle} label="Help" shortcut="?" />
                             <SidebarItem icon={RefreshCw} label="Clear canvas" onClick={() => setClearDialogOpen(true)} />
 
-                            <Separator className="my-4 dark:bg-w-border-color" />
+                            <Separator className="my-4 dark:bg-default-border-color-dark" />
 
                             <SidebarItem icon={Command} label="Excalidraw+" />
                             <SidebarItem icon={Github} label="GitHub" />

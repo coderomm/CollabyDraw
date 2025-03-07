@@ -44,11 +44,10 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: 
             }
         }
 
-        document.addEventListener("mousedown", handleOutsideClick)
-        return () => document.removeEventListener("mousedown", handleOutsideClick)
+        document.addEventListener("mouseup", handleOutsideClick)
+        return () => document.removeEventListener("mouseup", handleOutsideClick)
     }, [isOpen, onClose])
 
-    // Prevent scrolling when sidebar is open on mobile
     useEffect(() => {
         if (isOpen && window.innerWidth < 768) {
             document.body.classList.add("overflow-hidden")
@@ -60,8 +59,6 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: 
 
     return (
         <>
-
-            {/* Clear Canvas Confirmation Dialog */}
             <ConfirmDialog
                 open={clearDialogOpen}
                 onOpenChange={setClearDialogOpen}
@@ -71,19 +68,15 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: 
                 variant="destructive"
             />
 
-            {/* Sidebar */}
-            {/* fixed inset-y-0 left-0 z-50 w-72 border-r bg-background dark:bg-w-bg transition-transform duration-300 ease-in-out md:z-30 */}
             <aside
                 data-sidebar
-                className={cn("absolute top-full bg-background dark:bg-w-bg rounded-lg transition-transform duration-300 ease-in-out md:z-30 mt-2")}>
+                className={cn("absolute top-full bg-background dark:bg-w-bg rounded-lg transition-transform duration-300 ease-in-out z-20 mt-2")}>
                 <div className="flex h-[calc(100vh-150px)] flex-col Island rounded-lg">
-                    {/* Close button - mobile only */}
                     <Button variant="ghost" size="icon" className="absolute right-4 top-4 hidden" onClick={onClose}>
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close sidebar</span>
                     </Button>
 
-                    {/* Menu items */}
                     <div className="flex-1 overflow-auto py-1 custom-scrollbar">
                         <nav className="grid gap-1 px-2">
                             <SidebarItem icon={Command} label="Command palette" shortcut="Ctrl+/" />
@@ -91,7 +84,7 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: 
                             <SidebarItem icon={HelpCircle} label="Help" shortcut="?" />
                             <SidebarItem icon={RefreshCw} label="Clear canvas" onClick={() => setClearDialogOpen(true)} />
 
-                            <Separator className="my-4 dark:bg-w-border-color" />
+                            <Separator className="my-4 dark:bg-default-border-color-dark" />
 
                             <SidebarItem icon={Command} label="Excalidraw+" />
                             <SidebarItem icon={Github} label="GitHub" />
@@ -101,7 +94,6 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: 
                         </nav>
                     </div>
 
-                    {/* Theme and color picker */}
                     <div className="border-t p-4">
                         <div className="mb-4 w-full flex items-center justify-between gap-x-2">
                             <h3 className="mb-2 text-sm font-medium dark:text-w-text flex items-center w-full text-ellipsis overflow-hidden whitespace-nowrap">Theme</h3>

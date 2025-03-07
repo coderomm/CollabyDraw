@@ -66,8 +66,8 @@ body {
 
     --w-bg: #232329;
     --w-text: #e3e3e8;
-    --w-button-hover-bg: 245, 10%, 21%;
-    --w-border-color: 245, 10%, 21%;
+    --w-button-hover-bg: #31303b;
+    --default-border-color-dark: #31303b;
     --color-promo: #a8a5ff;
     --RadioGroup-choice-color-on: hsl(0, 0%, 7%);
     --RadioGroup-choice-background-on: #a8a5ff;
@@ -89,12 +89,12 @@ body {
     --text-primary-color: #1b1b1f;
     --color-on-primary-container: #030064;
     --color-surface-primary-container: #e0dfff;
-    --d-selected-tool-bg: #403e6a;
+    --selected-tool-bg-dark: #403e6a;
     --scrollbar-thumb: #ced4da;
     --scrollbar-thumb-hover: #adb5bd;
     --color-slider-track: #ccccff;
     --color-slider-thumb: #3d3d3d;
-    --button-bg: #f2f2f7;
+    --light-button-bg2: #f2f2f7;
     --default-border-color: #f1f0ff;
 
     --color-selection: #6965db;
@@ -105,6 +105,7 @@ body {
     --color-primary-light: #e3e2fe;
     --color-primary-light-darker: #d7d5ff;
     --color-primary-hover: #5753d0;
+    --tool-btn-bg-hover-dark:#363541;
   }
 
   .dark {
@@ -175,6 +176,15 @@ body {
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .bg-transparent-checkerboard {
+    background-image: linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd),
+      linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd);
+    background-size: 10px 10px;
+    background-position: 0 0, 5px 5px;
   }
 }
 
@@ -322,4 +332,12 @@ button {
   z-index: 1;
   border-radius: 5px;
   filter: none;
+}
+
+.popover-tooltip-arrow-pointer {
+  position: absolute;
+  left: 0px;
+  transform-origin: 0px 0px;
+  transform: translateY(50%) rotate(90deg) translateX(-50%);
+  top: 24px;
 }
