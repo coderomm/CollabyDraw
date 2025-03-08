@@ -45,9 +45,6 @@ export function MobileNavbar({ canvasColor,
     bgFill,
     setBgFill, }: MobileNavbarProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState(false)
-    // const [isToolStackOpen, setToolStackOpen] = useState(false);
-    // const [commandsOpen, setCommandsOpen] = useState(false)
-    // const [settingsOpen, setSettingsOpen] = useState(false)
     const isMediumScreen = useMediaQuery('md');
 
     return (
@@ -60,8 +57,6 @@ export function MobileNavbar({ canvasColor,
                             <NavbarButton icon={PaletteFilled} label="Colors" onClick={() => setColorPickerOpen(true)} active={colorPickerOpen} />
                         )}
                         <ScaleWidget scale={scale} setScale={setScale} />
-                        {/* <NavbarButton icon={Command} label="Commands" onClick={() => setCommandsOpen(true)} active={commandsOpen} /> */}
-                        {/* <NavbarButton icon={Settings} label="Settings" onClick={() => setSettingsOpen(true)} active={settingsOpen} /> */}
                     </div>
                 </div>
             </footer>
