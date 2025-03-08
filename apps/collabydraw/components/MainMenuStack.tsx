@@ -30,9 +30,10 @@ interface SidebarProps {
     onClose: () => void
     canvasColor: string
     setCanvasColor: (color: string) => void
+    isMobile?: boolean
 }
 
-export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: SidebarProps) {
+export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, isMobile }: SidebarProps) {
     const [clearDialogOpen, setClearDialogOpen] = useState(false)
     const { theme, setTheme } = useTheme()
 
@@ -70,14 +71,14 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor }: 
 
             <aside
                 data-sidebar
-                className={cn("absolute top-full bg-background dark:bg-w-bg rounded-lg transition-transform duration-300 ease-in-out z-20 mt-2")}>
-                <div className="flex h-[calc(100vh-150px)] flex-col Island rounded-lg">
+                className={cn("transition-transform duration-300 ease-in-out z-20", isMobile ? "" : "absolute top-full mt-2")}>
+                <div className={cn("flex flex-col", isMobile ? "" : "h-[calc(100vh-150px)] Island rounded-lg")}>
                     <Button variant="ghost" size="icon" className="absolute right-4 top-4 hidden" onClick={onClose}>
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close sidebar</span>
                     </Button>
 
-                    <div className="flex-1 overflow-auto py-1 custom-scrollbar">
+                    <div className={cn("py-1",isMobile ? "" : "flex-1 overflow-auto py-1 custom-scrollbar")}>
                         <nav className="grid gap-1 px-2">
                             <SidebarItem icon={Command} label="Command palette" shortcut="Ctrl+/" />
                             <SidebarItem icon={Search} label="Find on canvas" shortcut="Ctrl+F" />

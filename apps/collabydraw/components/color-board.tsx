@@ -36,7 +36,7 @@ export function ColorBoard({
                     <div className="">
                         <ItemLabel label="Stroke" />
                         <div className="">
-                            <div className="color-picker-container grid grid-cols-[1fr_20px_1.625rem] py-1 px-0 items-center">
+                            <div className="color-picker-container grid grid-cols-[1fr_1.5rem_2.5rem] md:grid-cols-[1fr_20px_1.625rem] max-w-[17rem] md:max-w-80 py-1 px-0 items-center">
                                 <div className="flex items-center justify-between">
                                     {strokeFills.map((color) => (
                                         <ColorPickerButton
@@ -56,7 +56,7 @@ export function ColorBoard({
                     <div className="">
                         <ItemLabel label="Background" />
                         <div className="relative">
-                            <div className="color-picker-container grid grid-cols-[1fr_20px_1.625rem] py-1 px-0 items-center">
+                        <div className="color-picker-container grid grid-cols-[1fr_1.5rem_2.5rem] md:grid-cols-[1fr_20px_1.625rem] max-w-[17rem] md:max-w-80 py-1 px-0 items-center">
                                 <div className="flex items-center justify-between">
                                     {bgFills.map((color) => (
                                         <ColorPickerButton

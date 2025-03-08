@@ -15,6 +15,7 @@ interface SidebarProps {
     setStrokeWidth: React.Dispatch<React.SetStateAction<StrokeWidth>>;
     bgFill: BgFill;
     setBgFill: React.Dispatch<React.SetStateAction<BgFill>>;
+    isMobile?: boolean
 }
 
 export function ToolMenuStack({
@@ -25,6 +26,7 @@ export function ToolMenuStack({
     setStrokeWidth,
     bgFill,
     setBgFill,
+    isMobile
 }: SidebarProps) {
 
     const strokeWidths: StrokeWidth[] = [1, 2, 4]
@@ -35,7 +37,9 @@ export function ToolMenuStack({
 
     return (
         <>
-            <aside className="ToolMenuStack absolute top-full w-56 p-3 h-[calc(100vh-150px)] overflow-auto custom-scrollbar bg-background dark:bg-w-bg rounded-lg transition-transform duration-300 ease-in-out z-10 mt-2 Island">
+            <aside className={cn("ToolMenuStack p-3 overflow-auto custom-scrollbar transition-transform duration-300 ease-in-out z-10 mt-2",
+                isMobile ? "" : "absolute top-full w-56 h-[calc(100vh-150px)] bg-background dark:bg-w-bg rounded-lg Island"
+            )}>
                 <div className="flex flex-col gap-y-3">
                     <ColorBoard
                         mode="Shape"
@@ -66,7 +70,7 @@ export function ToolMenuStack({
 
 const StrokeWidthIndicator = ({ strokeWidth, strokeWidthProp, onClick }: { strokeWidth: StrokeWidth, strokeWidthProp: StrokeWidth, onClick?: () => void }) => {
     return (
-            <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
+        <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
             strokeWidth === strokeWidthProp ? 'bg-selected-tool-bg-light dark:bg-selected-tool-bg-dark dark:border-selected-tool-bg-dark' : ''
         )}
             title={strokeWidthProp === 1 ? 'Thin' : strokeWidthProp === 2 ? 'Bold' : 'Extra bold'}
@@ -74,7 +78,7 @@ const StrokeWidthIndicator = ({ strokeWidth, strokeWidthProp, onClick }: { strok
         >
             <Input type="radio" checked={strokeWidth === strokeWidthProp} name="stroke-width" className="opacity-0 absolute pointer-events-none" />
             <div
-                style={{ height: `${strokeWidthProp*2}px` }}
+                style={{ height: `${strokeWidthProp * 2}px` }}
                 className="w-4 rounded-[10px] bg-color-on-primary-container dark:bg-icon-fill-color-d"
             />
         </label>
