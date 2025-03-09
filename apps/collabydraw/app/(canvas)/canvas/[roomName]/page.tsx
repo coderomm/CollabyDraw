@@ -1,8 +1,7 @@
 import client from '@repo/db/client';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/utils/auth';
-import Link from 'next/link';
 import { CanvasSheet } from '@/components/canvas/CanvasSheet';
 
 export default async function CanvasPage({ params }: { params: Promise<{ roomName: string }> }) {
@@ -19,20 +18,9 @@ export default async function CanvasPage({ params }: { params: Promise<{ roomNam
 
     const session = await getServerSession(authOptions);
     const user = session?.user;
-    if (!user) {
+    if (!user || !user.id) {
         console.error('User from session not found.');
-        return;
-    }
-    if (!user.id) {
-        return (
-            <div className="flex flex-col items-center justify-center h-screen">
-                <h1 className="text-2xl mb-4">Session Expired</h1>
-                <p>Your session has expired. Please join the room again.</p>
-                <Link href="/" className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                    Back to Home
-                </Link>
-            </div>
-        );
+        redirect(`/`);
     }
 
     return (

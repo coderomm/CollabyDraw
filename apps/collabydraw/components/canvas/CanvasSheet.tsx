@@ -227,6 +227,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                                     onClose={() => setSidebarOpen(false)}
                                     canvasColor={canvasColor}
                                     setCanvasColor={setCanvasColor}
+                                    roomName={roomName}
                                 />
                             )}
 
@@ -261,6 +262,8 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                 setStrokeWidth={setStrokeWidth}
                 bgFill={bgFill}
                 setBgFill={setBgFill}
+
+                roomName={roomName}
             />
             <canvas ref={canvasRef} />
         </div>

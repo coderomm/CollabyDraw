@@ -29,6 +29,8 @@ interface MobileNavbarProps {
     setStrokeWidth: React.Dispatch<React.SetStateAction<StrokeWidth>>;
     bgFill: BgFill;
     setBgFill: React.Dispatch<React.SetStateAction<BgFill>>;
+
+    roomName?: string
 }
 
 export function MobileNavbar({ canvasColor,
@@ -43,7 +45,8 @@ export function MobileNavbar({ canvasColor,
     strokeWidth,
     setStrokeWidth,
     bgFill,
-    setBgFill, }: MobileNavbarProps) {
+    setBgFill,
+    roomName }: MobileNavbarProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState(false)
     const isMediumScreen = useMediaQuery('md');
 
@@ -65,7 +68,7 @@ export function MobileNavbar({ canvasColor,
                 <>
                     {sidebarOpen && (
                         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                            <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-6 py-6 overflow-auto custom-scrollbar Island">
+                            <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-4 py-4 overflow-auto custom-scrollbar Island">
                                 <SheetHeader className="mb-5">
                                     <SheetTitle>Settings</SheetTitle>
                                 </SheetHeader>
@@ -75,12 +78,14 @@ export function MobileNavbar({ canvasColor,
                                     canvasColor={canvasColor}
                                     setCanvasColor={setCanvasColor}
                                     isMobile={true}
+
+                                    roomName={roomName}
                                 />
                             </SheetContent>
                         </Sheet>
                     )}
                     <Sheet open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
-                        <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-6 py-6 overflow-auto custom-scrollbar Island">
+                        <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-4 py-4 overflow-auto custom-scrollbar Island">
                             <SheetHeader className="mb-5">
                                 <SheetTitle>Canvas Background</SheetTitle>
                             </SheetHeader>

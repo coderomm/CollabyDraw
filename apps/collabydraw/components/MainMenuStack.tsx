@@ -5,9 +5,6 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import {
     Command,
-    Search,
-    HelpCircle,
-    RefreshCw,
     Github,
     Twitter,
     MessageSquare,
@@ -16,14 +13,18 @@ import {
     Moon,
     Monitor,
     X,
+    Trash,
+    LogOut,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { ColorPicker } from "@/components/color-picker"
 import { ConfirmDialog } from "./confirm-dialog"
-import { clearCanvas } from "@/actions/canvas"
+// import { clearCanvas } from "@/actions/canvas"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
+import { clearAllChats } from "@/actions/chat"
+import { signOut } from "next-auth/react"
 
 interface SidebarProps {
     isOpen: boolean
@@ -31,9 +32,11 @@ interface SidebarProps {
     canvasColor: string
     setCanvasColor: (color: string) => void
     isMobile?: boolean
+
+    roomName?: string
 }
 
-export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, isMobile }: SidebarProps) {
+export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, isMobile, roomName }: SidebarProps) {
     const [clearDialogOpen, setClearDialogOpen] = useState(false)
     const { theme, setTheme } = useTheme()
 
@@ -65,7 +68,7 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                 onOpenChange={setClearDialogOpen}
                 title="Clear canvas"
                 description="This will clear the whole canvas. Are you sure?"
-                onConfirm={clearCanvas}
+                onConfirm={() => clearAllChats({ roomName: roomName! })}
                 variant="destructive"
             />
 
@@ -78,12 +81,14 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                         <span className="sr-only">Close sidebar</span>
                     </Button>
 
-                    <div className={cn("py-1",isMobile ? "" : "flex-1 overflow-auto py-1 custom-scrollbar")}>
-                        <nav className="grid gap-1 px-2">
+                    <div className={cn("py-1", isMobile ? "" : "flex-1 overflow-auto py-1 custom-scrollbar")}>
+                        <nav className={cn("grid gap-1", isMobile ? "px-0" : "px-2")}>
                             <SidebarItem icon={Command} label="Command palette" shortcut="Ctrl+/" />
-                            <SidebarItem icon={Search} label="Find on canvas" shortcut="Ctrl+F" />
-                            <SidebarItem icon={HelpCircle} label="Help" shortcut="?" />
-                            <SidebarItem icon={RefreshCw} label="Clear canvas" onClick={() => setClearDialogOpen(true)} />
+                            {/* <SidebarItem icon={Search} label="Find on canvas" shortcut="Ctrl+F" /> */}
+                            {/* <SidebarItem icon={HelpCircle} label="Help" shortcut="?" /> */}
+
+                            <SidebarItem icon={Trash} label="Reset the canvas" onClick={() => setClearDialogOpen(true)} />
+                            <SidebarItem icon={LogOut} label="Log Out" onClick={() => signOut({ callbackUrl: '/' })} />
 
                             <Separator className="my-4 dark:bg-default-border-color-dark" />
 
