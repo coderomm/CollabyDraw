@@ -18,7 +18,7 @@ interface ConfirmDialogProps {
     title: string
     description: string
     // onConfirm: () => Promise<void> | void
-    onConfirm: () => Promise<{
+    onConfirm?: () => Promise<{
         success: boolean;
         error: string;
         count?: undefined;
@@ -26,7 +26,8 @@ interface ConfirmDialogProps {
         success: boolean;
         count: number;
         error?: undefined;
-    }>
+    }> | Promise<void> | void
+    onClearCanvas?: () => void
     confirmText?: string
     cancelText?: string
     variant?: "default" | "destructive"
@@ -38,21 +39,32 @@ export function ConfirmDialog({
     title,
     description,
     onConfirm,
+    onClearCanvas,
     confirmText = "Confirm",
     cancelText = "Cancel",
     variant = "default",
 }: ConfirmDialogProps) {
     const [isPending, startTransition] = React.useTransition()
 
-    const handleClearCanvas = () => {
+    const handleConfirm = () => {
         startTransition(async () => {
             try {
-                const result = await onConfirm();
-                if (result.success) {
-                    onOpenChange(false)
-                    toast.success(`Canvas cleared.`);
-                } else {
-                    toast.error('Error: ' + result!.error);
+                if (onClearCanvas) {
+                    console.log("Clearing canvas...");
+                    onClearCanvas();
+                    onOpenChange(false);
+                    toast.success("Canvas cleared.");
+                    return;
+                }
+                if (onConfirm) {
+                    console.log("Clearing room canvas...");
+                    const result = await onConfirm();
+                    if (result?.success) {
+                        onOpenChange(false)
+                        toast.success(`Canvas cleared.`);
+                    } else {
+                        toast.error('Error: ' + result!.error);
+                    }
                 }
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Failed to clear canvas. Please try again.';
@@ -75,7 +87,7 @@ export function ConfirmDialog({
                     <Button
                         size={"lg"}
                         variant={variant}
-                        onClick={handleClearCanvas}
+                        onClick={handleConfirm}
                         disabled={isPending}
                     >
                         {confirmText}

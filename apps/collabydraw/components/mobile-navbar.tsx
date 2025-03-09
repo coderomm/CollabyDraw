@@ -29,8 +29,12 @@ interface MobileNavbarProps {
     setStrokeWidth: React.Dispatch<React.SetStateAction<StrokeWidth>>;
     bgFill: BgFill;
     setBgFill: React.Dispatch<React.SetStateAction<BgFill>>;
-
     roomName?: string
+
+    isStandalone?: boolean;
+    onClearCanvas?: () => void;
+    onExportCanvas?: () => void;
+    onImportCanvas?: () => void;
 }
 
 export function MobileNavbar({ canvasColor,
@@ -46,7 +50,12 @@ export function MobileNavbar({ canvasColor,
     setStrokeWidth,
     bgFill,
     setBgFill,
-    roomName }: MobileNavbarProps) {
+    roomName,
+    isStandalone = false,
+    onClearCanvas,
+    onExportCanvas,
+    onImportCanvas
+}: MobileNavbarProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState(false)
     const isMediumScreen = useMediaQuery('md');
 
@@ -78,8 +87,11 @@ export function MobileNavbar({ canvasColor,
                                     canvasColor={canvasColor}
                                     setCanvasColor={setCanvasColor}
                                     isMobile={true}
-
                                     roomName={roomName}
+                                    isStandalone={isStandalone}
+                                    onClearCanvas={onClearCanvas}
+                                    onExportCanvas={onExportCanvas}
+                                    onImportCanvas={onImportCanvas}
                                 />
                             </SheetContent>
                         </Sheet>
@@ -87,7 +99,7 @@ export function MobileNavbar({ canvasColor,
                     <Sheet open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
                         <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-4 py-4 overflow-auto custom-scrollbar Island">
                             <SheetHeader className="mb-5">
-                                <SheetTitle>Canvas Background</SheetTitle>
+                                <SheetTitle>Canvas Settings</SheetTitle>
                             </SheetHeader>
                             <ToolMenuStack
                                 isMobile={true}

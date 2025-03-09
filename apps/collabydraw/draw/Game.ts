@@ -5,15 +5,17 @@ import { ExcalidrawElement, Radians } from "@/types/element-types";
 import { RoughGenerator } from "roughjs/bin/generator";
 import rough from "roughjs/bin/rough";
 
+const LOCALSTORAGE_CANVAS_KEY = "standalone_canvas_shapes";
+
 export class Game {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private roomId: string;
+  private roomId: string | null;
   private canvasBgColor: string;
-  private sendMessage: (data: string) => void;
+  private sendMessage: ((data: string) => void) | null;
   private existingShape: Shape[];
   private clicked: boolean;
-  private roomName: string;
+  private roomName: string | null;
   private activeTool: ToolType = "grab";
   private startX: number = 0;
   private startY: number = 0;
@@ -25,15 +27,17 @@ export class Game {
   private strokeWidth: number = 1;
   private strokeFill: string = "rgba(255, 255, 255)";
   private bgFill: string = "rgba(18, 18, 18)";
+  private isStandalone: boolean = false;
   private static rg = new RoughGenerator();
   constructor(
     canvas: HTMLCanvasElement,
-    roomId: string,
+    roomId: string | null,
     canvasBgColor: string,
-    sendMessage: (data: string) => void,
-    roomName: string,
+    sendMessage: ((data: string) => void) | null,
+    roomName: string | null,
     onScaleChangeCallback: (scale: number) => void,
-    initialShapes: Shape[] = []
+    initialShapes: Shape[] = [],
+    isStandalone: boolean = false
   ) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d")!;
@@ -48,27 +52,40 @@ export class Game {
     this.roomName = roomName;
     this.init();
     this.initMouseHandler();
+    this.isStandalone = isStandalone;
   }
 
   async init() {
-    try {
-      const getRoomResult = await getRoom({ roomName: this.roomName });
-      if (getRoomResult?.success && getRoomResult.room?.Chat) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        getRoomResult.room.Chat.forEach((shape: any) => {
-          try {
-            const parsedShapes = JSON.parse(shape.message);
-            const parsedShapeData = JSON.parse(parsedShapes.data);
-            this.existingShape.push(parsedShapeData.shape);
-          } catch (e) {
-            console.error("Error parsing shape data:", e);
-          }
-        });
-      } else if (!getRoomResult?.success) {
-        console.error("Error fetching room: " + getRoomResult?.error);
+    if (this.isStandalone) {
+      try {
+        const storedShapes = localStorage.getItem(LOCALSTORAGE_CANVAS_KEY);
+        if (storedShapes) {
+          const parsedShapes = JSON.parse(storedShapes);
+          this.existingShape = [...this.existingShape, ...parsedShapes];
+        }
+      } catch (e) {
+        console.error("Error loading shapes from localStorage:", e);
       }
-    } catch (error) {
-      console.error("Error in init:", error);
+    } else if (!this.isStandalone && this.roomName) {
+      try {
+        const getRoomResult = await getRoom({ roomName: this.roomName });
+        if (getRoomResult?.success && getRoomResult.room?.Chat) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          getRoomResult.room.Chat.forEach((shape: any) => {
+            try {
+              const parsedShapes = JSON.parse(shape.message);
+              const parsedShapeData = JSON.parse(parsedShapes.data);
+              this.existingShape.push(parsedShapeData.shape);
+            } catch (e) {
+              console.error("Error parsing shape data:", e);
+            }
+          });
+        } else if (!getRoomResult?.success) {
+          console.error("Error fetching room: " + getRoomResult?.error);
+        }
+      } catch (error) {
+        console.error("Error in init:", error);
+      }
     }
     this.clearCanvas();
   }
@@ -122,12 +139,9 @@ export class Game {
       this.canvas.height / this.scale
     );
     this.ctx.fillStyle = this.canvasBgColor;
-    // this.setCanvasBgColor(this.canvasBgColor);
     this.ctx.fillRect(
-      // Adjusts the offset of the canvas
       -this.panX / this.scale,
       -this.panY / this.scale,
-      // Adjusts the scale of the canvas
       this.canvas.width / this.scale,
       this.canvas.height / this.scale
     );
@@ -315,11 +329,9 @@ export class Game {
         (dy * dy) / ((shape.radY + tolerance) * (shape.radY + tolerance));
       return normalized <= 1;
     } else if (shape.type === "diamond") {
-      // Normalize the point to diamond's coordinate system
       const dx = Math.abs(x - shape.centerX);
       const dy = Math.abs(y - shape.centerY);
 
-      // Check if the point is inside the diamond
       return (
         dx / (shape.width / 2 + tolerance) +
           dy / (shape.height / 2 + tolerance) <=
@@ -372,7 +384,6 @@ export class Game {
     strokeFill: string,
     bgFill: string
   ) {
-    // If we draw right to left, width is -ve and so postion of mouse + (-ve width) gives top left corner
     const posX = width < 0 ? x + width : x;
     const posY = height < 0 ? y + height : y;
     const normalizedWidth = Math.abs(width);
@@ -421,7 +432,6 @@ export class Game {
     this.ctx.closePath();
     this.ctx.fill();
     this.ctx.stroke();
-    // this.ctx.strokeRect(x , y, width, height)
   }
 
   drawEllipse(
@@ -501,27 +511,20 @@ export class Game {
     } else {
       const cornerRadiusPercentage: number = 15;
 
-      // Calculate the four points of the diamond
       const halfWidth = width / 2;
       const halfHeight = height / 2;
 
       const normalizedWidth = Math.abs(halfWidth);
       const normalizedHeight = Math.abs(halfHeight);
 
-      // Calculate the shortest side length along the diamond perimeter
-      // (the distance between adjacent corners)
       const sideLength = Math.min(
         Math.sqrt(Math.pow(normalizedWidth, 2) + Math.pow(normalizedHeight, 2)),
         2 * normalizedWidth,
         2 * normalizedHeight
       );
 
-      // Calculate radius based on percentage of the minimum side length
-      // with a safe upper limit to prevent overlap
       let radius = (sideLength * cornerRadiusPercentage) / 100;
 
-      // Additional constraint: radius should never be more than 40% of the shortest dimension
-      // to prevent corners from overlapping
       const maxRadius = Math.min(normalizedWidth, normalizedHeight) * 0.4;
       radius = Math.min(radius, maxRadius);
 
@@ -543,8 +546,6 @@ export class Game {
           Math.pow(topPoint.y - leftPoint.y, 2)
       );
 
-      // Start at a point before the first corner (moving from left point toward top point)
-      // This is important for arcTo to work correctly
       const startX =
         leftPoint.x + ((topPoint.x - leftPoint.x) * radius) / distTopLeft;
       const startY =
@@ -552,8 +553,6 @@ export class Game {
 
       this.ctx.moveTo(startX, startY);
 
-      // Apply arcTo for each corner
-      // Top corner
       this.ctx.arcTo(
         topPoint.x,
         topPoint.y,
@@ -562,7 +561,6 @@ export class Game {
         radius
       );
 
-      // Right corner
       this.ctx.arcTo(
         rightPoint.x,
         rightPoint.y,
@@ -571,7 +569,6 @@ export class Game {
         radius
       );
 
-      // Bottom corner
       this.ctx.arcTo(
         bottomPoint.x,
         bottomPoint.y,
@@ -580,10 +577,8 @@ export class Game {
         radius
       );
 
-      // Left corner
       this.ctx.arcTo(leftPoint.x, leftPoint.y, topPoint.x, topPoint.y, radius);
 
-      // Close the path by connecting back to start
       this.ctx.lineTo(startX, startY);
       this.ctx.closePath();
 
@@ -642,15 +637,26 @@ export class Game {
       this.existingShape.splice(shapeIndex, 1);
       this.clearCanvas();
 
-      this.sendMessage(
-        JSON.stringify({
-          type: "eraser",
-          data: JSON.stringify({
-            shape: erasedShape,
-          }),
-          roomId: this.roomId,
-        })
-      );
+      if (this.isStandalone) {
+        try {
+          localStorage.setItem(
+            LOCALSTORAGE_CANVAS_KEY,
+            JSON.stringify(this.existingShape)
+          );
+        } catch (e) {
+          console.error("Error saving shapes to localStorage:", e);
+        }
+      } else if (this.sendMessage && this.roomId) {
+        this.sendMessage(
+          JSON.stringify({
+            type: "eraser",
+            data: JSON.stringify({
+              shape: erasedShape,
+            }),
+            roomId: this.roomId,
+          })
+        );
+      }
     }
   }
 
@@ -736,15 +742,26 @@ export class Game {
 
     this.existingShape.push(shape);
 
-    this.sendMessage(
-      JSON.stringify({
-        type: "draw",
-        data: JSON.stringify({
-          shape,
-        }),
-        roomId: this.roomId,
-      })
-    );
+    if (this.isStandalone) {
+      try {
+        localStorage.setItem(
+          LOCALSTORAGE_CANVAS_KEY,
+          JSON.stringify(this.existingShape)
+        );
+      } catch (e) {
+        console.error("Error saving shapes to localStorage:", e);
+      }
+    } else if (this.sendMessage && this.roomId) {
+      this.sendMessage(
+        JSON.stringify({
+          type: "draw",
+          data: JSON.stringify({
+            shape,
+          }),
+          roomId: this.roomId,
+        })
+      );
+    }
   };
 
   mouseWheelHandler = (e: WheelEvent) => {
@@ -755,7 +772,7 @@ export class Game {
 
     const mouseX = e.clientX - this.canvas.offsetLeft;
     const mouseY = e.clientY - this.canvas.offsetTop;
-    // Position of cursor on canvas
+
     const canvasMouseX = (mouseX - this.panX) / this.scale;
     const canvasMouseY = (mouseY - this.panY) / this.scale;
 
@@ -793,5 +810,13 @@ export class Game {
     this.scale = newScale;
     this.onScaleChange(this.scale);
     this.clearCanvas();
+  }
+
+  clearAllShapes() {
+    this.existingShape = [];
+    this.clearCanvas();
+    if (this.isStandalone) {
+      localStorage.removeItem(LOCALSTORAGE_CANVAS_KEY);
+    }
   }
 }

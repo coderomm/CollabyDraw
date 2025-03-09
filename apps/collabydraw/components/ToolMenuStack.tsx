@@ -76,7 +76,7 @@ const StrokeWidthIndicator = ({ strokeWidth, strokeWidthProp, onClick }: { strok
             title={strokeWidthProp === 1 ? 'Thin' : strokeWidthProp === 2 ? 'Bold' : 'Extra bold'}
             onClick={onClick}
         >
-            <Input type="radio" checked={strokeWidth === strokeWidthProp} name="stroke-width" className="opacity-0 absolute pointer-events-none" />
+            <Input type="radio" checked={strokeWidth === strokeWidthProp} onChange={() => onClick?.()} name="stroke-width" className="opacity-0 absolute pointer-events-none" />
             <div
                 style={{ height: `${strokeWidthProp * 2}px` }}
                 className="w-4 rounded-[10px] bg-color-on-primary-container dark:bg-icon-fill-color-d"
