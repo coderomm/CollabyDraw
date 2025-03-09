@@ -17,7 +17,7 @@ export function Toolbar2({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, 
     return (
         <TooltipProvider delayDuration={0}>
             <header className="fixed top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 rounded-lg Island">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 lg:gap-3">
                     {tools.map((tool) => (
                         <Tooltip key={tool.type}>
                             <TooltipTrigger asChild>
@@ -36,9 +36,7 @@ export function Toolbar2({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, 
                         </Tooltip>
                     ))}
                 </div>
-
-                {/* <div className="w-px h-6 bg-border mx-1" /> */}
-                {/* add flex, remove hidden */}
+                <div className="HintViewer sr-only text-[.75rem] text-gray-400 text-center mt-2 w-full max-w-full pointer-events-none absolute flex flex-col justify-center left-0 top-full"><span>To move canvas, hold mouse wheel or spacebar while dragging, or use the hand tool</span></div>
                 <div className="items-center gap-1 hidden">
                     <Tooltip>
                         <TooltipTrigger asChild>

@@ -11,7 +11,7 @@ export default async function Home() {
   if (!user || !user.id) {
     return (
       <>
-        <StandaloneCanvas />;
+        <StandaloneCanvas />
       </>
     )
   }
