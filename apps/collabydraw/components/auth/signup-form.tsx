@@ -55,11 +55,12 @@ export function SignUpForm() {
                     name="name"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel className="sr-only">Username</FormLabel>
                             <FormControl>
                                 <Input {...field}
                                     disabled={isPending}
-                                    placeholder="Enter your username" />
+                                    placeholder="Enter your username"
+                                    className="h-12 bg-form-input hover:bg-form-input-hover p-3 border rounded border-color-border-input text-form-color-text !ring-0 !outline-0 focus:border-color-outline-focus focus:border-[2px]" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -70,11 +71,12 @@ export function SignUpForm() {
                     name="email"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel className="sr-only">Email</FormLabel>
                             <FormControl>
                                 <Input {...field}
                                     disabled={isPending}
-                                    placeholder="Enter your email" />
+                                    placeholder="Enter your email"
+                                    className="h-12 bg-form-input hover:bg-form-input-hover p-3 border rounded border-color-border-input text-form-color-text !ring-0 !outline-0 focus:border-color-outline-focus focus:border-[2px]" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -85,17 +87,18 @@ export function SignUpForm() {
                     name="password"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Password</FormLabel>
+                            <FormLabel className="sr-only">Password</FormLabel>
                             <FormControl>
                                 <Input type="password" {...field}
                                     disabled={isPending}
-                                    placeholder="Enter your password" />
+                                    placeholder="Enter your password"
+                                    className="h-12 bg-form-input hover:bg-form-input-hover p-3 border rounded border-color-border-input text-form-color-text !ring-0 !outline-0 focus:border-color-outline-focus focus:border-[2px]" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="!mt-[10px] w-full h-12 rounded-md text-sm font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]">
                     Sign Up
                 </Button>
             </form>

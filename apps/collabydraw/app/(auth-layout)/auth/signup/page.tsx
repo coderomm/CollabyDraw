@@ -1,36 +1,27 @@
 import { SignUpForm } from "@/components/auth/signup-form";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
 export default function SignUpPage() {
     return (
-        <div className="container flex h-screen w-screen flex-col items-center justify-center">
-            <Card className="w-full max-w-md mx-auto flex flex-col justify-center space-y-6 sm:w-[350px]">
-                <CardHeader>
-                    <CardTitle className="text-2xl text-center">Create an account</CardTitle>
-                    <CardDescription className="text-center">Enter your email below to create your account</CardDescription>
-                </CardHeader>
-                <CardContent className="!mt-0">
-                    <SignUpForm />
-                </CardContent>
-                <CardFooter className="flex-col !mt-0 gap-6">
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-                        </div>
-                    </div>
-                    <Button className="w-full" variant="outline">GitHub</Button>
-                    <p className="px-8 text-center text-sm text-muted-foreground">
-                        <Link href="/auth/signin" className="hover:text-brand underline underline-offset-4">
-                            Already have an account? Sign In
-                        </Link>
-                    </p>
-                </CardFooter>
-            </Card>
-        </div>
+        <Card className="border-0 shadow-none lg:shadow-2xl rounded-3xl mt-10 mx-auto px-6 py-8 lg:mt-0 lg:p-16 relative z-10 dark:!bg-surface-loww max-w-[480px] bg-yellow-light">
+            <CardHeader className="p-0">
+                <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
+                <CardDescription className="text-sm pb-4 text-primary text-center">Enter your email below to create your account</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0 !my-0">
+                <SignUpForm />
+            </CardContent>
+            <CardFooter className="px-0 pt-2 pb-0 flex-col !mt-0 gap-2">
+                <div className="relative flex h-7 items-center justify-center gap-2">
+                    <div className="w-6 border-t border-yellow-darker"></div>
+                    <span className="flex-shrink font-primary text-sm text-yellow-darker">or</span>
+                    <div className="w-6 border-t border-yellow-darker"></div>
+                </div>
+                <div className="flex w-full flex-col items-center gap-3">
+                    <Link className="text-color-primary text-sm hover:underline hover:underline-offset-4 transition-all duration-200 ease-in-out" href="/auth/signin">Already have an account? Sign In</Link>
+                </div>
+            </CardFooter>
+        </Card>
     );
 }

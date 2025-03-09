@@ -67,7 +67,6 @@ body {
     --w-bg: #232329;
     --w-text: #e3e3e8;
     --w-button-hover-bg: #31303b;
-    --default-border-color-dark: #31303b;
     --color-promo: #a8a5ff;
     --RadioGroup-choice-color-on: hsl(0, 0%, 7%);
     --RadioGroup-choice-background-on: #a8a5ff;
@@ -96,8 +95,9 @@ body {
     --color-slider-thumb: #3d3d3d;
     --light-button-bg2: #f2f2f7;
     --default-border-color: #f1f0ff;
+    --default-border-color-dark: #31303b;
 
-    --color-selection: #6965db;
+    --color-selection: var(--color-primary);
     --color-icon-white: #ffffff;
     --color-primary: #6965db;
     --color-primary-darker: #5b57d1;
@@ -106,6 +106,24 @@ body {
     --color-primary-light-darker: #d7d5ff;
     --color-primary-hover: #5753d0;
     --tool-btn-bg-hover-dark:#363541;
+
+    --background-color-light: #f0fcf0;
+    --yellow-lighter: #fffbf0;
+    --yellow-light: #fff0c9;
+    --yellow-darker: #705400;
+    --red-lighter: #fff0f0;
+    --red-light: #ffdad6;
+    --blue-lighter: #f0fbff;
+    --blue-light: #d1ecff;
+    --surface-loww: #f5f5f9;
+
+    --form-input: #fff;
+    --form-input-hover: #f1f3f5;
+    --color-border-input: #aaa;
+    --form-color-text: #343a40;
+    --color-outline-focus: var(--color-primary);
+    --brand-active: #4440bf;
+    --brand-hover: #5753d0;
   }
 
   .dark {
@@ -143,6 +161,22 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
     --surface-box-shadow: #121212;
     --shadow-island: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
+
+    --color-primary: #a8a5ff;
+    --color-primary-darker: #b2aeff;
+    --color-primary-darkest: #beb9ff;
+    --color-primary-light: #4f4d6f;
+    --color-primary-light-darker: #43415e;
+    --color-primary-hover: #bbb8ff;
+
+    --form-input: #121212;
+    --form-input-hover: #141414;
+    --color-border-input: #212121;
+    --form-color-text: #ced4da;
+    --color-primary: #a8a5ff;
+    --color-outline-focus: var(--color-primary);
+    --brand-active: #4440bf;
+    --brand-hover: #5753d0;
   }
 }
 
