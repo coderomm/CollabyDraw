@@ -1,11 +1,9 @@
 import { getRoom } from "@/actions/room";
 import { _generateElementShape } from "@/lib/Shape";
-import { Shape, ToolType } from "@/types/canvas";
+import { LOCALSTORAGE_CANVAS_KEY, Shape, ToolType } from "@/types/canvas";
 import { ExcalidrawElement, Radians } from "@/types/element-types";
 import { RoughGenerator } from "roughjs/bin/generator";
 import rough from "roughjs/bin/rough";
-
-const LOCALSTORAGE_CANVAS_KEY = "standalone_canvas_shapes";
 
 export class Game {
   private canvas: HTMLCanvasElement;

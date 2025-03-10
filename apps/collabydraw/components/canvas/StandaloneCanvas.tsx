@@ -1,7 +1,7 @@
 "use client"
 
 import { Game } from "@/draw/Game";
-import { BgFill, canvasBgDark, canvasBgLight, Shape, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgDark, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
 import { Toolbar2 } from "../Toolbar2";
@@ -31,8 +31,23 @@ export function StandaloneCanvas() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [canvasColor, setCanvasColor] = useState<string>(theme === 'light' ? canvasBgLight[0] : canvasBgDark[0]);
     const canvasColorRef = useRef(canvasColor);
+    const [isCanvasEmpty, setIsCanvasEmpty] = useState(true);
 
     const isMediumScreen = useMediaQuery('md');
+
+    useEffect(() => {
+        const storedShapes = localStorage.getItem(LOCALSTORAGE_CANVAS_KEY);
+        if (storedShapes) {
+            const parsedShapes = JSON.parse(storedShapes);
+            setIsCanvasEmpty(parsedShapes.length === 0);
+        } else {
+            setIsCanvasEmpty(true);
+        }
+    }, []);
+
+    useEffect(() => {
+        setIsCanvasEmpty(existingShapes.length === 0);
+    }, [existingShapes, activeTool]);
 
     const clearCanvas = useCallback(() => {
         game?.clearAllShapes();
@@ -220,13 +235,15 @@ export function StandaloneCanvas() {
     }, [game]);
 
     return (
-        <div className={`h-screen overflow-hidden ${(activeTool === "grab") ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
+        <div className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab") ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
             <div className="fixed top-4 left-4 flex items-center justify-center">
                 <div className="relative">
                     {isMediumScreen && (
                         <>
                             <SidebarTriggerButton onClick={toggleSidebar} />
-                            <MainMenuWelcome />
+                            {activeTool === "grab" && isCanvasEmpty && (
+                                <MainMenuWelcome />
+                            )}
                             {sidebarOpen && (
                                 <MainMenuStack
                                     isOpen={sidebarOpen}
@@ -262,9 +279,11 @@ export function StandaloneCanvas() {
                     onRedo={() => { }}
                     onUndo={() => { }}
                 />
-                <div className="relative">
-                    <ToolMenuWelcome />
-                </div>
+                {activeTool === "grab" && isCanvasEmpty && (
+                    <div className="relative">
+                        <ToolMenuWelcome />
+                    </div>
+                )}
             </div>
 
             <Scale scale={scale} setScale={setScale} />
@@ -289,7 +308,9 @@ export function StandaloneCanvas() {
                 onExportCanvas={exportCanvas}
                 onImportCanvas={importCanvas}
             />
-            <HomeWelcome />
+            {activeTool === "grab" && isCanvasEmpty && (
+                <HomeWelcome />
+            )}
             <canvas ref={canvasRef} />
         </div >
     )

@@ -1,4 +1,5 @@
 import { LogoSvg } from "@/components/Branding";
+import Link from "next/link";
 
 export default function AuthLayout({
     children,
@@ -12,14 +13,17 @@ export default function AuthLayout({
             <S3 />
             <div className="h-fit min-h-screen w-full relative p-10 lg:p-12 overflow-hidden flex flex-col items-center justify-center">
                 <div className="relative z-10">
-                    <a href="#" className="Logo flex items-center select-none is-normal is-plain underline-none text-current"><LogoSvg /></a>
+                    <Link href="/" className="Logo flex items-center select-none is-normal is-plain underline-none text-current">
+                        <div className=""><LogoSvg /></div>
+                        <div className="md:flex hidden">
+                            <h1 className="brand-title ExcalidrawLogo-text">CollabyDraw</h1>
+                        </div>
+                    </Link>
                 </div>
                 <div className="my-12 flex w-full grow flex-col items-center justify-center">
                     <div className="w-full max-w-6xl">
                         <div className="relative mx-auto w-full max-w-[30rem] lg:mx-0 lg:max-w-none">
-                            {/* <div className="lg:shadow-2xl rounded-3xl mt-10 px-6 py-8 lg:mt-0 lg:p-16 relative z-10 dark:!bg-surface-loww max-w-[480px] bg-yellow-light"> */}
-                                {children}
-                            {/* </div> */}
+                            {children}
                         </div>
                     </div>
                 </div>

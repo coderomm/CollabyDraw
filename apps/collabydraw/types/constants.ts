@@ -222,7 +222,7 @@ export const MIME_TYPES = {
   text: "text/plain",
   html: "text/html",
   json: "application/json",
-  // excalidraw data
+  // collabydraw data
   excalidraw: "application/vnd.excalidraw+json",
   excalidrawlib: "application/vnd.excalidrawlib+json",
   // image-encoded excalidraw data

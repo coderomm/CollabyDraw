@@ -3,7 +3,24 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  @apply font-assistant;
+}
+
+a,
+p,
+span,
+li {
+  @apply font-assistant;
+}
+
+/* Apply Geist Sans to all heading elements */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-sans;
 }
 
 @font-face {
@@ -72,7 +89,7 @@ body {
 
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    --w-bg: #232329;
+    --island-bg-color: #232329;
     --w-text: #e3e3e8;
     --w-button-hover-bg: #31303b;
     --color-promo: #a8a5ff;
@@ -90,12 +107,9 @@ body {
     --surface-box-shadow: #ffffff;
     --d-btn-hover-bg: #31303b;
     --l-btn-hover-bg: #f1f0ff;
-    --color-surface-low: #ececf4;
     --icon-fill-color: #1b1b1f;
     --icon-fill-color-d: #e0dfff;
-    --text-primary-color: #1b1b1f;
     --color-on-primary-container: #030064;
-    --color-surface-primary-container: #e0dfff;
     --selected-tool-bg-dark: #403e6a;
     --scrollbar-thumb: #ced4da;
     --scrollbar-thumb-hover: #adb5bd;
@@ -114,7 +128,6 @@ body {
     --color-primary-light-darker: #d7d5ff;
     --color-primary-hover: #5753d0;
     --tool-btn-bg-hover-dark: #363541;
-
     --background-color-light: #f0fcf0;
     --yellow-lighter: #fffbf0;
     --yellow-light: #fff0c9;
@@ -132,7 +145,30 @@ body {
     --color-outline-focus: var(--color-primary);
     --brand-active: #4440bf;
     --brand-hover: #5753d0;
+    --color-gray-10: #f5f5f5;
+    --color-gray-20: #ebebeb;
+    --color-gray-30: #d6d6d6;
     --color-gray-40: #b8b8b8;
+    --color-gray-50: #999999;
+    --color-gray-60: #7a7a7a;
+    --color-gray-70: #5c5c5c;
+    --color-gray-80: #3d3d3d;
+    --color-gray-85: #242424;
+    --color-gray-90: #1e1e1e;
+    --color-gray-100: #121212;
+
+    --color-logo-icon: var(--color-primary);
+    --color-logo-text: #190064;
+    --default-icon-size: 1rem;
+    --color-surface-high: #f1f0ff;
+    --color-surface-mid: #f2f2f7;
+    --color-surface-low: #ececf4;
+    --color-surface-lowest: #ffffff;
+    --color-on-surface: #1b1b1f;
+    --color-surface-primary-container: #e0dfff;
+    --island-bg-color: #ffffff;
+    --dialog-border-color: var(--color-gray-20);
+    --text-primary-color: var(--color-on-surface);
   }
 
   .dark {
@@ -186,6 +222,17 @@ body {
     --color-outline-focus: var(--color-primary);
     --brand-active: #4440bf;
     --brand-hover: #5753d0;
+
+    --color-logo-text: #e2dfff;
+    --color-surface-high: #31303b;
+    --color-surface-high: #31303b;
+    --color-surface-low: #232329;
+    --color-surface-mid: #18181b;
+    --color-surface-lowest: #121212;
+    --color-on-surface: #e3e3e8;
+    --island-bg-color: #232329;
+    --dialog-border-color: var(--color-gray-80);
+    --text-primary-color: var(--color-on-surface);
   }
 }
 
@@ -305,7 +352,7 @@ body {
 }
 
 .dark .Island {
-  background-color: var(--w-bg);
+  background-color: var(--island-bg-color);
   box-shadow: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
   transition: box-shadow .5s ease-in-out;
 }
@@ -403,16 +450,16 @@ button {
   animation-delay: 0.5s;
 }
 
-.excalidraw.excalifont {
+.collabydraw .excalifont {
   font-family: Excalifont, Xiaolai;
 }
 
-.excalidraw.welcome-screen-decor {
+.collabydraw .welcome-screen-decor {
   pointer-events: none;
   color: var(--color-gray-40);
 }
 
-.excalidraw.welcome-screen-decor-hint--menu {
+.collabydraw .welcome-screen-decor-hint--menu {
   position: absolute;
   width: 320px;
   font-size: 1rem;
@@ -424,18 +471,18 @@ button {
   gap: .5rem;
 }
 
-.excalidraw.welcome-screen-decor-hint--menu svg {
+.collabydraw .welcome-screen-decor-hint--menu svg {
   width: 41px;
   height: 94px;
 }
 
 @media (max-width: 860px) {
-  .excalidraw.welcome-screen-decor-hint--menu .welcome-screen-decor-hint__label {
+  .collabydraw .welcome-screen-decor-hint--menu .welcome-screen-decor-hint__label {
     max-width: 160px;
   }
 }
 
-.excalidraw.welcome-screen-decor-hint--toolbar {
+.collabydraw .welcome-screen-decor-hint--toolbar {
   position: absolute;
   top: 100%;
   left: 50%;
@@ -445,12 +492,12 @@ button {
   align-items: baseline;
 }
 
-.excalidraw.welcome-screen-decor-hint--toolbar svg {
+.collabydraw .welcome-screen-decor-hint--toolbar svg {
   width: 38px;
   height: 78px;
 }
 
-.excalidraw.welcome-screen-decor-hint--toolbar .welcome-screen-decor-hint__label {
+.collabydraw .welcome-screen-decor-hint--toolbar .welcome-screen-decor-hint__label {
   width: 120px;
   position: relative;
   top: -.5rem;
@@ -458,7 +505,7 @@ button {
 
 /*  */
 
-.excalidraw.welcome-screen-center {
+.collabydraw .welcome-screen-center {
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -473,33 +520,85 @@ button {
 }
 
 @media (min-height: 600px) and (max-height: 900px) {
-  .excalidraw.welcome-screen-center {
+  .collabydraw .welcome-screen-center {
     margin-top: 8rem;
   }
 }
 
-.excalidraw.excalifont {
+.collabydraw .excalifont {
   font-family: Excalifont, Xiaolai;
 }
 
-.excalidraw.welcome-screen-decor {
+.collabydraw .welcome-screen-decor {
   pointer-events: none;
   color: var(--color-gray-40);
 }
 
-.excalidraw.welcome-screen-center__logo {
+.collabydraw .welcome-screen-center__logo {
   display: flex;
   align-items: center;
   column-gap: .75rem;
   font-size: 2.25rem;
 }
 
-.excalidraw.welcome-screen-center__heading {
+.collabydraw .ExcalidrawLogo {
+  --logo-icon--xs: 2rem;
+  --logo-text--xs: 1.5rem;
+  --logo-icon--small: 2.5rem;
+  --logo-text--small: 1.75rem;
+  --logo-icon--normal: 3rem;
+  --logo-text--normal: 2.2rem;
+  --logo-icon--large: 90px;
+  --logo-text--large: 65px;
+  display: flex;
+  align-items: center;
+}
+
+.collabydraw .ExcalidrawLogo svg {
+  flex: 0 0 auto;
+}
+
+.collabydraw .ExcalidrawLogo .ExcalidrawLogo-icon {
+  width: auto;
+  color: var(--color-logo-icon);
+}
+
+.collabydraw .ExcalidrawLogo.is-small .ExcalidrawLogo-icon {
+  height: var(--logo-icon--small);
+}
+
+.collabydraw .ExcalidrawLogo .ExcalidrawLogo-text {
+  margin-left: .75rem;
+  width: auto;
+  color: var(--color-logo-text);
+  font-family: Excalifont, Xiaolai;
+  font-size: 2.25rem;
+  font-weight: bolder;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ExcalidrawLogo-text {
+  margin-left: .75rem;
+  width: auto;
+  color: var(--color-logo-text);
+  font-family: Excalifont, Xiaolai;
+  font-size: 2.25rem;
+  font-weight: bolder;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* .collabydraw .ExcalidrawLogo.is-small .ExcalidrawLogo-text {
+  height: var(--logo-text--small);
+} */
+
+.collabydraw .welcome-screen-center__heading {
   font-size: 1.125rem;
   text-align: center;
 }
 
-.excalidraw.welcome-screen-menu {
+.collabydraw .welcome-screen-menu {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -507,9 +606,9 @@ button {
   align-items: center;
 }
 
-.excalidraw.welcome-screen-menu-item {
+.collabydraw .welcome-screen-menu-item {
   box-sizing: border-box;
-  pointer-events: var(--ui-pointerEvents);
+  pointer-events: all;
   color: var(--color-gray-50);
   font-size: .875rem;
   width: 100%;
@@ -521,17 +620,31 @@ button {
   background: none;
   border: 1px solid transparent;
   padding: .75rem;
-  border-radius: var(--border-radius-md);
+  border-radius: .375rem;
   grid-template-columns: calc(var(--default-icon-size) + .5rem) 1fr 3rem;
 }
 
-/* --default-icon-size: 1rem; */
-.excalidraw.welcome-screen-menu-item__icon {
+.collabydraw .welcome-screen-menu-item:hover {
+  text-decoration: none;
+  background: var(--color-surface-high);
+}
+
+.collabydraw .welcome-screen-menu-item:active {
+  background: var(--color-surface-high);
+  border-color: var(--brand-active);
+}
+
+.collabydraw .welcome-screen-menu-item:focus-visible {
+  outline: transparent;
+  box-shadow: 0 0 0 1px var(--brand-hover);
+}
+
+.collabydraw .welcome-screen-menu-item__icon {
   width: var(--default-icon-size);
   height: var(--default-icon-size);
 }
 
-.excalidraw.welcome-screen-menu-item__text {
+.collabydraw .welcome-screen-menu-item__text {
   display: flex;
   align-items: center;
   margin-right: auto;
@@ -539,8 +652,20 @@ button {
   column-gap: .5rem;
 }
 
-.excalidraw.welcome-screen-menu-item__shortcut {
+.collabydraw .welcome-screen-menu-item__shortcut {
   margin-left: auto;
   color: var(--color-gray-40);
   font-size: .75rem;
+}
+
+.collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__shortcut,
+.collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__icon,
+.collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__text {
+  color: var(--color-gray-100);
+}
+
+.collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__shortcut,
+.collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__icon,
+.collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__text {
+  color: var(--color-gray-100);
 }

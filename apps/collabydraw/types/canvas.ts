@@ -31,7 +31,7 @@ export type StrokeFill =
   | "#2f9e44"
   | "#1971c2"
   | "#f08c00";
-  
+
 export type BgFill =
   | "#00000000"
   | "#ffc9c9"
@@ -112,3 +112,5 @@ export type Shape =
       strokeWidth: number;
       strokeFill: string;
     };
+
+export const LOCALSTORAGE_CANVAS_KEY = "standalone_canvas_shapes";
