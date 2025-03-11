@@ -92,7 +92,9 @@ export class Game {
     this.canvas.addEventListener("mousedown", this.mouseDownHandler);
     this.canvas.addEventListener("mousemove", this.mouseMoveHandler);
     this.canvas.addEventListener("mouseup", this.mouseUpHandler);
-    this.canvas.addEventListener("wheel", this.mouseWheelHandler);
+    this.canvas.addEventListener("wheel", this.mouseWheelHandler, {
+      passive: false,
+    });
   }
 
   setTool(tool: ToolType) {
@@ -660,6 +662,7 @@ export class Game {
 
   mouseUpHandler = (e: MouseEvent) => {
     this.clicked = false;
+    // document.body.style.cursor = "default";
 
     const { x, y } = this.transformPanScale(e.clientX, e.clientY);
     const width = x - this.startX;
@@ -765,21 +768,27 @@ export class Game {
   mouseWheelHandler = (e: WheelEvent) => {
     e.preventDefault();
 
-    const scaleAmount = -e.deltaY / 200;
-    const newScale = this.scale * (1 + scaleAmount);
+    if (e.ctrlKey || e.metaKey) {
+      const scaleAmount = -e.deltaY / 200;
+      const newScale = this.scale * (1 + scaleAmount);
 
-    const mouseX = e.clientX - this.canvas.offsetLeft;
-    const mouseY = e.clientY - this.canvas.offsetTop;
+      const mouseX = e.clientX - this.canvas.offsetLeft;
+      const mouseY = e.clientY - this.canvas.offsetTop;
 
-    const canvasMouseX = (mouseX - this.panX) / this.scale;
-    const canvasMouseY = (mouseY - this.panY) / this.scale;
+      const canvasMouseX = (mouseX - this.panX) / this.scale;
+      const canvasMouseY = (mouseY - this.panY) / this.scale;
 
-    this.panX -= canvasMouseX * (newScale - this.scale);
-    this.panY -= canvasMouseY * (newScale - this.scale);
+      this.panX -= canvasMouseX * (newScale - this.scale);
+      this.panY -= canvasMouseY * (newScale - this.scale);
 
-    this.scale = newScale;
+      this.scale = newScale;
 
-    this.onScaleChange(this.scale);
+      this.onScaleChange(this.scale);
+    } else {
+      this.panX -= e.deltaX;
+      this.panY -= e.deltaY;
+    }
+
     this.clearCanvas();
   };
 

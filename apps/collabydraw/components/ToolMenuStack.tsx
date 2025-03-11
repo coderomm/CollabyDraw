@@ -37,9 +37,10 @@ export function ToolMenuStack({
 
     return (
         <>
-            <aside className={cn("ToolMenuStack p-3 overflow-auto custom-scrollbar transition-transform duration-300 ease-in-out z-10 mt-2",
+            <section className={cn("ToolMenuStack p-3 overflow-auto custom-scrollbar transition-transform duration-300 ease-in-out z-10 mt-2",
                 isMobile ? "" : "absolute top-full w-56 h-[calc(100vh-150px)] bg-background dark:bg-w-bg rounded-lg Island"
             )}>
+                <h2 className="sr-only">Selected shape actions</h2>
                 <div className="flex flex-col gap-y-3">
                     <ColorBoard
                         mode="Shape"
@@ -63,7 +64,7 @@ export function ToolMenuStack({
                         </div>
                     </div>
                 </div>
-            </aside>
+            </section>
         </>
     )
 }

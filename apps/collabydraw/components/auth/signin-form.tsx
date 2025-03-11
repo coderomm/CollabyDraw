@@ -48,8 +48,7 @@ export function SignInForm() {
                 }
 
                 toast.success("Signed in successfully");
-
-                router.push("/draw");
+                router.push("/");
                 router.refresh();
             } catch (error) {
                 toast.error("Something went wrong. Please try again.");

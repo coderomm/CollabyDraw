@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useTransition } from "react";
+import { signIn } from "next-auth/react";
 
 type SignUpFormValues = z.infer<typeof SignupSchema>;
 
@@ -30,15 +31,26 @@ export function SignUpForm() {
     async function onSubmit(values: SignUpFormValues) {
         startTransition(async () => {
             try {
-                const result = await signUp(values)
+                const signUpResult = await signUp(values)
 
-                if (result.error) {
-                    toast.error(result.error);
+                if (signUpResult.error) {
+                    toast.error(signUpResult.error);
                     return
                 }
 
+                const signInResult = await signIn("credentials", {
+                    email: values.email,
+                    password: values.password,
+                    redirect: false,
+                });
+
+                if (signInResult?.error) {
+                    toast.error(signInResult.error);
+                    return;
+                }
+
                 toast.success("Account created successfully")
-                router.push('/auth/signin')
+                router.push("/");
             } catch (error) {
                 toast.error("Something went wrong. Please try again.");
                 const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again.";

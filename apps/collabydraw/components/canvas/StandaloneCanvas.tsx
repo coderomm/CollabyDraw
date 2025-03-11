@@ -4,7 +4,7 @@ import { Game } from "@/draw/Game";
 import { BgFill, canvasBgDark, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
-import { Toolbar2 } from "../Toolbar2";
+import Toolbar from "../toolbar";
 import { MobileNavbar } from "../mobile-navbar";
 import { useTheme } from "next-themes";
 import { MainMenuStack } from "../MainMenuStack";
@@ -166,9 +166,16 @@ export function StandaloneCanvas() {
 
     useEffect(() => {
         if (activeTool === "grab") {
-            const handleGrab = () => {
-                setGrabbing((prev) => !prev)
-            }
+            // const handleGrab = () => {
+            //     setGrabbing((prev) => !prev)
+            // }
+            const handleGrab = (e: MouseEvent) => {
+                if (e.button === 1 || e.button === 2) {
+                    setGrabbing(true);
+                } else {
+                    setGrabbing((prev) => !prev)
+                }
+            };
 
             document.addEventListener("mousedown", handleGrab)
             document.addEventListener("mouseup", handleGrab)
@@ -235,15 +242,13 @@ export function StandaloneCanvas() {
     }, [game]);
 
     return (
-        <div className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab") ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
-            <div className="fixed top-4 left-4 flex items-center justify-center">
-                <div className="relative">
-                    {isMediumScreen && (
-                        <>
+        <div data-is-medium-screen={isMediumScreen} className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab" && !sidebarOpen) ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
+            <div className="App_Menu App_Menu_Top fixed top-4 right-4 left-4 grid grid-cols-[1fr_auto_1fr] gap-8 items-start">
+                {isMediumScreen && (
+                    <div className="Main_Menu_Stack Sidebar_Trigger_Button grid gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
+                        <div className="relative">
                             <SidebarTriggerButton onClick={toggleSidebar} />
-                            {activeTool === "grab" && isCanvasEmpty && (
-                                <MainMenuWelcome />
-                            )}
+
                             {sidebarOpen && (
                                 <MainMenuStack
                                     isOpen={sidebarOpen}
@@ -257,21 +262,23 @@ export function StandaloneCanvas() {
                                 />
                             )}
 
-                            <ToolMenuStack activeTool={activeTool}
-                                strokeFill={strokeFill}
-                                setStrokeFill={setStrokeFill}
-                                strokeWidth={strokeWidth}
-                                setStrokeWidth={setStrokeWidth}
-                                bgFill={bgFill}
-                                setBgFill={setBgFill}
-                            />
-                        </>
-                    )}
-                </div>
-            </div>
+                            {activeTool === "grab" && isCanvasEmpty && (
+                                <MainMenuWelcome />
+                            )}
+                        </div>
 
-            <div>
-                <Toolbar2
+                        <ToolMenuStack activeTool={activeTool}
+                            strokeFill={strokeFill}
+                            setStrokeFill={setStrokeFill}
+                            strokeWidth={strokeWidth}
+                            setStrokeWidth={setStrokeWidth}
+                            bgFill={bgFill}
+                            setBgFill={setBgFill}
+                        />
+                    </div>
+                )}
+
+                <Toolbar
                     selectedTool={activeTool}
                     onToolSelect={setActiveTool}
                     canRedo={false}
@@ -279,38 +286,52 @@ export function StandaloneCanvas() {
                     onRedo={() => { }}
                     onUndo={() => { }}
                 />
-                {activeTool === "grab" && isCanvasEmpty && (
-                    <div className="relative">
-                        <ToolMenuWelcome />
-                    </div>
-                )}
             </div>
 
-            <Scale scale={scale} setScale={setScale} />
-            <MobileNavbar
-                sidebarOpen={sidebarOpen}
-                setSidebarOpen={setSidebarOpen}
-                canvasColor={canvasColor}
-                setCanvasColor={setCanvasColor}
-                scale={scale}
-                setScale={setScale}
-
-                activeTool={activeTool}
-                strokeFill={strokeFill}
-                setStrokeFill={setStrokeFill}
-                strokeWidth={strokeWidth}
-                setStrokeWidth={setStrokeWidth}
-                bgFill={bgFill}
-                setBgFill={setBgFill}
-
-                isStandalone={true}
-                onClearCanvas={clearCanvas}
-                onExportCanvas={exportCanvas}
-                onImportCanvas={importCanvas}
-            />
             {activeTool === "grab" && isCanvasEmpty && (
-                <HomeWelcome />
+                <div className="relative">
+                    <ToolMenuWelcome />
+                </div>
             )}
+
+            {
+                isMediumScreen && (
+                    <Scale scale={scale} setScale={setScale} />
+                )
+            }
+
+            {
+                !isMediumScreen && (
+                    <MobileNavbar
+                        sidebarOpen={sidebarOpen}
+                        setSidebarOpen={setSidebarOpen}
+                        canvasColor={canvasColor}
+                        setCanvasColor={setCanvasColor}
+                        scale={scale}
+                        setScale={setScale}
+
+                        activeTool={activeTool}
+                        strokeFill={strokeFill}
+                        setStrokeFill={setStrokeFill}
+                        strokeWidth={strokeWidth}
+                        setStrokeWidth={setStrokeWidth}
+                        bgFill={bgFill}
+                        setBgFill={setBgFill}
+
+                        isStandalone={true}
+                        onClearCanvas={clearCanvas}
+                        onExportCanvas={exportCanvas}
+                        onImportCanvas={importCanvas}
+                    />
+                )
+            }
+
+            {
+                activeTool === "grab" && isCanvasEmpty && (
+                    <HomeWelcome />
+                )
+            }
+
             <canvas ref={canvasRef} />
         </div >
     )

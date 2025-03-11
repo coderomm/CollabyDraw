@@ -12,7 +12,6 @@ import {
     Sun,
     Moon,
     Monitor,
-    X,
     Trash,
     LogOut,
     CopyIcon,
@@ -24,11 +23,11 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { ColorPicker } from "@/components/color-picker"
 import { ConfirmDialog } from "./confirm-dialog"
-// import { clearCanvas } from "@/actions/canvas"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
 import { clearAllChats } from "@/actions/chat"
 import { signOut } from "next-auth/react"
+import { redirect } from "next/navigation"
 
 interface SidebarProps {
     isOpen: boolean
@@ -80,13 +79,8 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                 variant="destructive"
             />
 
-            <aside data-sidebar className={cn("transition-transform duration-300 ease-in-out z-20", isMobile ? "" : "absolute top-full mt-2")}>
+            <section data-sidebar className={cn("transition-transform duration-300 ease-in-out z-20", isMobile ? "" : "absolute top-full mt-2")}>
                 <div className={cn("flex flex-col", isMobile ? "" : "h-[calc(100vh-150px)] Island rounded-lg")}>
-                    <Button variant="ghost" size="icon" className="absolute right-4 top-4 hidden" onClick={onClose}>
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Close sidebar</span>
-                    </Button>
-
                     <div className={cn("py-1", isMobile ? "" : "flex-1 overflow-auto py-1 custom-scrollbar")}>
                         <nav className={cn("grid gap-1", isMobile ? "px-0" : "px-2")}>
                             <SidebarItem icon={Command} label="Command palette" shortcut="Ctrl+/" />
@@ -96,7 +90,7 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                                     <SidebarItem icon={TrashIcon} label="Clear canvas" onClick={() => setClearDialogOpen(true)} />
                                     <SidebarItem icon={DownloadIcon} label="Export Drawing" onClick={onExportCanvas} />
                                     <SidebarItem icon={Upload} label="Import Drawing" onClick={onImportCanvas} />
-                                    <SidebarItem icon={UserPlus} label="Sign up" className="text-color-promo hover:text-color-promo font-bold" />
+                                    {/* <SidebarItem icon={UserPlus} onClick={redirect('/auth/signup')} label="Sign up" className="text-color-promo hover:text-color-promo font-bold" /> */}
                                 </>
                             ) : (
                                 <>
@@ -147,7 +141,7 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                         </div>
                     </div>
                 </div>
-            </aside>
+            </section>
         </>
     )
 }

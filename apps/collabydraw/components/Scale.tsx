@@ -20,7 +20,7 @@ export const Scale = ({
     };
 
     return (
-        <div className="fixed bottom-4 left-4 rounded-lg flex items-center bg-white dark:bg-w-bg surface-box-shadow">
+        <div className="ScaleBar ZoomINZoomOut_Bar Mobile_View fixed bottom-4 left-4 rounded-lg hidden md:flex items-center bg-white dark:bg-w-bg surface-box-shadow">
             <TooltipProvider delayDuration={0}>
                 <Tooltip>
                     <TooltipTrigger asChild>
