@@ -12,6 +12,8 @@ import { ToolMenuStack } from "../ToolMenuStack";
 import SidebarTriggerButton from "../SidebarTriggerButton";
 import { HomeWelcome, MainMenuWelcome, ToolMenuWelcome } from "../welcome-screen";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import ScreenLoading from "../ScreenLoading";
+import CollaborationStart from "../CollaborationStart";
 
 export function StandaloneCanvas() {
     const { theme } = useTheme()
@@ -33,13 +35,14 @@ export function StandaloneCanvas() {
     const canvasColorRef = useRef(canvasColor);
     const [isCanvasEmpty, setIsCanvasEmpty] = useState(true);
 
-    const isMediumScreen = useMediaQuery('md');
+    const { matches, isLoading } = useMediaQuery("md");
 
     useEffect(() => {
         const storedShapes = localStorage.getItem(LOCALSTORAGE_CANVAS_KEY);
         if (storedShapes) {
             const parsedShapes = JSON.parse(storedShapes);
             setIsCanvasEmpty(parsedShapes.length === 0);
+            setExistingShapes(parsedShapes);
         } else {
             setIsCanvasEmpty(true);
         }
@@ -49,9 +52,30 @@ export function StandaloneCanvas() {
         setIsCanvasEmpty(existingShapes.length === 0);
     }, [existingShapes, activeTool]);
 
+    useEffect(() => {
+        const handleResize = () => {
+            if (canvasRef.current && game) {
+                const canvas = canvasRef.current;
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                game.handleResize(window.innerWidth, window.innerHeight);
+            }
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [game]);
+
+    useEffect(() => {
+        if (existingShapes.length > 0) {
+            localStorage.setItem(LOCALSTORAGE_CANVAS_KEY, JSON.stringify(existingShapes));
+        }
+    }, [existingShapes]);
+
     const clearCanvas = useCallback(() => {
         game?.clearAllShapes();
         setExistingShapes([]);
+        localStorage.removeItem(LOCALSTORAGE_CANVAS_KEY);
     }, [game]);
 
     useEffect(() => {
@@ -158,6 +182,9 @@ export function StandaloneCanvas() {
             game.setStrokeFill(strokeFillRef.current);
             game.setBgFill(bgFillRef.current);
 
+            canvasRef.current.width = window.innerWidth;
+            canvasRef.current.height = window.innerHeight;
+
             return () => {
                 game.destroy();
             }
@@ -217,7 +244,7 @@ export function StandaloneCanvas() {
                         const shapes = JSON.parse(event.target?.result as string);
                         setExistingShapes(shapes);
 
-                        localStorage.setItem('standalone_canvas_shapes', JSON.stringify(shapes));
+                        localStorage.setItem(LOCALSTORAGE_CANVAS_KEY, JSON.stringify(shapes));
 
                         if (game) {
                             game.updateShapes(shapes);
@@ -235,93 +262,95 @@ export function StandaloneCanvas() {
     }, [game]);
 
     return (
-        <div className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab" && !sidebarOpen) ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
-            <div className="App_Menu App_Menu_Top fixed top-4 right-4 left-4 flex justify-center items-center md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8 md:items-start">
-                {isMediumScreen && (
-                    <div className="Main_Menu_Stack Sidebar_Trigger_Button md:grid md:gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
-                        <div className="relative">
-                            <SidebarTriggerButton onClick={toggleSidebar} />
+        <div data-isloading={isLoading} data-matches={matches} className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab" && !sidebarOpen) ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
+            {!isLoading && (
+                <div className="App_Menu App_Menu_Top fixed top-4 right-4 left-4 flex justify-center items-center md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8 md:items-start">
+                    {matches && !isLoading && (
+                        <div className="Main_Menu_Stack Sidebar_Trigger_Button md:grid md:gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
+                            <div className="relative">
+                                <SidebarTriggerButton onClick={toggleSidebar} />
 
-                            {sidebarOpen && (
-                                <MainMenuStack
-                                    isOpen={sidebarOpen}
-                                    onClose={() => setSidebarOpen(false)}
-                                    canvasColor={canvasColor}
-                                    setCanvasColor={setCanvasColor}
-                                    isStandalone={true}
-                                    onClearCanvas={clearCanvas}
-                                    onExportCanvas={exportCanvas}
-                                    onImportCanvas={importCanvas}
-                                />
-                            )}
+                                {sidebarOpen && (
+                                    <MainMenuStack
+                                        isOpen={sidebarOpen}
+                                        onClose={() => setSidebarOpen(false)}
+                                        canvasColor={canvasColor}
+                                        setCanvasColor={setCanvasColor}
+                                        isStandalone={true}
+                                        onClearCanvas={clearCanvas}
+                                        onExportCanvas={exportCanvas}
+                                        onImportCanvas={importCanvas}
+                                    />
+                                )}
 
-                            {activeTool === "grab" && isCanvasEmpty && (
-                                <MainMenuWelcome />
-                            )}
+                                {activeTool === "grab" && isCanvasEmpty && (
+                                    <MainMenuWelcome />
+                                )}
+                            </div>
+
+                            <ToolMenuStack activeTool={activeTool}
+                                strokeFill={strokeFill}
+                                setStrokeFill={setStrokeFill}
+                                strokeWidth={strokeWidth}
+                                setStrokeWidth={setStrokeWidth}
+                                bgFill={bgFill}
+                                setBgFill={setBgFill}
+                            />
                         </div>
+                    )}
 
-                        <ToolMenuStack activeTool={activeTool}
-                            strokeFill={strokeFill}
-                            setStrokeFill={setStrokeFill}
-                            strokeWidth={strokeWidth}
-                            setStrokeWidth={setStrokeWidth}
-                            bgFill={bgFill}
-                            setBgFill={setBgFill}
-                        />
-                    </div>
-                )}
+                    <Toolbar
+                        selectedTool={activeTool}
+                        onToolSelect={setActiveTool}
+                    />
 
-                <Toolbar
-                    selectedTool={activeTool}
-                    onToolSelect={setActiveTool}
-                />
-            </div>
-
-            {activeTool === "grab" && isCanvasEmpty && (
+                    <CollaborationStart />
+                </div>
+            )}
+            {activeTool === "grab" && isCanvasEmpty && !isLoading && (
                 <div className="relative">
                     <ToolMenuWelcome />
                 </div>
             )}
 
-            {
-                isMediumScreen && (
-                    <Scale scale={scale} setScale={setScale} />
-                )
-            }
+            {!isLoading && matches && (
+                <Scale scale={scale} setScale={setScale} />
+            )}
 
-            {
-                !isMediumScreen && (
-                    <MobileNavbar
-                        sidebarOpen={sidebarOpen}
-                        setSidebarOpen={setSidebarOpen}
-                        canvasColor={canvasColor}
-                        setCanvasColor={setCanvasColor}
-                        scale={scale}
-                        setScale={setScale}
+            {!isLoading && !matches && (
+                <MobileNavbar
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                    canvasColor={canvasColor}
+                    setCanvasColor={setCanvasColor}
+                    scale={scale}
+                    setScale={setScale}
 
-                        activeTool={activeTool}
-                        strokeFill={strokeFill}
-                        setStrokeFill={setStrokeFill}
-                        strokeWidth={strokeWidth}
-                        setStrokeWidth={setStrokeWidth}
-                        bgFill={bgFill}
-                        setBgFill={setBgFill}
+                    activeTool={activeTool}
+                    strokeFill={strokeFill}
+                    setStrokeFill={setStrokeFill}
+                    strokeWidth={strokeWidth}
+                    setStrokeWidth={setStrokeWidth}
+                    bgFill={bgFill}
+                    setBgFill={setBgFill}
 
-                        isStandalone={true}
-                        onClearCanvas={clearCanvas}
-                        onExportCanvas={exportCanvas}
-                        onImportCanvas={importCanvas}
-                    />
-                )
-            }
+                    isStandalone={true}
+                    onClearCanvas={clearCanvas}
+                    onExportCanvas={exportCanvas}
+                    onImportCanvas={importCanvas}
+                />
+            )}
 
-            {
-                activeTool === "grab" && isCanvasEmpty && (
-                    <HomeWelcome />
-                )
-            }
+            {!isLoading && activeTool === "grab" && isCanvasEmpty && (
+                <HomeWelcome />
+            )}
+
+            {isLoading && (
+                <ScreenLoading />
+            )}
 
             <canvas ref={canvasRef} />
+
         </div >
     )
 }

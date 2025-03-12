@@ -12,6 +12,8 @@ import { ToolMenuStack } from "../ToolMenuStack";
 import SidebarTriggerButton from "../SidebarTriggerButton";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Toolbar from "../Toolbar";
+import ScreenLoading from "../ScreenLoading";
+import CollaborationStart from "../CollaborationStart";
 
 export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: string; roomId: string; userId: string; userName: string; }) {
     const { theme } = useTheme()
@@ -40,11 +42,25 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
         userName
     );
 
-    const isMediumScreen = useMediaQuery('md');
+    const { matches, isLoading } = useMediaQuery('md');
 
     useEffect(() => {
         setCanvasColor(theme === 'light' ? canvasBgLight[0] : canvasBgDark[0]);
-    }, [theme])
+    }, [theme]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (canvasRef.current && game) {
+                const canvas = canvasRef.current;
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                game.handleResize(window.innerWidth, window.innerHeight);
+            }
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [game]);
 
     useEffect(() => {
         paramsRef.current = { roomId, roomName, userId, userName };
@@ -181,6 +197,9 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
             game.setStrokeFill(strokeFillRef.current);
             game.setBgFill(bgFillRef.current);
 
+            canvasRef.current.width = window.innerWidth;
+            canvasRef.current.height = window.innerHeight;
+
             return () => {
                 game.destroy();
             }
@@ -214,10 +233,16 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
         setSidebarOpen(prev => !prev);
     }, []);
 
+    if (isLoading) {
+        return (
+            <ScreenLoading />
+        )
+    }
+
     return (
         <div className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab" && !sidebarOpen) ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
             <div className="App_Menu App_Menu_Top fixed top-4 right-4 left-4 flex justify-center items-center md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8 md:items-start">
-                {isMediumScreen && (
+                {matches && (
                     <div className="Main_Menu_Stack Sidebar_Trigger_Button md:grid md:gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
                         <div className="relative">
                             <SidebarTriggerButton onClick={toggleSidebar} />
@@ -247,13 +272,14 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                     selectedTool={activeTool}
                     onToolSelect={setActiveTool}
                 />
+                <CollaborationStart />
             </div>
 
-            {isMediumScreen && (
+            {matches && (
                 <Scale scale={scale} setScale={setScale} />
             )}
 
-            {!isMediumScreen && (
+            {!matches && (
                 <MobileNavbar
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}

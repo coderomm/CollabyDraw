@@ -169,6 +169,7 @@ h6 {
     --island-bg-color: #ffffff;
     --dialog-border-color: var(--color-gray-20);
     --text-primary-color: var(--color-on-surface);
+    --loading-text-color: var(--brand-active);
   }
 
   .dark {
@@ -233,6 +234,7 @@ h6 {
     --island-bg-color: #232329;
     --dialog-border-color: var(--color-gray-80);
     --text-primary-color: var(--color-on-surface);
+    --loading-text-color: var(--color-on-surface);
   }
 }
 

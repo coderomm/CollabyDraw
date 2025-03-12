@@ -5,9 +5,9 @@ type BreakpointKey = "sm" | "md" | "lg" | "xl" | "2xl" | number;
 /**
  * Custom hook for responsive design based on media queries
  * @param query - CSS media query string or predefined breakpoint key
- * @returns boolean indicating if the query matches
+ * @returns { matches, isLoading } - matches: boolean indicating if the query matches, isLoading: boolean indicating if the hook is still determining the match
  */
-export const useMediaQuery = (query: string | BreakpointKey): boolean => {
+export const useMediaQuery = (query: string | BreakpointKey) => {
   const breakpoints = {
     sm: "640px",
     md: "768px",
@@ -28,17 +28,15 @@ export const useMediaQuery = (query: string | BreakpointKey): boolean => {
   const queryString = getQueryString(query);
 
   const [matches, setMatches] = useState(false);
-
-  const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    
-    setMounted(true);
 
     const mediaQuery = window.matchMedia(queryString);
 
     setMatches(mediaQuery.matches);
+    setIsLoading(false);
 
     const handleChange = (event: MediaQueryListEvent) => {
       setMatches(event.matches);
@@ -57,7 +55,7 @@ export const useMediaQuery = (query: string | BreakpointKey): boolean => {
         mediaQuery.removeListener(handleChange);
       }
     };
-  }, [queryString]);
+  }, [queryString, isLoading]);
 
-  return mounted ? matches : false;
+  return { matches, isLoading };
 };

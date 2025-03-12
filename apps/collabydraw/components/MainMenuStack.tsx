@@ -90,7 +90,7 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                                     <SidebarItem icon={TrashIcon} label="Clear canvas" onClick={() => setClearDialogOpen(true)} />
                                     <SidebarItem icon={DownloadIcon} label="Export Drawing" onClick={onExportCanvas} />
                                     <SidebarItem icon={Upload} label="Import Drawing" onClick={onImportCanvas} />
-                                    {/* <SidebarItem icon={UserPlus} onClick={redirect('/auth/signup')} label="Sign up" className="text-color-promo hover:text-color-promo font-bold" /> */}
+                                    <SidebarItem icon={UserPlus} onClick={() => redirect('/auth/signup')} label="Sign up" className="text-color-promo hover:text-color-promo font-bold" />
                                 </>
                             ) : (
                                 <>

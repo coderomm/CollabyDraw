@@ -826,4 +826,11 @@ export class Game {
       localStorage.removeItem(LOCALSTORAGE_CANVAS_KEY);
     }
   }
+
+  handleResize(width: number, height: number) {
+    this.canvas.width = width;
+    this.canvas.height = height;
+
+    this.clearCanvas();
+  }
 }
