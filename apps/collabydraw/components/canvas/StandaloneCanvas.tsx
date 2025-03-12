@@ -4,14 +4,14 @@ import { Game } from "@/draw/Game";
 import { BgFill, canvasBgDark, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
-import Toolbar from "../toolbar";
+import Toolbar from "../Toolbar";
 import { MobileNavbar } from "../mobile-navbar";
 import { useTheme } from "next-themes";
 import { MainMenuStack } from "../MainMenuStack";
 import { ToolMenuStack } from "../ToolMenuStack";
 import SidebarTriggerButton from "../SidebarTriggerButton";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { HomeWelcome, MainMenuWelcome, ToolMenuWelcome } from "../welcome-screen";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export function StandaloneCanvas() {
     const { theme } = useTheme()
@@ -166,16 +166,9 @@ export function StandaloneCanvas() {
 
     useEffect(() => {
         if (activeTool === "grab") {
-            // const handleGrab = () => {
-            //     setGrabbing((prev) => !prev)
-            // }
-            const handleGrab = (e: MouseEvent) => {
-                if (e.button === 1 || e.button === 2) {
-                    setGrabbing(true);
-                } else {
-                    setGrabbing((prev) => !prev)
-                }
-            };
+            const handleGrab = () => {
+                setGrabbing((prev) => !prev)
+            }
 
             document.addEventListener("mousedown", handleGrab)
             document.addEventListener("mouseup", handleGrab)
@@ -242,10 +235,10 @@ export function StandaloneCanvas() {
     }, [game]);
 
     return (
-        <div data-is-medium-screen={isMediumScreen} className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab" && !sidebarOpen) ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
-            <div className="App_Menu App_Menu_Top fixed top-4 right-4 left-4 grid grid-cols-[1fr_auto_1fr] gap-8 items-start">
+        <div className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab" && !sidebarOpen) ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
+            <div className="App_Menu App_Menu_Top fixed top-4 right-4 left-4 flex justify-center items-center md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8 md:items-start">
                 {isMediumScreen && (
-                    <div className="Main_Menu_Stack Sidebar_Trigger_Button grid gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
+                    <div className="Main_Menu_Stack Sidebar_Trigger_Button md:grid md:gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
                         <div className="relative">
                             <SidebarTriggerButton onClick={toggleSidebar} />
 
@@ -281,10 +274,6 @@ export function StandaloneCanvas() {
                 <Toolbar
                     selectedTool={activeTool}
                     onToolSelect={setActiveTool}
-                    canRedo={false}
-                    canUndo={false}
-                    onRedo={() => { }}
-                    onUndo={() => { }}
                 />
             </div>
 

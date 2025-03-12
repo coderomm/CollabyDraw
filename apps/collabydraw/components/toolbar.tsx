@@ -2,18 +2,13 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import type { ToolType } from "@/types/canvas"
 import { tools } from "@/types/Tools"
-import { Redo2, Undo2 } from "lucide-react"
 
 interface ToolbarProps {
     selectedTool: ToolType
     onToolSelect: (tool: ToolType) => void
-    onUndo: () => void
-    onRedo: () => void
-    canUndo: boolean
-    canRedo: boolean
 }
 
-export default function Toolbar({ selectedTool, onToolSelect, onUndo, onRedo, canUndo, canRedo }: ToolbarProps) {
+export default function Toolbar({ selectedTool, onToolSelect }: ToolbarProps) {
     return (
         <TooltipProvider delayDuration={0}>
             <header className="Tool_Bar flex items-center gap-1 p-1.5 rounded-lg Island">
@@ -37,27 +32,6 @@ export default function Toolbar({ selectedTool, onToolSelect, onUndo, onRedo, ca
                     ))}
                 </div>
                 <div className="HintViewer sr-only text-[.75rem] text-gray-400 text-center mt-2 w-full max-w-full pointer-events-none absolute flex flex-col justify-center left-0 top-full"><span>To move canvas, hold mouse wheel or spacebar while dragging, or use the hand tool</span></div>
-                <div className="items-center gap-1 hidden">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={onUndo} disabled={!canUndo}>
-                                <Undo2 className="h-4 w-4" />
-                                <span className="sr-only">Undo</span>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Undo</TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={onRedo} disabled={!canRedo}>
-                                <Redo2 className="h-4 w-4" />
-                                <span className="sr-only">Redo</span>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Redo</TooltipContent>
-                    </Tooltip>
-                </div>
             </header>
         </TooltipProvider>
     )

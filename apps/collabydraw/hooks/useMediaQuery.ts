@@ -32,6 +32,8 @@ export const useMediaQuery = (query: string | BreakpointKey): boolean => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    
     setMounted(true);
 
     const mediaQuery = window.matchMedia(queryString);
