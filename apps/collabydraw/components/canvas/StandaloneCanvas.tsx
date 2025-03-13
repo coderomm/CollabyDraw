@@ -13,7 +13,7 @@ import SidebarTriggerButton from "../SidebarTriggerButton";
 import { HomeWelcome, MainMenuWelcome, ToolMenuWelcome } from "../welcome-screen";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import ScreenLoading from "../ScreenLoading";
-import CollaborationStart from "../CollaborationStart";
+import CollaborationStart from "../CollaborationStartBtn";
 
 export function StandaloneCanvas() {
     const { theme } = useTheme()

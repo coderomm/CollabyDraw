@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Play } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Input } from "./ui/input";
 import { createRoom } from "@/actions/room";
 import { toast } from "sonner";
@@ -13,20 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 
-export default function CollaborationStart() {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <div className="Start_Room_Session transition-transform duration-500 ease-in-out flex items-center justify-end">
-            <Button type="button" onClick={() => setIsOpen(true)}
-                className="excalidraw-button collab-button relative w-auto py-3 px-4 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]"
-                title="Live collaboration...">Share</Button>
-            <CollaborationStartdDialog open={isOpen} onOpenChange={setIsOpen} />
-        </div>
-    )
-}
-
-export function CollaborationStartdDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+export default function CollaborationStartdDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
@@ -73,14 +60,16 @@ export function CollaborationStartdDialog({ open, onOpenChange }: { open: boolea
                                 name="roomName"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Room Name</FormLabel>
+                                        <FormLabel className="font-assistant font-semibold text-[0.875rem] indent-[150%] text-collaby-textfield-label mb-1 select-none">Room Name</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                placeholder="Enter room name"
-                                                className="h-12 bg-form-input hover:bg-form-input-hover p-3 border rounded border-color-border-input text-form-color-text !ring-0 !outline-0 focus:border-color-outline-focus focus:border-[2px]"
-                                                {...field}
-                                                disabled={isPending}
-                                            />
+                                            <div className="flex items-center h-12 bg-collaby-textfield border border-collaby-textfield hover:border-collaby-textfield-hover active:border-collaby-textfield-active focus-within:border-collaby-textfield-hover rounded-md px-3 transition-shadow duration-500 ease-in-out">
+                                                <Input
+                                                    placeholder="Enter room name"
+                                                    className="flex items-center h-6 mt-0 w-full font-assistant font-normal text-base text-ellipsis text-text-primary-color bg-transparent border-none p-0 !ring-0 !outline-0 shadow-none"
+                                                    {...field}
+                                                    disabled={isPending}
+                                                />
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -103,4 +92,4 @@ export function CollaborationStartdDialog({ open, onOpenChange }: { open: boolea
             </Dialog >
         </>
     );
-}
+};

@@ -28,7 +28,7 @@ const wss = new WebSocketServer({
     try {
       const decoded = jwt.verify(sessionToken, JWT_SECRET) as JwtPayload;
       if (!decoded || !decoded.id) {
-        console.log("Invalid token payload:", decoded);
+        console.error("Invalid token payload:", decoded);
         callback(false, 401, "Invalid token");
         return;
       }
@@ -38,7 +38,7 @@ const wss = new WebSocketServer({
       };
       callback(true);
     } catch (err) {
-      console.log(
+      console.error(
         "Direct JWT verification failed, trying NextAuth token format..."
       );
       callback(false, 401, "Unauthorized");

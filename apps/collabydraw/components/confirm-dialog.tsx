@@ -50,14 +50,12 @@ export function ConfirmDialog({
         startTransition(async () => {
             try {
                 if (onClearCanvas) {
-                    console.log("Clearing canvas...");
                     onClearCanvas();
                     onOpenChange(false);
                     toast.success("Canvas cleared.");
                     return;
                 }
                 if (onConfirm) {
-                    console.log("Clearing room canvas...");
                     const result = await onConfirm();
                     if (result?.success) {
                         onOpenChange(false)

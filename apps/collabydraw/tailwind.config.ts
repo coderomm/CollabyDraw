@@ -97,12 +97,26 @@ export default {
         "brand-hover": "var(--brand-hover)",
         "island-bg-color": "var(--island-bg-color)",
         "dialog-border-color": "var(--dialog-border-color)",
-        "loading-text-color":"var(--loading-text-color)"
+        "loading-text-color":"var(--loading-text-color)",
+        'collaby-textfield': 'var(--CollabyTextField--background)',
+        'collaby-textfield-readonly': 'var(--CollabyTextField--readonly--background)',
+      },
+      textColor: {
+        'collaby-textfield': 'var(--CollabyTextField--color)',
+        'collaby-textfield-label': 'var(--CollabyTextField--label-color)',
+        'collaby-textfield-readonly': 'var(--CollabyTextField--readonly--color)',
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      borderColor: {
+        'collaby-textfield': 'var(--CollabyTextField--border)',
+        'collaby-textfield-readonly': 'var(--CollabyTextField--readonly--border)',
+        'collaby-textfield-hover': 'var(--CollabyTextField--border-hover)',
+        'collaby-textfield-active': 'var(--CollabyTextField--border-active)',
+        'collaby-textfield-placeholder': 'var(--CollabyTextField--placeholder)',
       },
       keyframes: {
         "accordion-down": {

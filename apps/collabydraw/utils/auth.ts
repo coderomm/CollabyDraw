@@ -21,7 +21,6 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log("DATABASE_URL in authOptions = ", process.env.DATABASE_URL);
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials");
         }

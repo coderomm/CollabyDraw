@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
@@ -72,7 +72,6 @@ export default function ChatRoom({
   };
 
   const getInitials = (name: string) => {
-    console.log('name = ', name)
     return name
       .toUpperCase()
       .substring(0, 2);
@@ -187,7 +186,7 @@ export default function ChatRoom({
               <div className="flex">
                 <Input
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
                   placeholder={isConnected ? "Type your message..." : "Waiting for connection..."}
                   className="flex-1 mr-2"
                   disabled={!isConnected}

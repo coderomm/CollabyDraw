@@ -96,11 +96,11 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                                 <>
                                     <Button
                                         variant="ghost"
-                                        className={cn("flex h-10 w-full justify-start gap-2 rounded-md px-3 text-sm font-medium transition-colors dark:text-w-text dark:hover:text-w-text dark:hover:bg-w-button-hover-bg")}
+                                        className={cn("flex h-10 w-full justify-start gap-2 rounded-md px-3 text-sm font-semibold transition-colors dark:text-w-text dark:hover:text-w-text dark:hover:bg-w-button-hover-bg")}
                                         onClick={() => navigator.clipboard.writeText(window.location.href)}
                                     >
                                         <CopyIcon className="h-4 w-4" />
-                                        <span>{roomName}</span>
+                                        Room Name: <span>{roomName}</span>
                                     </Button>
                                     <SidebarItem icon={Trash} label="Reset the canvas" onClick={() => setClearDialogOpen(true)} />
                                     <SidebarItem icon={LogOut} label="Log Out" onClick={() => signOut({ callbackUrl: '/' })} />

@@ -170,6 +170,19 @@ h6 {
     --dialog-border-color: var(--color-gray-20);
     --text-primary-color: var(--color-on-surface);
     --loading-text-color: var(--brand-active);
+
+    --color-border-outline: #767680;
+    --color-border-outline-variant: #c5c5d0;
+    --CollabyTextField--color: var(--color-on-surface);
+    --CollabyTextField--label-color: var(--color-on-surface);
+    --CollabyTextField--background: var(--color-surface-low);
+    --CollabyTextField--readonly--background: var(--color-surface-high);
+    --CollabyTextField--readonly--color: var(--color-on-surface);
+    --CollabyTextField--border: var(--color-gray-20);
+    --CollabyTextField--readonly--border: var(--color-border-outline-variant);
+    --CollabyTextField--border-hover: var(--brand-hover);
+    --CollabyTextField--border-active: var(--brand-active);
+    --CollabyTextField--placeholder: var(--color-border-outline-variant);
   }
 
   .dark {
@@ -235,6 +248,19 @@ h6 {
     --dialog-border-color: var(--color-gray-80);
     --text-primary-color: var(--color-on-surface);
     --loading-text-color: var(--color-on-surface);
+
+    --color-border-outline: #8e8d9c;
+    --color-border-outline-variant: #46464f;
+    --CollabyTextField--color: var(--color-on-surface);
+    --CollabyTextField--label-color: var(--color-on-surface);
+    --CollabyTextField--background: var(--color-surface-low);
+    --CollabyTextField--readonly--background: var(--color-surface-high);
+    --CollabyTextField--readonly--color: var(--color-on-surface);
+    --CollabyTextField--border: var(--color-gray-20);
+    --CollabyTextField--readonly--border: var(--color-border-outline-variant);
+    --CollabyTextField--border-hover: var(--brand-hover);
+    --CollabyTextField--border-active: var(--color-brand-active);
+    --CollabyTextField--placeholder: var(--color-border-outline-variant);
   }
 }
 

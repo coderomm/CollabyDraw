@@ -37,11 +37,6 @@ export function Sidebar({ isOpen, onClose, canvasColor, setCanvasColor }: Sideba
     const { theme, setTheme } = useTheme()
 
     useEffect(() => {
-        console.log('current theme = ', theme)
-    }, [theme])
-
-    // Close sidebar when clicking outside on mobile
-    useEffect(() => {
         const handleOutsideClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement
             if (isOpen && !target.closest("[data-sidebar]") && !target.closest("[data-sidebar-trigger]")) {
@@ -53,7 +48,6 @@ export function Sidebar({ isOpen, onClose, canvasColor, setCanvasColor }: Sideba
         return () => document.removeEventListener("mousedown", handleOutsideClick)
     }, [isOpen, onClose])
 
-    // Prevent scrolling when sidebar is open on mobile
     useEffect(() => {
         if (isOpen && window.innerWidth < 768) {
             document.body.classList.add("overflow-hidden")
@@ -65,7 +59,6 @@ export function Sidebar({ isOpen, onClose, canvasColor, setCanvasColor }: Sideba
 
     return (
         <>
-            {/* Backdrop for mobile */}
             <div
                 className={cn(
                     "fixed inset-0 z-40 bg-background/80 backdrop-blur-sm transition-opacity md:hidden",
@@ -74,7 +67,6 @@ export function Sidebar({ isOpen, onClose, canvasColor, setCanvasColor }: Sideba
                 aria-hidden="true"
             />
 
-            {/* Clear Canvas Confirmation Dialog */}
             <ConfirmDialog
                 open={clearDialogOpen}
                 onOpenChange={setClearDialogOpen}
@@ -84,7 +76,6 @@ export function Sidebar({ isOpen, onClose, canvasColor, setCanvasColor }: Sideba
                 variant="destructive"
             />
 
-            {/* Sidebar */}
             <aside
                 data-sidebar
                 className={cn(
@@ -93,13 +84,11 @@ export function Sidebar({ isOpen, onClose, canvasColor, setCanvasColor }: Sideba
                 )}
             >
                 <div className="flex h-full flex-col">
-                    {/* Close button - mobile only */}
                     <Button variant="ghost" size="icon" className="absolute right-4 top-4 md:hidden" onClick={onClose}>
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close sidebar</span>
                     </Button>
 
-                    {/* Menu items */}
                     <div className="flex-1 overflow-auto py-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-scrollbar-thumb hover:scrollbar-hover-scrollbar-thumb-hover">
                         <nav className="grid gap-1 px-2">
                             <SidebarItem icon={Command} label="Command palette" shortcut="Ctrl+/" />
@@ -117,7 +106,6 @@ export function Sidebar({ isOpen, onClose, canvasColor, setCanvasColor }: Sideba
                         </nav>
                     </div>
 
-                    {/* Theme and color picker */}
                     <div className="border-t p-4">
                         <div className="mb-4 w-full flex items-center justify-between gap-x-2">
                             <h3 className="mb-2 text-sm font-medium dark:text-w-text flex items-center w-full text-ellipsis overflow-hidden whitespace-nowrap">Theme</h3>
