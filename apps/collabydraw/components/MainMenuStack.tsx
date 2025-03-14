@@ -7,7 +7,6 @@ import {
     Command,
     Github,
     Twitter,
-    MessageSquare,
     UserPlus,
     Sun,
     Moon,
@@ -18,8 +17,9 @@ import {
     TrashIcon,
     DownloadIcon,
     Upload,
+    Linkedin,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { ColorPicker } from "@/components/color-picker"
 import { ConfirmDialog } from "./confirm-dialog"
@@ -28,6 +28,7 @@ import { useTheme } from "next-themes"
 import { clearAllChats } from "@/actions/chat"
 import { signOut } from "next-auth/react"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 
 interface SidebarProps {
     isOpen: boolean
@@ -96,7 +97,7 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                                 <>
                                     <Button
                                         variant="ghost"
-                                        className={cn("flex h-10 w-full justify-start gap-2 rounded-md px-3 text-sm font-semibold transition-colors dark:text-w-text dark:hover:text-w-text dark:hover:bg-w-button-hover-bg")}
+                                        className={cn("flex h-10 w-full justify-start gap-2 rounded-md px-3 text-sm transition-colors font-bold text-color-promo hover:text-color-promo bg-transparent hover:bg-button-hover-bg focus-visible:shadow-brand-color-shadow focus-visible:outline-none focus-visible:ring-0 active:bg-button-hover-bg active:border active:border-brand-active dark:hover:bg-w-button-hover-bg")}
                                         onClick={() => navigator.clipboard.writeText(window.location.href)}
                                     >
                                         <CopyIcon className="h-4 w-4" />
@@ -109,10 +110,9 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
 
                             <Separator className="my-4 dark:bg-default-border-color-dark" />
 
-                            <SidebarItem icon={Command} label="CollabyDraw+" />
-                            <SidebarItem icon={Github} label="GitHub" />
-                            <SidebarItem icon={Twitter} label="Follow us" />
-                            <SidebarItem icon={MessageSquare} label="Discord chat" />
+                            <SidebarLinkItem icon={Github} label="GitHub" url="https://github.com/coderomm" />
+                            <SidebarLinkItem icon={Twitter} label="Twitter / X" url="https://x.com/1omsharma" />
+                            <SidebarLinkItem icon={Linkedin} label="Linkedin" url="https://www.linkedin.com/in/1omsharma/" />
                         </nav>
                     </div>
 
@@ -159,10 +159,12 @@ function SidebarItem({ icon: Icon, label, shortcut, className, onClick }: Sideba
         <Button
             variant="ghost"
             className={cn(
-                "flex h-10 w-full justify-start gap-2 rounded-md px-3 text-sm font-medium transition-colors dark:text-w-text dark:hover:text-w-text dark:hover:bg-w-button-hover-bg",
+                "flex h-10 w-full justify-start gap-2 rounded-md px-3 text-sm font-medium transition-colors text-color-on-surface hover:text-color-on-surface bg-transparent hover:bg-button-hover-bg focus-visible:shadow-brand-color-shadow focus-visible:outline-none focus-visible:ring-0 active:bg-button-hover-bg active:border active:border-brand-active dark:hover:bg-w-button-hover-bg",
                 className,
             )}
             onClick={onClick}
+            target="_blank"
+            rel="noopener noreferrer"
         >
             <Icon className="h-4 w-4" />
             <span>{label}</span>
@@ -172,5 +174,34 @@ function SidebarItem({ icon: Icon, label, shortcut, className, onClick }: Sideba
                 </kbd>
             )}
         </Button>
+    )
+}
+
+interface SidebarLinkItemProps {
+    icon: React.ElementType
+    label: string
+    shortcut?: string
+    className?: string
+    url: string
+}
+
+function SidebarLinkItem({ icon: Icon, label, shortcut, className, url }: SidebarLinkItemProps) {
+    return (
+        <Link
+            className={cn(
+                buttonVariants({ variant: "ghost" }),
+                "flex h-10 w-full justify-start gap-2 rounded-md px-3 text-sm font-medium transition-colors text-color-on-surface hover:text-color-on-surface bg-transparent hover:bg-button-hover-bg focus-visible:shadow-brand-color-shadow focus-visible:outline-none focus-visible:ring-0 active:bg-button-hover-bg active:border active:border-brand-active dark:hover:bg-w-button-hover-bg",
+                className,
+            )}
+            href={url}
+        >
+            <Icon className="h-4 w-4" />
+            <span>{label}</span>
+            {shortcut && (
+                <kbd className="ml-auto inline-flex h-5 select-none items-center gap-1 rounded px-1.5 font-mono text-[10px] font-medium opacity-100 bg-muted text-muted-foreground dark:text-[var(--RadioGroup-choice-color-on)] dark:bg-[var(--RadioGroup-choice-background-on)] dark:hover:bg-[var(--RadioGroup-choice-background-on-hover)]">
+                    {shortcut}
+                </kbd>
+            )}
+        </Link>
     )
 }

@@ -92,7 +92,6 @@ h6 {
     --island-bg-color: #232329;
     --w-text: #e3e3e8;
     --w-button-hover-bg: #31303b;
-    --color-promo: #a8a5ff;
     --RadioGroup-choice-color-on: hsl(0, 0%, 7%);
     --RadioGroup-choice-background-on: #a8a5ff;
     --RadioGroup-background: #232329;
@@ -183,6 +182,10 @@ h6 {
     --CollabyTextField--border-hover: var(--brand-hover);
     --CollabyTextField--border-active: var(--brand-active);
     --CollabyTextField--placeholder: var(--color-border-outline-variant);
+    --button-hover-bg: var(--color-surface-high);
+    --button-active-bg: var(--color-surface-high);
+    --button-active-border: var(--brand-active);
+    --color-promo: var(--color-primary);
   }
 
   .dark {
@@ -234,8 +237,8 @@ h6 {
     --form-color-text: #ced4da;
     --color-primary: #a8a5ff;
     --color-outline-focus: var(--color-primary);
-    --brand-active: #4440bf;
-    --brand-hover: #5753d0;
+    --brand-active: #d0ccff;
+    --brand-hover: #bbb8ff;
 
     --color-logo-text: #e2dfff;
     --color-surface-high: #31303b;
@@ -261,6 +264,11 @@ h6 {
     --CollabyTextField--border-hover: var(--brand-hover);
     --CollabyTextField--border-active: var(--color-brand-active);
     --CollabyTextField--placeholder: var(--color-border-outline-variant);
+
+    --button-hover-bg: var(--color-surface-high);
+    --button-active-bg: var(--color-surface-high);
+    --button-active-border: var(--brand-active);
+    --color-promo: var(--color-primary);
   }
 }
 
@@ -487,6 +495,10 @@ button {
   color: var(--color-gray-40);
 }
 
+.dark .collabydraw .welcome-screen-decor {
+  color: var(--color-gray-60);
+}
+
 .collabydraw .welcome-screen-decor-hint--menu {
   position: absolute;
   width: 320px;
@@ -531,8 +543,6 @@ button {
   top: -.5rem;
 }
 
-/*  */
-
 .collabydraw .welcome-screen-center {
   display: flex;
   flex-direction: column;
@@ -551,15 +561,6 @@ button {
   .collabydraw .welcome-screen-center {
     margin-top: 8rem;
   }
-}
-
-.collabydraw .excalifont {
-  font-family: Excalifont, Xiaolai;
-}
-
-.collabydraw .welcome-screen-decor {
-  pointer-events: none;
-  color: var(--color-gray-40);
 }
 
 .collabydraw .welcome-screen-center__logo {
@@ -595,7 +596,7 @@ button {
   height: var(--logo-icon--small);
 }
 
-.collabydraw .ExcalidrawLogo .ExcalidrawLogo-text {
+.collabydraw .ExcalidrawLogo-text {
   margin-left: .75rem;
   width: auto;
   color: var(--color-logo-text);
@@ -605,21 +606,6 @@ button {
   text-transform: uppercase;
   letter-spacing: 1px;
 }
-
-.ExcalidrawLogo-text {
-  margin-left: .75rem;
-  width: auto;
-  color: var(--color-logo-text);
-  font-family: Excalifont, Xiaolai;
-  font-size: 2.25rem;
-  font-weight: bolder;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-/* .collabydraw .ExcalidrawLogo.is-small .ExcalidrawLogo-text {
-  height: var(--logo-text--small);
-} */
 
 .collabydraw .welcome-screen-center__heading {
   font-size: 1.125rem;
@@ -657,12 +643,26 @@ button {
   background: var(--color-surface-high);
 }
 
+.dark .collabydraw .welcome-screen-menu-item:hover {
+  background: var(--color-surface-low);
+}
+
 .collabydraw .welcome-screen-menu-item:active {
   background: var(--color-surface-high);
   border-color: var(--brand-active);
 }
 
+.dark .collabydraw .welcome-screen-menu-item:active {
+  background: var(--color-surface-high);
+  border-color: var(--brand-active);
+}
+
 .collabydraw .welcome-screen-menu-item:focus-visible {
+  outline: transparent;
+  box-shadow: 0 0 0 1px var(--brand-hover);
+}
+
+.dark .collabydraw .welcome-screen-menu-item:focus-visible {
   outline: transparent;
   box-shadow: 0 0 0 1px var(--brand-hover);
 }
@@ -686,6 +686,11 @@ button {
   font-size: .75rem;
 }
 
+.dark .collabydraw .welcome-screen-menu-item,
+.dark .collabydraw .welcome-screen-menu-item__shortcut {
+  color: var(--color-gray-60);
+}
+
 .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__shortcut,
 .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__icon,
 .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__text {
@@ -696,4 +701,16 @@ button {
 .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__icon,
 .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__text {
   color: var(--color-gray-100);
+}
+
+.dark .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__shortcut,
+.dark .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__icon,
+.dark .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__text {
+  color: var(--color-gray-10);
+}
+
+.dark .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__shortcut,
+.dark .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__icon,
+.dark .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__text {
+  color: var(--color-gray-10);
 }
