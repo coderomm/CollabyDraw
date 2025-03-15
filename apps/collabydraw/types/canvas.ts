@@ -39,12 +39,9 @@ export type BgFill =
   | "#a5d8ff"
   | "#ffec99";
 
-// export type canvasBg =
-//   | "rgba(0, 0, 0, 0)"
-//   | "rgba(89, 49, 49)"
-//   | "rgba(23, 61, 16)"
-//   | "rgba(30, 70, 101)"
-//   | "rgba(49, 37, 7)";
+export const Edge = ["sharp", "round"] as const;
+
+export type StrokeEdge = (typeof Edge)[number];
 
 export const canvasBgLight = [
   "#ffffff",

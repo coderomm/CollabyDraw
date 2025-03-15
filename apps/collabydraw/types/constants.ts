@@ -1,6 +1,12 @@
 import { COLOR_PALETTE } from "./colors";
 import { ExcalidrawElement } from "./element-types";
 
+export const TEXT_ALIGN = {
+  LEFT: "left",
+  CENTER: "center",
+  RIGHT: "right",
+};
+
 // Radius represented as 25% of element's largest side (width/height).
 // Used for LEGACY and PROPORTIONAL_RADIUS algorithms, or when the element is
 
