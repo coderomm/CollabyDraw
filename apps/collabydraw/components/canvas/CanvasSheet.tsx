@@ -2,7 +2,7 @@
 
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { Game } from "@/draw/Game";
-import { BgFill, canvasBgDark, canvasBgLight, Shape, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgDark, canvasBgLight, Shape, StrokeEdge, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
 import { MobileNavbar } from "../mobile-navbar";
@@ -24,12 +24,14 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
     const [strokeFill, setStrokeFill] = useState<StrokeFill>("#f08c00");
     const [strokeWidth, setStrokeWidth] = useState<StrokeWidth>(1);
     const [bgFill, setBgFill] = useState<BgFill>("#00000000");
+    const [strokeEdge, setStrokeEdge] = useState<StrokeEdge>("round");
     const [grabbing, setGrabbing] = useState(false);
     const [existingShapes, setExistingShapes] = useState<Shape[]>([]);
     const paramsRef = useRef({ roomId, roomName, userId, userName });
     const activeToolRef = useRef(activeTool);
     const strokeFillRef = useRef(strokeFill);
     const strokeWidthRef = useRef(strokeWidth);
+    const strokeEdgeRef = useRef(strokeEdge);
     const bgFillRef = useRef(bgFill);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [canvasColor, setCanvasColor] = useState<string>(theme === 'light' ? canvasBgLight[0] : canvasBgDark[0]);
@@ -97,7 +99,13 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
         game?.setStrokeFill(strokeFill)
         game?.setBgFill(bgFill)
         game?.setCanvasBgColor(canvasColor)
+        game?.setStrokeEdge(strokeEdge)
     });
+
+    useEffect(() => {
+        strokeEdgeRef.current = strokeEdge;
+        game?.setStrokeEdge(strokeEdge);
+    }, [strokeEdge, game]);
 
     useEffect(() => {
         activeToolRef.current = activeTool;
@@ -195,6 +203,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
             game.setStrokeWidth(strokeWidthRef.current);
             game.setStrokeFill(strokeFillRef.current);
             game.setBgFill(bgFillRef.current);
+            game.setStrokeEdge(strokeEdgeRef.current);
 
             canvasRef.current.width = window.innerWidth;
             canvasRef.current.height = window.innerHeight;
@@ -264,6 +273,8 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                             setStrokeWidth={setStrokeWidth}
                             bgFill={bgFill}
                             setBgFill={setBgFill}
+                            strokeEdge={strokeEdge}
+                            setStrokeEdge={setStrokeEdge}
                         />
                     </div>
                 )}

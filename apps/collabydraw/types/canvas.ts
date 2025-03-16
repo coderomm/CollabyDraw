@@ -39,9 +39,7 @@ export type BgFill =
   | "#a5d8ff"
   | "#ffec99";
 
-export const Edge = ["sharp", "round"] as const;
-
-export type StrokeEdge = (typeof Edge)[number];
+export type StrokeEdge = "sharp" | "round";
 
 export const canvasBgLight = [
   "#ffffff",
@@ -73,6 +71,7 @@ export type Shape =
       strokeWidth: number;
       strokeFill: string;
       bgFill: string;
+      rounded: StrokeEdge;
     }
   | {
       type: "ellipse";
@@ -93,6 +92,7 @@ export type Shape =
       strokeWidth: number;
       strokeFill: string;
       bgFill: string;
+      rounded: StrokeEdge;
     }
   | {
       type: "line";

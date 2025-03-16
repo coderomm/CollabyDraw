@@ -1,7 +1,7 @@
 "use client"
 
 import { Game } from "@/draw/Game";
-import { BgFill, canvasBgDark, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgDark, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeEdge, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
 import Toolbar from "../Toolbar";
@@ -24,11 +24,13 @@ export function StandaloneCanvas() {
     const [strokeFill, setStrokeFill] = useState<StrokeFill>("#f08c00");
     const [strokeWidth, setStrokeWidth] = useState<StrokeWidth>(1);
     const [bgFill, setBgFill] = useState<BgFill>("#00000000");
+    const [strokeEdge, setStrokeEdge] = useState<StrokeEdge>("round");
     const [grabbing, setGrabbing] = useState(false);
     const [existingShapes, setExistingShapes] = useState<Shape[]>([]);
     const activeToolRef = useRef(activeTool);
     const strokeFillRef = useRef(strokeFill);
     const strokeWidthRef = useRef(strokeWidth);
+    const strokeEdgeRef = useRef(strokeEdge);
     const bgFillRef = useRef(bgFill);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [canvasColor, setCanvasColor] = useState<string>(theme === 'light' ? canvasBgLight[0] : canvasBgDark[0]);
@@ -88,7 +90,13 @@ export function StandaloneCanvas() {
         game?.setStrokeFill(strokeFill)
         game?.setBgFill(bgFill)
         game?.setCanvasBgColor(canvasColor)
+        game?.setStrokeEdge(strokeEdge)
     });
+
+    useEffect(() => {
+        strokeEdgeRef.current = strokeEdge;
+        game?.setStrokeEdge(strokeEdge);
+    }, [strokeEdge, game]);
 
     useEffect(() => {
         activeToolRef.current = activeTool;
@@ -132,6 +140,9 @@ export function StandaloneCanvas() {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             switch (e.key) {
+                case "0":
+                    setActiveTool("selection");
+                    break;
                 case "1":
                     setActiveTool("grab");
                     break;
@@ -181,6 +192,7 @@ export function StandaloneCanvas() {
             game.setStrokeWidth(strokeWidthRef.current);
             game.setStrokeFill(strokeFillRef.current);
             game.setBgFill(bgFillRef.current);
+            game.setStrokeEdge(strokeEdgeRef.current);
 
             canvasRef.current.width = window.innerWidth;
             canvasRef.current.height = window.innerHeight;
@@ -212,6 +224,12 @@ export function StandaloneCanvas() {
             setScale(game.outputScale);
         }
     }, [game?.outputScale]);
+
+    useEffect(() => {
+        if (sidebarOpen && activeTool !== 'grab') {
+            setSidebarOpen(false);
+        }
+    }, [activeTool,sidebarOpen]);
 
     const toggleSidebar = useCallback(() => {
         setSidebarOpen(prev => !prev);
@@ -295,6 +313,8 @@ export function StandaloneCanvas() {
                                 setStrokeWidth={setStrokeWidth}
                                 bgFill={bgFill}
                                 setBgFill={setBgFill}
+                                strokeEdge={strokeEdge}
+                                setStrokeEdge={setStrokeEdge}
                             />
                         </div>
                     )}

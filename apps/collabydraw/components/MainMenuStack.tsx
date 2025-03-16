@@ -47,6 +47,8 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
     const [clearDialogOpen, setClearDialogOpen] = useState(false)
     const { theme, setTheme } = useTheme()
 
+    console.log('isOpen = ', isOpen);
+
     useEffect(() => {
         const handleOutsideClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement

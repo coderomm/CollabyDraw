@@ -1,9 +1,20 @@
 import { getRoom } from "@/actions/room";
-import { _generateElementShape } from "@/lib/Shape";
-import { LOCALSTORAGE_CANVAS_KEY, Shape, ToolType } from "@/types/canvas";
-import { ExcalidrawElement, Radians } from "@/types/element-types";
+import {
+  LOCALSTORAGE_CANVAS_KEY,
+  Shape,
+  StrokeEdge,
+  ToolType,
+} from "@/types/canvas";
 import { RoughGenerator } from "roughjs/bin/generator";
-import rough from "roughjs/bin/rough";
+
+const CORNER_RADIUS_FACTOR = 20;
+const RECT_CORNER_RADIUS_FACTOR = CORNER_RADIUS_FACTOR;
+const DIAMOND_CORNER_RADIUS_PERCENTAGE = CORNER_RADIUS_FACTOR;
+const ERASER_TOLERANCE = 5;
+// const WHEEL_SCALE_FACTOR = 200;
+const DEFAULT_STROKE_WIDTH = 1;
+const DEFAULT_STROKE_FILL = "rgba(255, 255, 255)";
+const DEFAULT_BG_FILL = "rgba(18, 18, 18)";
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -25,8 +36,10 @@ export class Game {
   private strokeWidth: number = 1;
   private strokeFill: string = "rgba(255, 255, 255)";
   private bgFill: string = "rgba(18, 18, 18)";
+  private strokeEdge: StrokeEdge = "round";
   private isStandalone: boolean = false;
   private static rg = new RoughGenerator();
+
   constructor(
     canvas: HTMLCanvasElement,
     roomId: string | null,
@@ -130,6 +143,11 @@ export class Game {
     }
   }
 
+  setStrokeEdge(edge: StrokeEdge) {
+    this.strokeEdge = edge;
+    this.clearCanvas();
+  }
+
   clearCanvas() {
     this.ctx.setTransform(this.scale, 0, 0, this.scale, this.panX, this.panY);
     this.ctx.clearRect(
@@ -153,9 +171,10 @@ export class Game {
           shape.y,
           shape.width,
           shape.height,
-          shape.strokeWidth,
-          shape.strokeFill,
-          shape.bgFill
+          shape.strokeWidth || DEFAULT_STROKE_WIDTH,
+          shape.strokeFill || DEFAULT_STROKE_FILL,
+          shape.bgFill || DEFAULT_BG_FILL,
+          shape.rounded
         );
       } else if (shape.type === "ellipse") {
         this.drawEllipse(
@@ -175,7 +194,8 @@ export class Game {
           shape.height,
           shape.strokeWidth,
           shape.strokeFill,
-          shape.bgFill
+          shape.bgFill,
+          shape.rounded
         );
       } else if (shape.type === "line") {
         this.drawLine(
@@ -224,146 +244,157 @@ export class Game {
 
       this.clearCanvas();
 
-      const activeTool = this.activeTool;
+      switch (this.activeTool) {
+        case "rectangle":
+          this.drawRect(
+            this.startX,
+            this.startY,
+            width,
+            height,
+            this.strokeWidth,
+            this.strokeFill,
+            this.bgFill,
+            this.strokeEdge
+          );
+          break;
 
-      if (activeTool === "rectangle") {
-        this.drawRect(
-          this.startX,
-          this.startY,
-          width,
-          height,
-          this.strokeWidth,
-          this.strokeFill,
-          this.bgFill
-        );
-      } else if (activeTool === "ellipse") {
-        const centerX = this.startX + width / 2;
-        const centerY = this.startY + height / 2;
-        const radX = Math.abs(width / 2);
-        const radY = Math.abs(height / 2);
-        this.drawEllipse(
-          centerX,
-          centerY,
-          radX,
-          radY,
-          this.strokeWidth,
-          this.strokeFill,
-          this.bgFill
-        );
-      } else if (activeTool === "diamond") {
-        const width = Math.abs(x - this.startX) * 2;
-        const height = Math.abs(y - this.startY) * 2;
-        const centerX = this.startX;
-        const centerY = this.startY;
+        case "ellipse":
+          this.drawEllipse(
+            this.startX + width / 2,
+            this.startY + height / 2,
+            Math.abs(width / 2),
+            Math.abs(height / 2),
+            this.strokeWidth,
+            this.strokeFill,
+            this.bgFill
+          );
+          break;
 
-        this.drawDiamond(
-          centerX,
-          centerY,
-          width,
-          height,
-          this.strokeWidth,
-          this.strokeFill,
-          this.bgFill
-        );
-      } else if (activeTool === "line") {
-        this.drawLine(
-          this.startX,
-          this.startY,
-          x,
-          y,
-          this.strokeWidth,
-          this.strokeFill
-        );
-      } else if (activeTool === "pen") {
-        const currentShape = this.existingShape[this.existingShape.length - 1];
-        if (currentShape?.type === "pen") {
-          currentShape.points.push({ x, y });
-          this.drawPencil(
-            currentShape.points,
+        case "diamond":
+          this.drawDiamond(
+            this.startX,
+            this.startY,
+            Math.abs(x - this.startX) * 2,
+            Math.abs(y - this.startY) * 2,
+            this.strokeWidth,
+            this.strokeFill,
+            this.bgFill,
+            this.strokeEdge
+          );
+          break;
+
+        case "line":
+          this.drawLine(
+            this.startX,
+            this.startY,
+            x,
+            y,
             this.strokeWidth,
             this.strokeFill
           );
-        }
-      } else if (activeTool === "eraser") {
-        this.eraser(x, y);
-      } else if (activeTool === "grab") {
-        const { x: transformedX, y: transformedY } = this.transformPanScale(
-          e.clientX,
-          e.clientY
-        );
-        const { x: startTransformedX, y: startTransformedY } =
-          this.transformPanScale(this.startX, this.startY);
+          break;
 
-        const deltaX = transformedX - startTransformedX;
-        const deltaY = transformedY - startTransformedY;
+        case "pen":
+          const currentShape =
+            this.existingShape[this.existingShape.length - 1];
+          if (currentShape?.type === "pen") {
+            currentShape.points.push({ x, y });
+            this.drawPencil(
+              currentShape.points,
+              this.strokeWidth,
+              this.strokeFill
+            );
+          }
+          break;
 
-        this.panX += deltaX * this.scale;
-        this.panY += deltaY * this.scale;
-        this.startX = e.clientX;
-        this.startY = e.clientY;
-        this.clearCanvas();
+        case "eraser":
+          this.eraser(x, y);
+          break;
+
+        case "grab":
+          const { x: transformedX, y: transformedY } = this.transformPanScale(
+            e.clientX,
+            e.clientY
+          );
+          const { x: startTransformedX, y: startTransformedY } =
+            this.transformPanScale(this.startX, this.startY);
+
+          const deltaX = transformedX - startTransformedX;
+          const deltaY = transformedY - startTransformedY;
+
+          this.panX += deltaX * this.scale;
+          this.panY += deltaY * this.scale;
+          this.startX = e.clientX;
+          this.startY = e.clientY;
+          this.clearCanvas();
       }
     }
   };
 
   isPointInShape(x: number, y: number, shape: Shape): boolean {
-    const tolerance = 5;
+    const tolerance = ERASER_TOLERANCE;
 
-    if (shape.type === "rectangle") {
-      const startX = Math.min(shape.x, shape.x + shape.width);
-      const endX = Math.max(shape.x, shape.x + shape.width);
-      const startY = Math.min(shape.y, shape.y + shape.height);
-      const endY = Math.max(shape.y, shape.y + shape.height);
+    switch (shape.type) {
+      case "rectangle": {
+        const startX = Math.min(shape.x, shape.x + shape.width);
+        const endX = Math.max(shape.x, shape.x + shape.width);
+        const startY = Math.min(shape.y, shape.y + shape.height);
+        const endY = Math.max(shape.y, shape.y + shape.height);
 
-      return (
-        x >= startX - tolerance &&
-        x <= endX + tolerance &&
-        y >= startY - tolerance &&
-        y <= endY + tolerance
-      );
-    } else if (shape.type === "ellipse") {
-      const dx = x - shape.centerX;
-      const dy = y - shape.centerY;
-      const normalized =
-        (dx * dx) / ((shape.radX + tolerance) * (shape.radX + tolerance)) +
-        (dy * dy) / ((shape.radY + tolerance) * (shape.radY + tolerance));
-      return normalized <= 1;
-    } else if (shape.type === "diamond") {
-      const dx = Math.abs(x - shape.centerX);
-      const dy = Math.abs(y - shape.centerY);
+        return (
+          x >= startX - tolerance &&
+          x <= endX + tolerance &&
+          y >= startY - tolerance &&
+          y <= endY + tolerance
+        );
+      }
+      case "ellipse": {
+        const dx = x - shape.centerX;
+        const dy = y - shape.centerY;
+        const normalized =
+          (dx * dx) / ((shape.radX + tolerance) * (shape.radX + tolerance)) +
+          (dy * dy) / ((shape.radY + tolerance) * (shape.radY + tolerance));
+        return normalized <= 1;
+      }
+      case "diamond": {
+        const dx = Math.abs(x - shape.centerX);
+        const dy = Math.abs(y - shape.centerY);
 
-      return (
-        dx / (shape.width / 2 + tolerance) +
-          dy / (shape.height / 2 + tolerance) <=
-        1
-      );
-    } else if (shape.type === "line") {
-      const lineLength = Math.hypot(
-        shape.toX - shape.fromX,
-        shape.toY - shape.fromY
-      );
-      const distance =
-        Math.abs(
-          (shape.toY - shape.fromY) * x -
-            (shape.toX - shape.fromX) * y +
-            shape.toX * shape.fromY -
-            shape.toY * shape.fromX
-        ) / lineLength;
+        return (
+          dx / (shape.width / 2 + tolerance) +
+            dy / (shape.height / 2 + tolerance) <=
+          1
+        );
+      }
+      case "line": {
+        const lineLength = Math.hypot(
+          shape.toX - shape.fromX,
+          shape.toY - shape.fromY
+        );
+        const distance =
+          Math.abs(
+            (shape.toY - shape.fromY) * x -
+              (shape.toX - shape.fromX) * y +
+              shape.toX * shape.fromY -
+              shape.toY * shape.fromX
+          ) / lineLength;
 
-      const withinLineBounds =
-        x >= Math.min(shape.fromX, shape.toX) - tolerance &&
-        x <= Math.max(shape.fromX, shape.toX) + tolerance &&
-        y >= Math.min(shape.fromY, shape.toY) - tolerance &&
-        y <= Math.max(shape.fromY, shape.toY) + tolerance;
+        const withinLineBounds =
+          x >= Math.min(shape.fromX, shape.toX) - tolerance &&
+          x <= Math.max(shape.fromX, shape.toX) + tolerance &&
+          y >= Math.min(shape.fromY, shape.toY) - tolerance &&
+          y <= Math.max(shape.fromY, shape.toY) + tolerance;
 
-      return distance <= tolerance && withinLineBounds;
-    } else if (shape.type === "pen") {
-      return shape.points.some(
-        (point) => Math.hypot(point.x - x, point.y - y) <= tolerance
-      );
+        return distance <= tolerance && withinLineBounds;
+      }
+      case "pen": {
+        return shape.points.some(
+          (point) => Math.hypot(point.x - x, point.y - y) <= tolerance
+        );
+      }
+      default:
+        return false;
     }
-
-    return false;
   }
 
   transformPanScale(
@@ -382,56 +413,43 @@ export class Game {
     height: number,
     strokeWidth: number,
     strokeFill: string,
-    bgFill: string
+    bgFill: string,
+    rounded: StrokeEdge
   ) {
     const posX = width < 0 ? x + width : x;
     const posY = height < 0 ? y + height : y;
     const normalizedWidth = Math.abs(width);
     const normalizedHeight = Math.abs(height);
 
-    strokeWidth = strokeWidth || 1;
-    strokeFill = strokeFill || "rgba(255, 255, 255)";
-    bgFill = bgFill || "rgba(18, 18, 18)";
-
     const radius = Math.min(
-      Math.abs(Math.max(normalizedWidth, normalizedHeight) / 20),
+      Math.abs(
+        Math.max(normalizedWidth, normalizedHeight) / RECT_CORNER_RADIUS_FACTOR
+      ),
       normalizedWidth / 2,
       normalizedHeight / 2
     );
 
-    // RoundRect : https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/roundRect
-    // RoundRect : https://stackoverflow.com/a/3368118
-    this.ctx.beginPath();
-    this.ctx.moveTo(posX + radius, posY);
-    this.ctx.strokeStyle = strokeFill;
-    this.ctx.lineWidth = strokeWidth;
-    this.ctx.fillStyle = bgFill;
-    this.ctx.lineTo(posX + normalizedWidth - radius, posY);
-    this.ctx.quadraticCurveTo(
-      posX + normalizedWidth,
-      posY,
-      posX + normalizedWidth,
-      posY + radius
-    );
-    this.ctx.lineTo(posX + normalizedWidth, posY + normalizedHeight - radius);
-    this.ctx.quadraticCurveTo(
-      posX + normalizedWidth,
-      posY + normalizedHeight,
-      posX + normalizedWidth - radius,
-      posY + normalizedHeight
-    );
-    this.ctx.lineTo(posX + radius, posY + normalizedHeight);
-    this.ctx.quadraticCurveTo(
-      posX,
-      posY + normalizedHeight,
-      posX,
-      posY + normalizedHeight - radius
-    );
-    this.ctx.lineTo(posX, posY + radius);
-    this.ctx.quadraticCurveTo(posX, posY, posX + radius, posY);
-    this.ctx.closePath();
-    this.ctx.fill();
-    this.ctx.stroke();
+    if (rounded === "round") {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = strokeFill;
+      this.ctx.lineWidth = strokeWidth;
+      this.ctx.fillStyle = bgFill;
+      this.ctx.roundRect(posX, posY, normalizedWidth, normalizedHeight, [
+        radius,
+      ]);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+    } else {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = strokeFill;
+      this.ctx.lineWidth = strokeWidth;
+      this.ctx.fillStyle = bgFill;
+      this.ctx.roundRect(posX, posY, normalizedWidth, normalizedHeight, [0]);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+    }
   }
 
   drawEllipse(
@@ -443,10 +461,6 @@ export class Game {
     strokeFill: string,
     bgFill: string
   ) {
-    strokeWidth = strokeWidth || 1;
-    strokeFill = strokeFill || "rgba(255, 255, 255)";
-    bgFill = bgFill || "rgba(18, 18, 18)";
-
     this.ctx.beginPath();
     this.ctx.strokeStyle = strokeFill;
     this.ctx.lineWidth = strokeWidth;
@@ -463,59 +477,17 @@ export class Game {
     height: number,
     strokeWidth: number,
     strokeFill: string,
-    bgFill: string
+    bgFill: string,
+    rounded: StrokeEdge
   ) {
-    strokeWidth = strokeWidth || 1;
-    strokeFill = strokeFill || "rgba(255, 255, 255)";
-    bgFill = bgFill || "rgba(18, 18, 18)";
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
 
-    const isNew: boolean = false;
+    const normalizedWidth = Math.abs(halfWidth);
+    const normalizedHeight = Math.abs(halfHeight);
 
-    if (isNew) {
-      const element: ExcalidrawElement = {
-        id: "100",
-        x: centerX - width / 2,
-        y: centerY - height / 2,
-        strokeColor: strokeFill,
-        backgroundColor: bgFill,
-        fillStyle: "cross-hatch",
-        strokeWidth: strokeWidth,
-        strokeStyle: "dotted",
-        roundness: { type: 1, value: 51 },
-        roughness: 1,
-        opacity: 1,
-        width: width,
-        height: height,
-        angle: (Math.PI / 2) as Radians,
-        seed: 1,
-        version: 1,
-        versionNonce: 1,
-        index: null,
-        isDeleted: false,
-        groupIds: [],
-        frameId: null,
-        boundElements: null,
-        updated: 111111,
-        link: null,
-        locked: false,
-        type: "diamond",
-      };
-      const rc = rough.canvas(this.canvas);
-      this.ctx.lineJoin = "round";
-      this.ctx.lineCap = "round";
-      const shape = _generateElementShape(element, Game.rg);
-      if (shape === null) {
-        console.error("_generateElementShape returned null");
-      }
-      rc.draw(shape!);
-    } else {
-      const cornerRadiusPercentage: number = 15;
-
-      const halfWidth = width / 2;
-      const halfHeight = height / 2;
-
-      const normalizedWidth = Math.abs(halfWidth);
-      const normalizedHeight = Math.abs(halfHeight);
+    if (rounded === "round") {
+      const cornerRadiusPercentage: number = DIAMOND_CORNER_RADIUS_PERCENTAGE;
 
       const sideLength = Math.min(
         Math.sqrt(Math.pow(normalizedWidth, 2) + Math.pow(normalizedHeight, 2)),
@@ -536,11 +508,7 @@ export class Game {
       this.ctx.save();
 
       this.ctx.beginPath();
-      // this.ctx.moveTo(centerX, centerY - halfHeight); // Top point
-      // this.ctx.lineTo(centerX + halfWidth, centerY); // Right point
-      // this.ctx.lineTo(centerX, centerY + halfHeight); // Bottom point
-      // this.ctx.lineTo(centerX - halfWidth, centerY); // Left point
-      // Calculate distance between points for the offset calculation
+
       const distTopLeft = Math.sqrt(
         Math.pow(topPoint.x - leftPoint.x, 2) +
           Math.pow(topPoint.y - leftPoint.y, 2)
@@ -588,6 +556,20 @@ export class Game {
 
       this.ctx.fill();
       this.ctx.stroke();
+    } else {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = strokeFill;
+      this.ctx.lineWidth = strokeWidth;
+      this.ctx.fillStyle = bgFill;
+
+      this.ctx.moveTo(centerX, centerY - halfHeight); // Top point
+      this.ctx.lineTo(centerX + halfWidth, centerY); // Right point
+      this.ctx.lineTo(centerX, centerY + halfHeight); // Bottom point
+      this.ctx.lineTo(centerX - halfWidth, centerY); // Left point
+      // Calculate distance between points for the offset calculation
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
     }
   }
 
@@ -599,9 +581,6 @@ export class Game {
     strokeWidth: number,
     strokeFill: string
   ) {
-    strokeWidth = strokeWidth || 1;
-    strokeFill = strokeFill || "rgba(255, 255, 255)";
-
     this.ctx.beginPath();
     this.ctx.strokeStyle = strokeFill;
     this.ctx.lineWidth = strokeWidth;
@@ -662,79 +641,83 @@ export class Game {
 
   mouseUpHandler = (e: MouseEvent) => {
     this.clicked = false;
-    // document.body.style.cursor = "default";
 
     const { x, y } = this.transformPanScale(e.clientX, e.clientY);
+
     const width = x - this.startX;
     const height = y - this.startY;
 
     let shape: Shape | null = null;
-    if (this.activeTool === "rectangle") {
-      shape = {
-        type: "rectangle",
-        x: this.startX,
-        y: this.startY,
-        width,
-        height,
-        strokeWidth: this.strokeWidth,
-        strokeFill: this.strokeFill,
-        bgFill: this.bgFill,
-      };
-    } else if (this.activeTool === "ellipse") {
-      const centerX = this.startX + width / 2;
-      const centerY = this.startY + height / 2;
-      const radX = Math.abs(width / 2);
-      const radY = Math.abs(height / 2);
 
-      shape = {
-        type: "ellipse",
-        centerX,
-        centerY,
-        radX,
-        radY,
-        strokeWidth: this.strokeWidth,
-        strokeFill: this.strokeFill,
-        bgFill: this.bgFill,
-      };
-    } else if (this.activeTool === "diamond") {
-      const width = Math.abs(x - this.startX) * 2;
-      const height = Math.abs(y - this.startY) * 2;
-      const centerX = this.startX;
-      const centerY = this.startY;
-
-      shape = {
-        type: "diamond",
-        centerX,
-        centerY,
-        width,
-        height,
-        strokeWidth: this.strokeWidth,
-        strokeFill: this.strokeFill,
-        bgFill: this.bgFill,
-      };
-    } else if (this.activeTool === "line") {
-      shape = {
-        type: "line",
-        fromX: this.startX,
-        fromY: this.startY,
-        toX: x,
-        toY: y,
-        strokeWidth: this.strokeWidth,
-        strokeFill: this.strokeFill,
-      };
-    } else if (this.activeTool === "pen") {
-      const currentShape = this.existingShape[this.existingShape.length - 1];
-      if (currentShape?.type === "pen") {
+    switch (this.activeTool) {
+      case "rectangle":
         shape = {
-          type: "pen",
-          points: currentShape.points,
+          type: "rectangle",
+          x: this.startX,
+          y: this.startY,
+          width,
+          height,
+          strokeWidth: this.strokeWidth,
+          strokeFill: this.strokeFill,
+          bgFill: this.bgFill,
+          rounded: this.strokeEdge,
+        };
+        break;
+
+      case "ellipse":
+        shape = {
+          type: "ellipse",
+          centerX: this.startX + width / 2,
+          centerY: this.startY + height / 2,
+          radX: Math.abs(width / 2),
+          radY: Math.abs(height / 2),
+          strokeWidth: this.strokeWidth,
+          strokeFill: this.strokeFill,
+          bgFill: this.bgFill,
+        };
+        break;
+
+      case "diamond":
+        shape = {
+          type: "diamond",
+          centerX: this.startX,
+          centerY: this.startY,
+          width: Math.abs(x - this.startX) * 2,
+          height: Math.abs(y - this.startY) * 2,
+          strokeWidth: this.strokeWidth,
+          strokeFill: this.strokeFill,
+          bgFill: this.bgFill,
+          rounded: this.strokeEdge,
+        };
+        break;
+
+      case "line":
+        shape = {
+          type: "line",
+          fromX: this.startX,
+          fromY: this.startY,
+          toX: x,
+          toY: y,
           strokeWidth: this.strokeWidth,
           strokeFill: this.strokeFill,
         };
-      }
-    } else if (this.activeTool === "grab") {
-      this.startX = e.clientX;
-      this.startY = e.clientY;
+        break;
+
+      case "pen":
+        const currentShape = this.existingShape[this.existingShape.length - 1];
+        if (currentShape?.type === "pen") {
+          shape = {
+            type: "pen",
+            points: currentShape.points,
+            strokeWidth: this.strokeWidth,
+            strokeFill: this.strokeFill,
+          };
+        }
+        break;
+
+      case "grab":
+        this.startX = e.clientX;
+        this.startY = e.clientY;
     }
 
     if (!shape) {
