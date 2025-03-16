@@ -3,6 +3,7 @@ import {
   LOCALSTORAGE_CANVAS_KEY,
   Shape,
   StrokeEdge,
+  StrokeStyle,
   ToolType,
 } from "@/types/canvas";
 import { RoughGenerator } from "roughjs/bin/generator";
@@ -15,6 +16,14 @@ const ERASER_TOLERANCE = 5;
 const DEFAULT_STROKE_WIDTH = 1;
 const DEFAULT_STROKE_FILL = "rgba(255, 255, 255)";
 const DEFAULT_BG_FILL = "rgba(18, 18, 18)";
+const getDashArrayDashed = (strokeWidth: number) => [
+  strokeWidth,
+  strokeWidth * 4,
+];
+const getDashArrayDotted = (strokeWidth: number) => [
+  strokeWidth,
+  strokeWidth * 2,
+];
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -37,6 +46,7 @@ export class Game {
   private strokeFill: string = "rgba(255, 255, 255)";
   private bgFill: string = "rgba(18, 18, 18)";
   private strokeEdge: StrokeEdge = "round";
+  private strokeStyle: StrokeStyle = "solid";
   private isStandalone: boolean = false;
   private static rg = new RoughGenerator();
 
@@ -148,6 +158,11 @@ export class Game {
     this.clearCanvas();
   }
 
+  setStrokeStyle(style: StrokeStyle) {
+    this.strokeStyle = style;
+    this.clearCanvas();
+  }
+
   clearCanvas() {
     this.ctx.setTransform(this.scale, 0, 0, this.scale, this.panX, this.panY);
     this.ctx.clearRect(
@@ -163,6 +178,8 @@ export class Game {
       this.canvas.width / this.scale,
       this.canvas.height / this.scale
     );
+    this.ctx.lineCap = "round";
+    this.ctx.lineJoin = "round";
 
     this.existingShape.map((shape: Shape) => {
       if (shape.type === "rectangle") {
@@ -174,7 +191,8 @@ export class Game {
           shape.strokeWidth || DEFAULT_STROKE_WIDTH,
           shape.strokeFill || DEFAULT_STROKE_FILL,
           shape.bgFill || DEFAULT_BG_FILL,
-          shape.rounded
+          shape.rounded,
+          shape.strokeStyle
         );
       } else if (shape.type === "ellipse") {
         this.drawEllipse(
@@ -182,9 +200,10 @@ export class Game {
           shape.centerY,
           shape.radX,
           shape.radY,
-          shape.strokeWidth,
-          shape.strokeFill,
-          shape.bgFill
+          shape.strokeWidth || DEFAULT_STROKE_WIDTH,
+          shape.strokeFill || DEFAULT_STROKE_FILL,
+          shape.bgFill || DEFAULT_BG_FILL,
+          shape.strokeStyle
         );
       } else if (shape.type === "diamond") {
         this.drawDiamond(
@@ -192,10 +211,11 @@ export class Game {
           shape.centerY,
           shape.width,
           shape.height,
-          shape.strokeWidth,
-          shape.strokeFill,
-          shape.bgFill,
-          shape.rounded
+          shape.strokeWidth || DEFAULT_STROKE_WIDTH,
+          shape.strokeFill || DEFAULT_STROKE_FILL,
+          shape.bgFill || DEFAULT_BG_FILL,
+          shape.rounded,
+          shape.strokeStyle
         );
       } else if (shape.type === "line") {
         this.drawLine(
@@ -203,11 +223,17 @@ export class Game {
           shape.fromY,
           shape.toX,
           shape.toY,
-          shape.strokeWidth,
-          shape.strokeFill
+          shape.strokeWidth || DEFAULT_STROKE_WIDTH,
+          shape.strokeFill || DEFAULT_STROKE_FILL,
+          shape.strokeStyle
         );
       } else if (shape.type === "pen") {
-        this.drawPencil(shape.points, shape.strokeWidth, shape.strokeFill);
+        this.drawPencil(
+          shape.points,
+          shape.strokeWidth,
+          shape.strokeFill,
+          shape.strokeStyle
+        );
       }
     });
   }
@@ -226,6 +252,7 @@ export class Game {
         points: [{ x, y }],
         strokeWidth: this.strokeWidth,
         strokeFill: this.strokeFill,
+        strokeStyle: this.strokeStyle,
       });
     } else if (this.activeTool === "eraser") {
       this.eraser(x, y);
@@ -254,7 +281,8 @@ export class Game {
             this.strokeWidth,
             this.strokeFill,
             this.bgFill,
-            this.strokeEdge
+            this.strokeEdge,
+            this.strokeStyle
           );
           break;
 
@@ -266,7 +294,8 @@ export class Game {
             Math.abs(height / 2),
             this.strokeWidth,
             this.strokeFill,
-            this.bgFill
+            this.bgFill,
+            this.strokeStyle
           );
           break;
 
@@ -279,7 +308,8 @@ export class Game {
             this.strokeWidth,
             this.strokeFill,
             this.bgFill,
-            this.strokeEdge
+            this.strokeEdge,
+            this.strokeStyle
           );
           break;
 
@@ -290,7 +320,8 @@ export class Game {
             x,
             y,
             this.strokeWidth,
-            this.strokeFill
+            this.strokeFill,
+            this.strokeStyle
           );
           break;
 
@@ -302,7 +333,8 @@ export class Game {
             this.drawPencil(
               currentShape.points,
               this.strokeWidth,
-              this.strokeFill
+              this.strokeFill,
+              this.strokeStyle
             );
           }
           break;
@@ -414,7 +446,8 @@ export class Game {
     strokeWidth: number,
     strokeFill: string,
     bgFill: string,
-    rounded: StrokeEdge
+    rounded: StrokeEdge,
+    strokeStyle: StrokeStyle
   ) {
     const posX = width < 0 ? x + width : x;
     const posY = height < 0 ? y + height : y;
@@ -429,27 +462,30 @@ export class Game {
       normalizedHeight / 2
     );
 
-    if (rounded === "round") {
-      this.ctx.beginPath();
-      this.ctx.strokeStyle = strokeFill;
-      this.ctx.lineWidth = strokeWidth;
-      this.ctx.fillStyle = bgFill;
-      this.ctx.roundRect(posX, posY, normalizedWidth, normalizedHeight, [
-        radius,
-      ]);
-      this.ctx.closePath();
-      this.ctx.fill();
-      this.ctx.stroke();
-    } else {
-      this.ctx.beginPath();
-      this.ctx.strokeStyle = strokeFill;
-      this.ctx.lineWidth = strokeWidth;
-      this.ctx.fillStyle = bgFill;
-      this.ctx.roundRect(posX, posY, normalizedWidth, normalizedHeight, [0]);
-      this.ctx.closePath();
-      this.ctx.fill();
-      this.ctx.stroke();
-    }
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = strokeFill;
+    this.ctx.lineWidth = strokeWidth;
+    this.ctx.fillStyle = bgFill;
+
+    this.ctx.setLineDash(
+      strokeStyle === "dashed"
+        ? getDashArrayDashed(strokeWidth)
+        : strokeStyle === "dotted"
+          ? getDashArrayDotted(strokeWidth)
+          : []
+    );
+
+    this.ctx.roundRect(
+      posX,
+      posY,
+      normalizedWidth,
+      normalizedHeight,
+      rounded === "round" ? [radius] : [0]
+    );
+
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
   }
 
   drawEllipse(
@@ -459,11 +495,19 @@ export class Game {
     height: number,
     strokeWidth: number,
     strokeFill: string,
-    bgFill: string
+    bgFill: string,
+    strokeStyle: StrokeStyle
   ) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = strokeFill;
     this.ctx.lineWidth = strokeWidth;
+    this.ctx.setLineDash(
+      strokeStyle === "dashed"
+        ? getDashArrayDashed(strokeWidth)
+        : strokeStyle === "dotted"
+          ? getDashArrayDotted(strokeWidth)
+          : []
+    );
     this.ctx.fillStyle = bgFill;
     this.ctx.ellipse(x, y, width, height, 0, 0, 2 * Math.PI);
     this.ctx.fill();
@@ -478,13 +522,22 @@ export class Game {
     strokeWidth: number,
     strokeFill: string,
     bgFill: string,
-    rounded: StrokeEdge
+    rounded: StrokeEdge,
+    strokeStyle: StrokeStyle
   ) {
     const halfWidth = width / 2;
     const halfHeight = height / 2;
 
     const normalizedWidth = Math.abs(halfWidth);
     const normalizedHeight = Math.abs(halfHeight);
+
+    this.ctx.setLineDash(
+      strokeStyle === "dashed"
+        ? getDashArrayDashed(strokeWidth)
+        : strokeStyle === "dotted"
+          ? getDashArrayDotted(strokeWidth)
+          : []
+    );
 
     if (rounded === "round") {
       const cornerRadiusPercentage: number = DIAMOND_CORNER_RADIUS_PERCENTAGE;
@@ -579,12 +632,19 @@ export class Game {
     toX: number,
     toY: number,
     strokeWidth: number,
-    strokeFill: string
+    strokeFill: string,
+    strokeStyle: StrokeStyle
   ) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = strokeFill;
     this.ctx.lineWidth = strokeWidth;
-
+    this.ctx.setLineDash(
+      strokeStyle === "dashed"
+        ? getDashArrayDashed(strokeWidth)
+        : strokeStyle === "dotted"
+          ? getDashArrayDotted(strokeWidth)
+          : []
+    );
     this.ctx.moveTo(fromX, fromY);
     this.ctx.lineTo(toX, toY);
     this.ctx.stroke();
@@ -593,11 +653,19 @@ export class Game {
   drawPencil(
     points: { x: number; y: number }[],
     strokeWidth: number,
-    strokeFill: string
+    strokeFill: string,
+    strokeStyle: StrokeStyle
   ) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = strokeFill;
     this.ctx.lineWidth = strokeWidth;
+    this.ctx.setLineDash(
+      strokeStyle === "dashed"
+        ? getDashArrayDashed(strokeWidth)
+        : strokeStyle === "dotted"
+          ? getDashArrayDotted(strokeWidth)
+          : []
+    );
     if (points[0] === undefined) return null;
     this.ctx.moveTo(points[0].x, points[0].y);
     points.forEach((point) => this.ctx.lineTo(point.x, point.y));
@@ -661,6 +729,7 @@ export class Game {
           strokeFill: this.strokeFill,
           bgFill: this.bgFill,
           rounded: this.strokeEdge,
+          strokeStyle: this.strokeStyle,
         };
         break;
 
@@ -674,6 +743,7 @@ export class Game {
           strokeWidth: this.strokeWidth,
           strokeFill: this.strokeFill,
           bgFill: this.bgFill,
+          strokeStyle: this.strokeStyle,
         };
         break;
 
@@ -688,6 +758,7 @@ export class Game {
           strokeFill: this.strokeFill,
           bgFill: this.bgFill,
           rounded: this.strokeEdge,
+          strokeStyle: this.strokeStyle,
         };
         break;
 
@@ -700,6 +771,7 @@ export class Game {
           toY: y,
           strokeWidth: this.strokeWidth,
           strokeFill: this.strokeFill,
+          strokeStyle: this.strokeStyle,
         };
         break;
 
@@ -711,6 +783,7 @@ export class Game {
             points: currentShape.points,
             strokeWidth: this.strokeWidth,
             strokeFill: this.strokeFill,
+            strokeStyle: this.strokeStyle,
           };
         }
         break;

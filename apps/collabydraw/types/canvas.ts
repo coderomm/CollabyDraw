@@ -72,6 +72,7 @@ export type Shape =
       strokeFill: string;
       bgFill: string;
       rounded: StrokeEdge;
+      strokeStyle: StrokeStyle;
     }
   | {
       type: "ellipse";
@@ -82,6 +83,7 @@ export type Shape =
       strokeWidth: number;
       strokeFill: string;
       bgFill: string;
+      strokeStyle: StrokeStyle;
     }
   | {
       type: "diamond";
@@ -93,6 +95,7 @@ export type Shape =
       strokeFill: string;
       bgFill: string;
       rounded: StrokeEdge;
+      strokeStyle: StrokeStyle;
     }
   | {
       type: "line";
@@ -102,12 +105,14 @@ export type Shape =
       toY: number;
       strokeWidth: number;
       strokeFill: string;
+      strokeStyle: StrokeStyle;
     }
   | {
       type: "pen";
       points: { x: number; y: number }[];
       strokeWidth: number;
       strokeFill: string;
+      strokeStyle: StrokeStyle;
     };
 
 export const LOCALSTORAGE_CANVAS_KEY = "standalone_canvas_shapes";
