@@ -49,14 +49,16 @@ export const GetRoomBySlug = z.object({
 export enum WS_DATA_TYPE {
   JOIN = "JOIN_ROOM",
   LEAVE = "LEAVE_ROOM",
-  CHAT = "MESSAGE",
+  CHAT = "CHAT",
   USER_JOINED = "USER_JOINED",
   USER_LEFT = "USER_LEFT",
   DRAW = "DRAW",
-  ERASER = "ERASER"
+  ERASER = "ERASER",
+  UPDATE = "UPDATE",
 }
 
 export type WebSocketMessage = {
+  id?: string;
   type: WS_DATA_TYPE;
   roomId: string;
   roomName?: string;

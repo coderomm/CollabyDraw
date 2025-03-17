@@ -28,6 +28,7 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Shape     Shape[]
 }
 
 model Room {
@@ -38,6 +39,7 @@ model Room {
   Chat      Chat[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Shape     Shape[]
 }
 
 model Chat {
@@ -47,6 +49,17 @@ model Chat {
   user    User   @relation(fields: [userId], references: [id])
   roomId  Int
   room    Room   @relation(fields: [roomId], references: [id])
+}
+
+model Shape {
+  id        String   @id @default(uuid())
+  message   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  roomId    Int
+  room      Room     @relation(fields: [roomId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Account {

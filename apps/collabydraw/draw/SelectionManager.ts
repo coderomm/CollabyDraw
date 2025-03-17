@@ -2,6 +2,7 @@
 
 import { Shape } from "@/types/canvas";
 
+// type Tool = Exclude<Shape, { type: "pen" }>;
 type Tool = Shape;
 
 export interface ResizeHandle {
@@ -33,6 +34,15 @@ export class SelectionManager {
   private resetCursor() {
     this.canvas.style.cursor = "auto";
   }
+
+  private onUpdateCallback: () => void = () => {};
+  setOnUpdate(callback: () => void) {
+    this.onUpdateCallback = callback;
+  }
+  // Call this after any modification
+  private triggerUpdate() {
+    this.onUpdateCallback();
+  }
   constructor(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
     this.ctx = ctx;
     this.canvas = canvas;
@@ -58,60 +68,80 @@ export class SelectionManager {
     return this.isResizing;
   }
 
-  getShapeBounds(shape: Tool) {
+  getShapeBounds(shape: Tool): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } {
+    if (shape.type !== "pen") {
+      const bounds = {
+        x: shape.x,
+        y: shape.y,
+        width: 0,
+        height: 0,
+      };
+
+      switch (shape.type) {
+        case "rectangle":
+          bounds.width = shape.width || 0;
+          bounds.height = shape.height || 0;
+          if (bounds.width < 0) {
+            bounds.x += bounds.width;
+            bounds.width = Math.abs(bounds.width);
+          }
+          if (bounds.height < 0) {
+            bounds.y += bounds.height;
+            bounds.height = Math.abs(bounds.height);
+          }
+          bounds.x -= 4;
+          bounds.y -= 4;
+          bounds.width += 8;
+          bounds.height += 8;
+          break;
+
+        case "ellipse":
+          bounds.x = shape.x - (shape.radX || 0);
+          bounds.y = shape.y - (shape.radY || 0);
+          bounds.width = (shape.radX || 0) * 2;
+          bounds.height = (shape.radY || 0) * 2;
+          break;
+
+        case "diamond":
+          bounds.width = shape.width;
+          bounds.height = shape.height;
+          // bounds.x = shape.x - shape.width / 2 - 10;
+          // bounds.y = shape.y - shape.height / 2 - 10;
+          bounds.x = shape.x;
+          bounds.y = shape.y;
+          break;
+
+        case "line":
+          // case "arrow":
+          bounds.width = Math.abs(shape.x - shape.toX) + 20;
+          bounds.height = Math.abs(shape.y - shape.toY) + 20;
+          bounds.x = Math.min(shape.x, shape.toX) - 10;
+          bounds.y = Math.min(shape.y, shape.toY) - 10;
+          break;
+
+        // case "text":
+        //     this.ctx.font = '24px Comic Sans MS, cursive';
+        //     const metrics = this.ctx.measureText(shape.text || "");
+        //     bounds.x = shape.x-10
+        //     bounds.y = shape.y-10
+        //     bounds.width = metrics.width+20;
+        //     bounds.height = 48;
+        //     break;
+      }
+
+      return bounds;
+    }
     const bounds = {
       x: 0,
       y: 0,
       width: 0,
       height: 0,
     };
-
-    switch (shape.type) {
-      case "rectangle":
-        bounds.width = shape.width || 0;
-        bounds.height = shape.height || 0;
-        if (bounds.width < 0) {
-          bounds.x += bounds.width;
-          bounds.width = Math.abs(bounds.width);
-        }
-        if (bounds.height < 0) {
-          bounds.y += bounds.height;
-          bounds.height = Math.abs(bounds.height);
-        }
-        bounds.x -= 10;
-        bounds.y -= 10;
-        bounds.width += 20;
-        bounds.height += 20;
-        break;
-      case "ellipse":
-        bounds.width = (shape.radX || 0) * 2;
-        bounds.height = (shape.radY || 0) * 2;
-        break;
-      case "diamond":
-        bounds.width = shape.width * 2;
-        bounds.height = shape.height * 2;
-        // bounds.x -= shape.centerX;
-        // bounds.y -= shape.centerY;
-        bounds.x = shape.centerX - shape.width / 2;
-        bounds.y = shape.centerY - shape.height / 2;
-        break;
-      case "line":
-        // case "arrow":
-        bounds.width = Math.abs(shape.fromX - shape.fromX) + 20;
-        bounds.height = Math.abs(shape.fromY - shape.fromY) + 20;
-        bounds.x = Math.min(shape.fromX, shape.toX) - 10;
-        bounds.y = Math.min(shape.fromY, shape.toY) - 10;
-        break;
-      // case "text":
-      //     this.ctx.font = '24px Comic Sans MS, cursive';
-      //     const metrics = this.ctx.measureText(shape.text || "");
-      //     bounds.x = shape.x-10
-      //     bounds.y = shape.y-10
-      //     bounds.width = metrics.width+20;
-      //     bounds.height = 48;
-      //     break;
-    }
-
     return bounds;
   }
 
@@ -151,17 +181,32 @@ export class SelectionManager {
     height: number;
   }) {
     this.ctx.save();
-    this.ctx.strokeStyle = "#6082B6";
-    // this.ctx.setLineDash([5, 5]);
+
+    const borderColor = "#6965db";
+    const handleBorderColor = "#6965db";
+    const handleFillColor = "#ffffff";
+    const handleSize = 10;
+
+    this.ctx.strokeStyle = borderColor;
+    this.ctx.lineWidth = 1;
+
+    this.ctx.beginPath();
     this.ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
 
-    // Draw resize handles
-    this.ctx.fillStyle = "#6082B6";
     const handles = this.getResizeHandles(bounds);
     handles.forEach((handle) => {
       this.ctx.beginPath();
-      this.ctx.arc(handle.x, handle.y, 7, 0, Math.PI * 2);
+      this.ctx.fillStyle = handleFillColor;
+      this.ctx.strokeStyle = handleBorderColor;
+      this.ctx.roundRect(
+        handle.x - handleSize / 2,
+        handle.y - handleSize / 2,
+        handleSize, 
+        handleSize,
+        3
+      );
       this.ctx.fill();
+      this.ctx.stroke();
     });
 
     this.ctx.restore();
@@ -194,29 +239,63 @@ export class SelectionManager {
     );
   }
 
+  // In startDragging()
   startDragging(x: number, y: number) {
     if (this.selectedShape) {
       this.isDragging = true;
 
-      // if (this.selectedShape.type === "line" || this.selectedShape.type === "arrow") {
+      // Handle different shape types properly
       if (this.selectedShape.type === "line") {
+        this.dragOffset = {
+          x: x - this.selectedShape.x,
+          y: y - this.selectedShape.y,
+        };
         this.dragEndOffset = {
           x: x - this.selectedShape.toX,
           y: y - this.selectedShape.toY,
         };
       } else if (this.selectedShape.type === "ellipse") {
-        this.selectedShape.centerX = x - this.dragOffset.x;
-        this.selectedShape.centerY = y - this.dragOffset.y;
-      } else if (this.selectedShape.type === "diamond") {
-        this.selectedShape.centerX = x - this.dragOffset.x;
-        this.selectedShape.centerY = y - this.dragOffset.y;
-      } else if (this.selectedShape.type === "rectangle") {
-        this.selectedShape.x = x - this.dragOffset.x;
-        this.selectedShape.y = y - this.dragOffset.y;
+        this.dragOffset = {
+          x: x - this.selectedShape.x,
+          y: y - this.selectedShape.y,
+        };
+      } else if (this.selectedShape.type !== "pen") {
+        this.dragOffset = {
+          x: x - this.selectedShape.x,
+          y: y - this.selectedShape.y,
+        };
       }
       this.setCursor("move");
     }
   }
+
+  // startDragging(x: number, y: number) {
+  //   if (this.selectedShape) {
+  //     this.isDragging = true;
+  //     this.dragOffset = {
+  //       x: x - this.selectedShape.x,
+  //       y: y - this.selectedShape.y,
+  //     };
+
+  //     // if (this.selectedShape.type === "line" || this.selectedShape.type === "arrow") {
+  //     if (this.selectedShape.type === "line") {
+  //       this.dragEndOffset = {
+  //         x: x - this.selectedShape.toX,
+  //         y: y - this.selectedShape.toY,
+  //       };
+  //     } else if (this.selectedShape.type === "ellipse") {
+  //       this.selectedShape.centerX = x - this.dragOffset.x;
+  //       this.selectedShape.centerY = y - this.dragOffset.y;
+  //     } else if (this.selectedShape.type === "diamond") {
+  //       this.selectedShape.centerX = x - this.dragOffset.x;
+  //       this.selectedShape.centerY = y - this.dragOffset.y;
+  //     } else if (this.selectedShape.type === "rectangle") {
+  //       this.selectedShape.x = x - this.dragOffset.x;
+  //       this.selectedShape.y = y - this.dragOffset.y;
+  //     }
+  //     this.setCursor("move");
+  //   }
+  // }
 
   startResizing(x: number, y: number) {
     if (this.selectedShape) {
@@ -232,39 +311,35 @@ export class SelectionManager {
     }
   }
 
+  // In updateDragging()
   updateDragging(x: number, y: number) {
     if (this.isDragging && this.selectedShape) {
-      if (this.selectedShape.type === "line") {
-        // || this.selectedShape.type === "arrow") {
-        // Calculate the movement delta
-        const dx = x - this.dragOffset.x;
-        const dy = y - this.dragOffset.y;
+      const dx = x - this.dragOffset.x;
+      const dy = y - this.dragOffset.y;
 
-        // Move both start and end points by the same amount
-        const moveX = dx - this.selectedShape.fromX;
-        const moveY = dy - this.selectedShape.fromY;
+      switch (this.selectedShape.type) {
+        case "line":
+          this.selectedShape.x = dx;
+          this.selectedShape.y = dy;
+          this.selectedShape.toX = x - this.dragEndOffset.x;
+          this.selectedShape.toY = y - this.dragEndOffset.y;
+          break;
 
-        this.selectedShape.fromX = dx;
-        this.selectedShape.fromY = dy;
-        this.selectedShape.toX += moveX;
-        this.selectedShape.toY += moveY;
-      } else if (this.selectedShape.type === "ellipse") {
-        // Calculate the movement delta
-        const dx = x - this.dragOffset.x;
-        const dy = y - this.dragOffset.y;
+        case "ellipse":
+          this.selectedShape.x = dx;
+          this.selectedShape.y = dy;
+          break;
 
-        if (!this.selectedShape.radX || !this.selectedShape.radY) return;
-        // Move the circle's start and end points by the same amount
-        this.selectedShape.centerX = dx;
-        this.selectedShape.centerY = dy;
-        this.selectedShape.radX = dx + this.selectedShape.centerX * 2; // Diameter = radius * 2
-        this.selectedShape.radY = dy + this.selectedShape.centerY * 2; // Diameter = radius * 2
-      } 
-    //   else {
-    //     // For other shapes, just update the position
-    //     this.selectedShape.x = x - this.dragOffset.x;
-    //     this.selectedShape.y = y - this.dragOffset.y;
-    //   }
+        case "pen":
+          this.selectedShape.points[0].x = dx;
+          this.selectedShape.points[0].y = dy;
+          break;
+
+        default:
+          this.selectedShape.x = dx;
+          this.selectedShape.y = dy;
+      }
+      this.triggerUpdate();
     }
   }
 
@@ -306,15 +381,13 @@ export class SelectionManager {
         this.selectedShape.width = newBounds.width;
         this.selectedShape.height = newBounds.height;
       } else if (this.selectedShape.type === "ellipse") {
-        // // Update the circle's start/end points and radii
-        // this.selectedShape.x = newBounds.x; // Left edge of bounding box
-        // this.selectedShape.endX = newBounds.x + newBounds.width; // Right edge of bounding box
-        // this.selectedShape.y = newBounds.y; // Top edge of bounding box
-        // this.selectedShape.endY = newBounds.y + newBounds.height; // Bottom edge of bounding box
-
-        // // Update the radii (width/height are radiusX and radiusY)
-        // this.selectedShape.width = Math.max(newBounds.width / 2, 0); // radiusX = diameter / 2
-        // this.selectedShape.height = Math.max(newBounds.height / 2, 0); // radiusY = diameter / 2
+        // Convert bounding box to ellipse parameters
+        const centerX = newBounds.x + newBounds.width / 2;
+        const centerY = newBounds.y + newBounds.height / 2;
+        this.selectedShape.x = centerX;
+        this.selectedShape.y = centerY;
+        this.selectedShape.radX = newBounds.width / 2;
+        this.selectedShape.radY = newBounds.height / 2;
       } else if (this.selectedShape.type === "diamond") {
         this.selectedShape.width =
           Math.max(Math.abs(newBounds.width), Math.abs(newBounds.height)) / 2;
@@ -323,15 +396,15 @@ export class SelectionManager {
         // Update line/arrow endpoints based on the resize handle
         switch (this.activeResizeHandle.position) {
           case "top-left":
-            this.selectedShape.fromX = x;
-            this.selectedShape.fromY = y;
+            this.selectedShape.x = x;
+            this.selectedShape.y = y;
             break;
           case "top-right":
             this.selectedShape.toX = x;
-            this.selectedShape.fromY = y;
+            this.selectedShape.y = y;
             break;
           case "bottom-left":
-            this.selectedShape.fromX = x;
+            this.selectedShape.x = x;
             this.selectedShape.toY = y;
             break;
           case "bottom-right":
@@ -340,6 +413,7 @@ export class SelectionManager {
             break;
         }
       }
+      this.triggerUpdate();
     }
   }
 

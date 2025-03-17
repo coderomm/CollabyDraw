@@ -133,7 +133,7 @@ wss.on("connection", function connection(ws, req) {
             console.error("Missing message or roomId for CHAT");
             return;
           }
-          await client.chat.create({
+          await client.shape.create({
             data: {
               message: parsedData.message,
               roomId: Number(parsedData.roomId),
@@ -153,7 +153,7 @@ wss.on("connection", function connection(ws, req) {
               userName: parsedData.userName,
               timestamp: new Date().toISOString(),
             },
-            []
+            [userId]
           );
           break;
 
@@ -166,11 +166,52 @@ wss.on("connection", function connection(ws, req) {
 
           // Save drawing data to database
           try {
-            await client.chat.create({
+            await client.shape.create({
               data: {
                 message: parsedData.message,
                 roomId: Number(parsedData.roomId),
                 userId: userId,
+              },
+            });
+          } catch (err) {
+            console.error(
+              `Error saving ${parsedData.type} data to database:`,
+              err
+            );
+          }
+
+          // Broadcast to room
+          broadcastToRoom(
+            parsedData.roomId,
+            {
+              type: parsedData.type,
+              message: parsedData.message,
+              roomId: parsedData.roomId,
+              userId: userId,
+              userName: user.userName,
+              timestamp: new Date().toISOString(),
+            },
+            [userId] // Include sender so they get confirmation
+          );
+          break;
+
+        case WS_DATA_TYPE.UPDATE:
+          if (!parsedData.roomId || !parsedData.message || !parsedData.id) {
+            console.error(
+              `Missing shape Id or roomId or data for ${parsedData.type}`
+            );
+            return;
+          }
+
+          // Save drawing data to database
+          try {
+            await client.shape.update({
+              where: {
+                id: parsedData.id,
+                roomId: Number(parsedData.roomId),
+              },
+              data: {
+                message: parsedData.message,
               },
             });
           } catch (err) {

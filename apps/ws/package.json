@@ -25,6 +25,7 @@
     "@types/jsonwebtoken": "^9.0.8",
     "cookie": "^1.0.2",
     "jsonwebtoken": "^9.0.2",
+    "uuid": "^11.1.0",
     "ws": "^8.18.0"
   }
 }

@@ -63,6 +63,7 @@ export type DEFAULT_CANVAS_BACKGROUND_DARK = (typeof canvasBgDark)[number];
 
 export type Shape =
   | {
+      id: string | null;
       type: "rectangle";
       x: number;
       y: number;
@@ -75,9 +76,10 @@ export type Shape =
       strokeStyle: StrokeStyle;
     }
   | {
+      id: string | null;
       type: "ellipse";
-      centerX: number;
-      centerY: number;
+      x: number;
+      y: number;
       radX: number;
       radY: number;
       strokeWidth: number;
@@ -86,9 +88,10 @@ export type Shape =
       strokeStyle: StrokeStyle;
     }
   | {
+      id: string | null;
       type: "diamond";
-      centerX: number;
-      centerY: number;
+      x: number;
+      y: number;
       width: number;
       height: number;
       strokeWidth: number;
@@ -98,9 +101,10 @@ export type Shape =
       strokeStyle: StrokeStyle;
     }
   | {
+      id: string | null;
       type: "line";
-      fromX: number;
-      fromY: number;
+      x: number;
+      y: number;
       toX: number;
       toY: number;
       strokeWidth: number;
@@ -108,10 +112,24 @@ export type Shape =
       strokeStyle: StrokeStyle;
     }
   | {
+      id: string | null;
       type: "pen";
       points: { x: number; y: number }[];
       strokeWidth: number;
       strokeFill: string;
+      strokeStyle: StrokeStyle;
+    }
+  | {
+      id: string | null;
+      type: "selection";
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      strokeWidth: number;
+      strokeFill: string;
+      bgFill: string;
+      rounded: StrokeEdge;
       strokeStyle: StrokeStyle;
     };
 

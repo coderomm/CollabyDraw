@@ -186,6 +186,8 @@ h6 {
     --button-active-bg: var(--color-surface-high);
     --button-active-border: var(--brand-active);
     --color-promo: var(--color-primary);
+
+    --selection-box-border-color: #6965db;
   }
 
   .dark {
@@ -224,7 +226,6 @@ h6 {
     --surface-box-shadow: #121212;
     --shadow-island: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
 
-    --color-primary: #a8a5ff;
     --color-primary-darker: #b2aeff;
     --color-primary-darkest: #beb9ff;
     --color-primary-light: #4f4d6f;
@@ -269,6 +270,8 @@ h6 {
     --button-active-bg: var(--color-surface-high);
     --button-active-border: var(--brand-active);
     --color-promo: var(--color-primary);
+
+    --selection-box-border-color: #a8a5ff;
   }
 }
 

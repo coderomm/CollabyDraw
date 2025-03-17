@@ -282,6 +282,19 @@ export function StandaloneCanvas() {
         input.click();
     }, [game]);
 
+    const handleToolSelect = (tool: ToolType) => {
+        setActiveTool(tool);
+        game?.setTool(tool);
+        if (tool !== "selection") {
+            game?.updateShapes(existingShapes);
+        }
+    };
+
+    useEffect(() => {
+        // 
+        
+    }, []);
+
     return (
         <div data-isloading={isLoading} data-matches={matches} className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab" && !sidebarOpen) ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
             {!isLoading && (
@@ -326,7 +339,7 @@ export function StandaloneCanvas() {
 
                     <Toolbar
                         selectedTool={activeTool}
-                        onToolSelect={setActiveTool}
+                        onToolSelect={handleToolSelect}
                     />
 
                     <CollaborationStart />
