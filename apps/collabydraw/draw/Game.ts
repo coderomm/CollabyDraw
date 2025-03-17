@@ -960,10 +960,10 @@ export class Game {
   }
 
   eraser(x: number, y: number) {
-    const transformedPoint = this.transformPanScale(x, y);
-
+    // We don't need to transform the coordinates here again since they're already transformed
+    // in the mouseDownHandler and mouseMoveHandler
     const shapeIndex = this.existingShape.findIndex((shape) =>
-      this.isPointInShape(transformedPoint.x, transformedPoint.y, shape)
+      this.isPointInShape(x, y, shape)
     );
 
     if (shapeIndex !== -1) {

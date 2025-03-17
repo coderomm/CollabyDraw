@@ -32,7 +32,7 @@ export class SelectionManager {
   }
 
   private resetCursor() {
-    this.canvas.style.cursor = "auto";
+    this.canvas.style.cursor = "";
   }
 
   private onUpdateCallback: () => void = () => {};
@@ -110,18 +110,21 @@ export class SelectionManager {
         case "diamond":
           bounds.width = shape.width;
           bounds.height = shape.height;
-          // bounds.x = shape.x - shape.width / 2 - 10;
-          // bounds.y = shape.y - shape.height / 2 - 10;
-          bounds.x = shape.x;
-          bounds.y = shape.y;
+          bounds.x = shape.x - shape.width / 2;
+          bounds.y = shape.y - shape.height / 2;
           break;
 
         case "line":
           // case "arrow":
-          bounds.width = Math.abs(shape.x - shape.toX) + 20;
-          bounds.height = Math.abs(shape.y - shape.toY) + 20;
-          bounds.x = Math.min(shape.x, shape.toX) - 10;
-          bounds.y = Math.min(shape.y, shape.toY) - 10;
+          const minX = Math.min(shape.x, shape.toX);
+          const minY = Math.min(shape.y, shape.toY);
+          const maxX = Math.max(shape.x, shape.toX);
+          const maxY = Math.max(shape.y, shape.toY);
+
+          bounds.x = minX - shape.strokeWidth;
+          bounds.y = minY - shape.strokeWidth;
+          bounds.width = maxX - minX + shape.strokeWidth * 2;
+          bounds.height = maxY - minY + shape.strokeWidth * 2;
           break;
 
         // case "text":
@@ -201,7 +204,7 @@ export class SelectionManager {
       this.ctx.roundRect(
         handle.x - handleSize / 2,
         handle.y - handleSize / 2,
-        handleSize, 
+        handleSize,
         handleSize,
         3
       );
@@ -255,6 +258,11 @@ export class SelectionManager {
           y: y - this.selectedShape.toY,
         };
       } else if (this.selectedShape.type === "ellipse") {
+        this.dragOffset = {
+          x: x - this.selectedShape.x,
+          y: y - this.selectedShape.y,
+        };
+      } else if (this.selectedShape.type === "diamond") {
         this.dragOffset = {
           x: x - this.selectedShape.x,
           y: y - this.selectedShape.y,
@@ -389,8 +397,12 @@ export class SelectionManager {
         this.selectedShape.radX = newBounds.width / 2;
         this.selectedShape.radY = newBounds.height / 2;
       } else if (this.selectedShape.type === "diamond") {
-        this.selectedShape.width =
-          Math.max(Math.abs(newBounds.width), Math.abs(newBounds.height)) / 2;
+        const centerX = newBounds.x + newBounds.width / 2;
+        const centerY = newBounds.y + newBounds.height / 2;
+        this.selectedShape.x = centerX;
+        this.selectedShape.y = centerY;
+        this.selectedShape.width = newBounds.width;
+        this.selectedShape.height = newBounds.height;
       } else if (this.selectedShape.type === "line") {
         // || this.selectedShape.type === "arrow") {
         // Update line/arrow endpoints based on the resize handle

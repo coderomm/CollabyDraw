@@ -290,11 +290,6 @@ export function StandaloneCanvas() {
         }
     };
 
-    useEffect(() => {
-        // 
-        
-    }, []);
-
     return (
         <div data-isloading={isLoading} data-matches={matches} className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab" && !sidebarOpen) ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
             {!isLoading && (
