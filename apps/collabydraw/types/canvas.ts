@@ -1,4 +1,5 @@
 import type React from "react";
+
 export type Point = {
   x: number;
   y: number;
@@ -23,14 +24,25 @@ export type Tool = {
   shortcut: number;
 };
 
+export type StrokeEdge = "sharp" | "round";
+
 export type StrokeWidth = 1 | 2 | 4;
+
 export type StrokeStyle = "solid" | "dashed" | "dotted";
+
 export type StrokeFill =
   | "#1e1e1e"
   | "#e03131"
   | "#2f9e44"
   | "#1971c2"
   | "#f08c00";
+
+export type StrokeFillDark =
+  | "#d3d3d3"
+  | "#ff8383"
+  | "#3a994c"
+  | "#55a1e6"
+  | "#b76100";
 
 export type BgFill =
   | "#00000000"
@@ -39,7 +51,12 @@ export type BgFill =
   | "#a5d8ff"
   | "#ffec99";
 
-export type StrokeEdge = "sharp" | "round";
+export type BgFillDark =
+  | "#00000000"
+  | "#5b2c2c"
+  | "#043b0c"
+  | "#154163"
+  | "#362500";
 
 export const canvasBgLight = [
   "#ffffff",
@@ -60,6 +77,8 @@ export const canvasBgDark = [
 export type DEFAULT_CANVAS_BACKGROUND_LIGHT = (typeof canvasBgLight)[number];
 
 export type DEFAULT_CANVAS_BACKGROUND_DARK = (typeof canvasBgDark)[number];
+
+export const LOCALSTORAGE_CANVAS_KEY = "standalone_canvas_shapes";
 
 export type Shape =
   | {
@@ -132,5 +151,3 @@ export type Shape =
       rounded: StrokeEdge;
       strokeStyle: StrokeStyle;
     };
-
-export const LOCALSTORAGE_CANVAS_KEY = "standalone_canvas_shapes";

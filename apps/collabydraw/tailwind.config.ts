@@ -97,17 +97,19 @@ export default {
         "brand-hover": "var(--brand-hover)",
         "island-bg-color": "var(--island-bg-color)",
         "dialog-border-color": "var(--dialog-border-color)",
-        "loading-text-color":"var(--loading-text-color)",
-        'collaby-textfield': 'var(--CollabyTextField--background)',
-        'collaby-textfield-readonly': 'var(--CollabyTextField--readonly--background)',
-        'color-on-surface': 'var(--color-on-surface)',
-        "button-hover-bg":"var(--button-hover-bg)",
-        "button-active-bg":"var(--button-active-bg)",
+        "loading-text-color": "var(--loading-text-color)",
+        "collaby-textfield": "var(--CollabyTextField--background)",
+        "collaby-textfield-readonly":
+          "var(--CollabyTextField--readonly--background)",
+        "color-on-surface": "var(--color-on-surface)",
+        "button-hover-bg": "var(--button-hover-bg)",
+        "button-active-bg": "var(--button-active-bg)",
       },
       textColor: {
-        'collaby-textfield': 'var(--CollabyTextField--color)',
-        'collaby-textfield-label': 'var(--CollabyTextField--label-color)',
-        'collaby-textfield-readonly': 'var(--CollabyTextField--readonly--color)',
+        "collaby-textfield": "var(--CollabyTextField--color)",
+        "collaby-textfield-label": "var(--CollabyTextField--label-color)",
+        "collaby-textfield-readonly":
+          "var(--CollabyTextField--readonly--color)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -115,11 +117,12 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       borderColor: {
-        'collaby-textfield': 'var(--CollabyTextField--border)',
-        'collaby-textfield-readonly': 'var(--CollabyTextField--readonly--border)',
-        'collaby-textfield-hover': 'var(--CollabyTextField--border-hover)',
-        'collaby-textfield-active': 'var(--CollabyTextField--border-active)',
-        'collaby-textfield-placeholder': 'var(--CollabyTextField--placeholder)',
+        "collaby-textfield": "var(--CollabyTextField--border)",
+        "collaby-textfield-readonly":
+          "var(--CollabyTextField--readonly--border)",
+        "collaby-textfield-hover": "var(--CollabyTextField--border-hover)",
+        "collaby-textfield-active": "var(--CollabyTextField--border-active)",
+        "collaby-textfield-placeholder": "var(--CollabyTextField--placeholder)",
       },
       keyframes: {
         "accordion-down": {
@@ -143,13 +146,16 @@ export default {
         "input-shadow": "0 0 0 1px var(--color-border-input)",
         "modal-shadow":
           "0px 100px 80px rgba(0, 0, 0, .07), 0px 41.7776px 33.4221px rgba(0, 0, 0, .0503198), 0px 22.3363px 17.869px rgba(0, 0, 0, .0417275), 0px 12.5216px 10.0172px rgba(0, 0, 0, .035), 0px 6.6501px 5.32008px rgba(0, 0, 0, .0282725), 0px 2.76726px 2.21381px rgba(0, 0, 0, .0196802)",
-          "brand-color-shadow":"0 0 0 1px var(--brand-hover)"
+        "brand-color-shadow": "0 0 0 1px var(--brand-hover)",
       },
       fontFamily: {
         sans: "var(--font-geist-sans), system-ui, sans-serif",
         mono: "var(--font-geist-mono), monospace",
         assistant: "var(--font-assistant), sans-serif",
         excalifont: ["Excalifont", "sans-serif"],
+      },
+      filter: {
+        "canvas-theme-filter": "var(--theme-filter)",
       },
     },
   },

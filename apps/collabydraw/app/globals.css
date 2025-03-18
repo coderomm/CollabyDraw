@@ -188,6 +188,7 @@ h6 {
     --color-promo: var(--color-primary);
 
     --selection-box-border-color: #6965db;
+    --theme-filter: none;
   }
 
   .dark {
@@ -272,6 +273,7 @@ h6 {
     --color-promo: var(--color-primary);
 
     --selection-box-border-color: #a8a5ff;
+    --theme-filter: invert(93%) hue-rotate(180deg);
   }
 }
 
@@ -432,11 +434,11 @@ button {
   height: 1.35rem;
   border: 1px solid #d6d6d6;
   border-radius: 4px;
-  filter: none;
   background-position: left center;
   position: relative;
   font-family: inherit;
   box-sizing: border-box;
+  filter: var(--theme-filter);
 }
 
 .color-picker__button:hover:after {
@@ -448,7 +450,6 @@ button {
   bottom: -2px;
   box-shadow: 0 0 0 1px #d6d6d6;
   border-radius: 5px;
-  filter: none;
 }
 
 .color-picker__button.active .color-picker__button-outline {
@@ -461,6 +462,16 @@ button {
   z-index: 1;
   border-radius: 5px;
   filter: none;
+}
+
+.color-picker__button.is-transparent {
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==)
+}
+
+.color-picker__button.active-color {
+  border-radius: calc(var(--radius) + 1px);
+  width: 1.625rem;
+  height: 1.625rem;
 }
 
 .popover-tooltip-arrow-pointer {
@@ -716,4 +727,15 @@ button {
 .dark .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__icon,
 .dark .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__text {
   color: var(--color-gray-10);
+}
+
+.dark .collabydraw-canvas,
+.dark .collabydraw-canvas-dark {
+  filter: var(--theme-filter);
+  position: absolute;
+  z-index: 2;
+}
+
+.canvas-bg-color-item {
+  filter: var(--theme-filter);
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { Game } from "@/draw/Game";
-import { BgFill, canvasBgDark, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
 import Toolbar from "../Toolbar";
@@ -14,6 +14,7 @@ import { HomeWelcome, MainMenuWelcome, ToolMenuWelcome } from "../welcome-screen
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import ScreenLoading from "../ScreenLoading";
 import CollaborationStart from "../CollaborationStartBtn";
+import { cn } from "@/lib/utils";
 
 export function StandaloneCanvas() {
     const { theme } = useTheme()
@@ -35,7 +36,7 @@ export function StandaloneCanvas() {
     const strokeStyleRef = useRef(strokeStyle);
     const bgFillRef = useRef(bgFill);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [canvasColor, setCanvasColor] = useState<string>(theme === 'light' ? canvasBgLight[0] : canvasBgDark[0]);
+    const [canvasColor, setCanvasColor] = useState<string>(canvasBgLight[0]);
     const canvasColorRef = useRef(canvasColor);
     const [isCanvasEmpty, setIsCanvasEmpty] = useState(true);
 
@@ -83,7 +84,7 @@ export function StandaloneCanvas() {
     }, [game]);
 
     useEffect(() => {
-        setCanvasColor(theme === 'light' ? canvasBgLight[0] : canvasBgDark[0]);
+        setCanvasColor(canvasBgLight[0]);
     }, [theme])
 
     useEffect(() => {
@@ -293,7 +294,7 @@ export function StandaloneCanvas() {
     return (
         <div data-isloading={isLoading} data-matches={matches} className={`collabydraw h-screen overflow-hidden ${(activeTool === "grab" && !sidebarOpen) ? (grabbing ? "cursor-grabbing" : "cursor-grab") : "cursor-crosshair"} `}>
             {!isLoading && (
-                <div className="App_Menu App_Menu_Top fixed top-4 right-4 left-4 flex justify-center items-center md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8 md:items-start">
+                <div className="App_Menu App_Menu_Top fixed z-[4] top-4 right-4 left-4 flex justify-center items-center md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8 md:items-start">
                     {matches && !isLoading && (
                         <div className="Main_Menu_Stack Sidebar_Trigger_Button md:grid md:gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
                             <div className="relative">
@@ -382,7 +383,7 @@ export function StandaloneCanvas() {
                 <ScreenLoading />
             )}
 
-            <canvas ref={canvasRef} />
+            <canvas className={cn("collabydraw collabydraw-canvas", theme === 'dark' ? 'collabydraw-canvas-dark' : '')} ref={canvasRef} />
 
         </div >
     )

@@ -7,7 +7,7 @@ import { Check, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { canvasBgDark, canvasBgLight } from "@/types/canvas"
+import { canvasBgLight } from "@/types/canvas"
 import { useTheme } from "next-themes"
 
 interface ColorPickerProps {
@@ -19,10 +19,10 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [inputValue, setInputValue] = useState(value)
     const { theme } = useTheme()
-    const [canvasBg, setCanvasBg] = useState(theme === "dark" ? canvasBgDark : canvasBgLight);
+    const [canvasBg, setCanvasBg] = useState(canvasBgLight);
 
     useEffect(() => {
-        setCanvasBg(theme === "dark" ? canvasBgDark : canvasBgLight);
+        setCanvasBg(canvasBgLight);
     }, [theme])
 
     useEffect(() => {
@@ -70,7 +70,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
                     <button
                         key={color}
                         className={cn(
-                            "h-8 w-8 rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring",
+                            "canvas-bg-color-item h-8 w-8 rounded-md border transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring",
                             color === value && "ring-2 ring-ring ring-offset-2 ring-offset-background",
                         )}
                         style={{ backgroundColor: color }}
