@@ -7,28 +7,30 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-screen relative h-fit w-full overflow-hidden bg-yellow-lighter dark:bg-white">
-            <S1 />
-            <S2 />
-            <S3 />
-            <div className="h-fit min-h-screen w-full relative p-10 lg:p-12 overflow-hidden flex flex-col items-center justify-center">
-                <div className="relative z-10">
-                    <Link href="/" className="Logo flex items-center select-none is-normal is-plain underline-none text-current">
-                        <div className=""><LogoSvg /></div>
-                        <div className="md:flex hidden">
-                            <h1 className="brand-title ExcalidrawLogo-text">CollabyDraw</h1>
-                        </div>
-                    </Link>
-                </div>
-                <div className="my-12 flex w-full grow flex-col items-center justify-center">
-                    <div className="w-full max-w-6xl">
-                        <div className="relative mx-auto w-full max-w-[30rem] lg:mx-0 lg:max-w-none">
-                            {children}
+        <>
+            <div className="collabydraw min-h-screen relative h-fit w-full overflow-hidden bg-yellow-lighter">
+                <S1 />
+                <S2 />
+                <S3 />
+                <div className="h-fit min-h-screen w-full relative p-10 lg:p-12 overflow-hidden flex flex-col items-center justify-center">
+                    <div className="relative z-10">
+                        <Link href="/" className="Logo flex items-center select-none is-normal is-plain underline-none text-current">
+                            <div className=""><LogoSvg /></div>
+                            <div className="md:flex hidden">
+                                <h1 className="brand-title ExcalidrawLogo-text font-excalifont">CollabyDraw</h1>
+                            </div>
+                        </Link>
+                    </div>
+                    <div className="my-12 flex w-full grow flex-col items-center justify-center">
+                        <div className="w-full max-w-6xl">
+                            <div className="relative mx-auto w-full max-w-[30rem] lg:mx-0 lg:max-w-none">
+                                {children}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

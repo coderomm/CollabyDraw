@@ -75,10 +75,10 @@ export class Game {
     this.canvas.height = document.body.clientHeight;
     this.onScaleChangeCallback = onScaleChangeCallback;
     this.roomName = roomName;
+    this.selectionManager = new SelectionManager(this.ctx, canvas);
     this.init();
     this.initMouseHandler();
     this.isStandalone = isStandalone;
-    this.selectionManager = new SelectionManager(this.ctx, canvas);
     // Add persistence callback
     this.selectionManager.setOnUpdate(() => {
       if (this.isStandalone) {
