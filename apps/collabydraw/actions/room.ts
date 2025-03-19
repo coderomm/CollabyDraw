@@ -168,3 +168,29 @@ export async function deleteRoom(data: { roomName: string }) {
     return { success: false, error: "Failed to delete room" };
   }
 }
+
+export async function getUserRooms() {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = session?.user;
+
+    if (!user || !user.id) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    const rooms = await client.room.findMany({
+      where: { adminId: user.id },
+      select: {
+        id: true,
+        slug: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return { success: true, rooms };
+  } catch (error) {
+    console.error("Failed to fetch user rooms:", error);
+    return { success: false, error: "Failed to fetch user rooms" };
+  }
+}

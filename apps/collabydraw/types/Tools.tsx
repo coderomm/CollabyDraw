@@ -7,6 +7,7 @@ import {
     Diamond,
     Hand,
     MousePointer,
+    MoveRight,
 } from "lucide-react"
 import { Tool } from "./canvas";
 
@@ -14,49 +15,55 @@ export const tools: Tool[] = [
     {
         type: "selection",
         icon: <MousePointer />,
-        shortcut: 0,
+        shortcut: 1,
         label: 'Select'
     },
     {
         type: "grab",
         icon: <Hand />,
-        shortcut: 1,
+        shortcut: 2,
         label: 'Grab'
     },
     {
         type: "rectangle",
         icon: <Square />,
-        shortcut: 2,
+        shortcut: 3,
         label: 'Rectangle'
     },
     {
         type: "ellipse",
         icon: <Circle />,
-        shortcut: 3,
+        shortcut: 4,
         label: 'Ellipse'
     },
     {
         type: "diamond",
         icon: <Diamond />,
-        shortcut: 4,
+        shortcut: 5,
         label: 'Diamond'
     },
     {
         type: "line",
         icon: <Minus />,
-        shortcut: 5,
+        shortcut: 6,
         label: 'Line'
     },
     {
         type: "pen",
         icon: <Pencil />,
-        shortcut: 6,
+        shortcut: 7,
+        label: 'Pencil'
+    },
+    {
+        type: "arrow",
+        icon: <MoveRight />,
+        shortcut: 8,
         label: 'Arrow'
     },
     {
         type: "eraser",
         icon: <Eraser />,
-        shortcut: 7,
+        shortcut: 9,
         label: 'Eraser'
     }
 ]

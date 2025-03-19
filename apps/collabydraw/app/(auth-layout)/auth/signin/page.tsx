@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function SignInPage() {
     return (
-        <Card className="border-0 shadow-none lg:shadow-2xl rounded-3xl mt-10 mx-auto px-6 py-8 lg:mt-0 lg:p-16 relative z-10 dark:!bg-surface-loww max-w-[480px] bg-yellow-light">
+        <Card className="border-0 shadow-none lg:shadow-2xl rounded-3xl m-0 mx-auto px-6 py-8 lg:p-16 relative z-10 max-w-[480px] bg-yellow-light">
             <CardHeader className="p-0">
                 <CardTitle className="text-2xl font-bold text-center">Hi there!</CardTitle>
                 <CardDescription className="text-sm pb-4 text-primary text-center">Enter your email to sign in to your account</CardDescription>

@@ -1,8 +1,5 @@
-// import { Tool } from "./draw";
-
 import { Shape } from "@/types/canvas";
 
-// type Tool = Exclude<Shape, { type: "pen" }>;
 type Tool = Shape;
 
 export interface ResizeHandle {
@@ -39,7 +36,6 @@ export class SelectionManager {
   setOnUpdate(callback: () => void) {
     this.onUpdateCallback = callback;
   }
-  // Call this after any modification
   private triggerUpdate() {
     this.onUpdateCallback();
   }
@@ -115,26 +111,17 @@ export class SelectionManager {
           break;
 
         case "line":
-          // case "arrow":
+        case "arrow":
           const minX = Math.min(shape.x, shape.toX);
           const minY = Math.min(shape.y, shape.toY);
           const maxX = Math.max(shape.x, shape.toX);
           const maxY = Math.max(shape.y, shape.toY);
 
-          bounds.x = minX - shape.strokeWidth;
-          bounds.y = minY - shape.strokeWidth;
-          bounds.width = maxX - minX + shape.strokeWidth * 2;
-          bounds.height = maxY - minY + shape.strokeWidth * 2;
+          bounds.x = minX - shape.strokeWidth - 20;
+          bounds.y = minY - shape.strokeWidth - 20;
+          bounds.width = maxX - minX + shape.strokeWidth * 2 + 40;
+          bounds.height = maxY - minY + shape.strokeWidth * 2 + 40;
           break;
-
-        // case "text":
-        //     this.ctx.font = '24px Comic Sans MS, cursive';
-        //     const metrics = this.ctx.measureText(shape.text || "");
-        //     bounds.x = shape.x-10
-        //     bounds.y = shape.y-10
-        //     bounds.width = metrics.width+20;
-        //     bounds.height = 48;
-        //     break;
       }
 
       return bounds;
@@ -242,13 +229,14 @@ export class SelectionManager {
     );
   }
 
-  // In startDragging()
   startDragging(x: number, y: number) {
     if (this.selectedShape) {
       this.isDragging = true;
 
-      // Handle different shape types properly
-      if (this.selectedShape.type === "line") {
+      if (
+        this.selectedShape.type === "line" ||
+        this.selectedShape.type === "arrow"
+      ) {
         this.dragOffset = {
           x: x - this.selectedShape.x,
           y: y - this.selectedShape.y,
@@ -277,34 +265,6 @@ export class SelectionManager {
     }
   }
 
-  // startDragging(x: number, y: number) {
-  //   if (this.selectedShape) {
-  //     this.isDragging = true;
-  //     this.dragOffset = {
-  //       x: x - this.selectedShape.x,
-  //       y: y - this.selectedShape.y,
-  //     };
-
-  //     // if (this.selectedShape.type === "line" || this.selectedShape.type === "arrow") {
-  //     if (this.selectedShape.type === "line") {
-  //       this.dragEndOffset = {
-  //         x: x - this.selectedShape.toX,
-  //         y: y - this.selectedShape.toY,
-  //       };
-  //     } else if (this.selectedShape.type === "ellipse") {
-  //       this.selectedShape.centerX = x - this.dragOffset.x;
-  //       this.selectedShape.centerY = y - this.dragOffset.y;
-  //     } else if (this.selectedShape.type === "diamond") {
-  //       this.selectedShape.centerX = x - this.dragOffset.x;
-  //       this.selectedShape.centerY = y - this.dragOffset.y;
-  //     } else if (this.selectedShape.type === "rectangle") {
-  //       this.selectedShape.x = x - this.dragOffset.x;
-  //       this.selectedShape.y = y - this.dragOffset.y;
-  //     }
-  //     this.setCursor("move");
-  //   }
-  // }
-
   startResizing(x: number, y: number) {
     if (this.selectedShape) {
       const bounds = this.getShapeBounds(this.selectedShape);
@@ -327,6 +287,7 @@ export class SelectionManager {
 
       switch (this.selectedShape.type) {
         case "line":
+        case "arrow":
           this.selectedShape.x = dx;
           this.selectedShape.y = dy;
           this.selectedShape.toX = x - this.dragEndOffset.x;
@@ -403,9 +364,10 @@ export class SelectionManager {
         this.selectedShape.y = centerY;
         this.selectedShape.width = newBounds.width;
         this.selectedShape.height = newBounds.height;
-      } else if (this.selectedShape.type === "line") {
-        // || this.selectedShape.type === "arrow") {
-        // Update line/arrow endpoints based on the resize handle
+      } else if (
+        this.selectedShape.type === "line" ||
+        this.selectedShape.type === "arrow"
+      ) {
         switch (this.activeResizeHandle.position) {
           case "top-left":
             this.selectedShape.x = x;

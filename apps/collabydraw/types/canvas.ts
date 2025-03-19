@@ -132,6 +132,17 @@ export type Shape =
     }
   | {
       id: string | null;
+      type: "arrow";
+      x: number;
+      y: number;
+      toX: number;
+      toY: number;
+      strokeWidth: number;
+      strokeFill: string;
+      strokeStyle: StrokeStyle;
+    }
+  | {
+      id: string | null;
       type: "pen";
       points: { x: number; y: number }[];
       strokeWidth: number;

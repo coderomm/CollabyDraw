@@ -8,6 +8,7 @@ import {
 } from "@/types/canvas";
 import { RoughGenerator } from "roughjs/bin/generator";
 import { SelectionManager } from "./SelectionManager";
+import { v4 as uuidv4 } from "uuid";
 
 const CORNER_RADIUS_FACTOR = 20;
 const RECT_CORNER_RADIUS_FACTOR = CORNER_RADIUS_FACTOR;
@@ -17,6 +18,7 @@ const ERASER_TOLERANCE = 5;
 const DEFAULT_STROKE_WIDTH = 1;
 const DEFAULT_STROKE_FILL = "rgba(255, 255, 255)";
 const DEFAULT_BG_FILL = "rgba(18, 18, 18)";
+const ARROW_HEAD_LENGTH = 20;
 const getDashArrayDashed = (strokeWidth: number) => [
   strokeWidth,
   strokeWidth * 4,
@@ -197,8 +199,6 @@ export class Game {
       this.canvas.width / this.scale,
       this.canvas.height / this.scale
     );
-    // this.ctx.lineCap = "round";
-    // this.ctx.lineJoin = "round";
 
     this.existingShape.map((shape: Shape) => {
       if (shape.type === "rectangle") {
@@ -244,7 +244,19 @@ export class Game {
           shape.toY,
           shape.strokeWidth || DEFAULT_STROKE_WIDTH,
           shape.strokeFill || DEFAULT_STROKE_FILL,
-          shape.strokeStyle
+          shape.strokeStyle,
+          false
+        );
+      } else if (shape.type === "arrow") {
+        this.drawLine(
+          shape.x,
+          shape.y,
+          shape.toX,
+          shape.toY,
+          shape.strokeWidth || DEFAULT_STROKE_WIDTH,
+          shape.strokeFill || DEFAULT_STROKE_FILL,
+          shape.strokeStyle,
+          true
         );
       } else if (shape.type === "pen") {
         this.drawPencil(
@@ -272,7 +284,8 @@ export class Game {
     if (
       this.activeTool !== "pen" &&
       this.activeTool !== "eraser" &&
-      this.activeTool !== "line"
+      this.activeTool !== "line" &&
+      this.activeTool !== "arrow"
     )
       if (this.activeTool === "selection") {
         if (
@@ -331,7 +344,7 @@ export class Game {
     switch (this.activeTool) {
       case "rectangle":
         shape = {
-          id: null,
+          id: uuidv4(),
           type: "rectangle",
           x: this.startX,
           y: this.startY,
@@ -347,7 +360,7 @@ export class Game {
 
       case "ellipse":
         shape = {
-          id: null,
+          id: uuidv4(),
           type: "ellipse",
           x: this.startX + width / 2,
           y: this.startY + height / 2,
@@ -362,7 +375,7 @@ export class Game {
 
       case "diamond":
         shape = {
-          id: null,
+          id: uuidv4(),
           type: "diamond",
           x: this.startX,
           y: this.startY,
@@ -378,8 +391,22 @@ export class Game {
 
       case "line":
         shape = {
-          id: null,
+          id: uuidv4(),
           type: "line",
+          x: this.startX,
+          y: this.startY,
+          toX: x,
+          toY: y,
+          strokeWidth: this.strokeWidth,
+          strokeFill: this.strokeFill,
+          strokeStyle: this.strokeStyle,
+        };
+        break;
+
+      case "arrow":
+        shape = {
+          id: uuidv4(),
+          type: "arrow",
           x: this.startX,
           y: this.startY,
           toX: x,
@@ -394,7 +421,7 @@ export class Game {
         const currentShape = this.existingShape[this.existingShape.length - 1];
         if (currentShape?.type === "pen") {
           shape = {
-            id: null,
+            id: uuidv4(),
             type: "pen",
             points: currentShape.points,
             strokeWidth: this.strokeWidth,
@@ -505,7 +532,7 @@ export class Game {
 
     if (this.activeTool === "pen") {
       this.existingShape.push({
-        id: null,
+        id: uuidv4(),
         type: "pen",
         points: [{ x, y }],
         strokeWidth: this.strokeWidth,
@@ -590,7 +617,34 @@ export class Game {
             y,
             this.strokeWidth,
             this.strokeFill,
-            this.strokeStyle
+            this.strokeStyle,
+            false
+          );
+          break;
+
+        case "arrow":
+          this.drawLine(
+            this.startX,
+            this.startY,
+            x,
+            y,
+            this.strokeWidth,
+            this.strokeFill,
+            this.strokeStyle,
+            true
+          );
+          break;
+
+        case "arrow":
+          this.drawLine(
+            this.startX,
+            this.startY,
+            x,
+            y,
+            this.strokeWidth,
+            this.strokeFill,
+            this.strokeStyle,
+            true
           );
           break;
 
@@ -668,6 +722,24 @@ export class Game {
         );
       }
       case "line": {
+        const lineLength = Math.hypot(shape.toX - shape.x, shape.toY - shape.y);
+        const distance =
+          Math.abs(
+            (shape.toY - shape.y) * x -
+              (shape.toX - shape.x) * y +
+              shape.toX * shape.y -
+              shape.toY * shape.x
+          ) / lineLength;
+
+        const withinLineBounds =
+          x >= Math.min(shape.x, shape.toX) - tolerance &&
+          x <= Math.max(shape.x, shape.toX) + tolerance &&
+          y >= Math.min(shape.y, shape.toY) - tolerance &&
+          y <= Math.max(shape.y, shape.toY) + tolerance;
+
+        return distance <= tolerance && withinLineBounds;
+      }
+      case "arrow": {
         const lineLength = Math.hypot(shape.toX - shape.x, shape.toY - shape.y);
         const distance =
           Math.abs(
@@ -900,7 +972,8 @@ export class Game {
     toY: number,
     strokeWidth: number,
     strokeFill: string,
-    strokeStyle: StrokeStyle
+    strokeStyle: StrokeStyle,
+    arrowHead: boolean
   ) {
     this.ctx.beginPath();
     this.ctx.strokeStyle = strokeFill;
@@ -916,25 +989,35 @@ export class Game {
     this.ctx.lineTo(toX, toY);
     this.ctx.stroke();
 
-    // arrow
-    // const arrowLength = 20;
-    // const angle = Math.atan2(toY - fromY, toX - fromX);
+    if (arrowHead === false) {
+      return;
+    }
 
-    // this.ctx.beginPath();
-
-    // this.ctx.moveTo(toX, toY);
-    // this.ctx.lineTo(
-    //   toX - arrowLength * Math.cos(angle - Math.PI / 6),
-    //   toY - arrowLength * Math.sin(angle - Math.PI / 6)
-    // );
-
-    // this.ctx.moveTo(toX, toY);
-    // this.ctx.lineTo(
-    //   toX - arrowLength * Math.cos(angle + Math.PI / 6),
-    //   toY - arrowLength * Math.sin(angle + Math.PI / 6)
-    // );
-
-    // this.ctx.stroke();
+    const angleHeadAngle = Math.atan2(toY - fromY, toX - fromX);
+    this.ctx.beginPath();
+    this.ctx.moveTo(toX, toY);
+    this.ctx.lineTo(
+      toX -
+        ARROW_HEAD_LENGTH *
+          (strokeStyle !== "solid" ? 2 : 1) *
+          Math.cos(angleHeadAngle - Math.PI / 6),
+      toY -
+        ARROW_HEAD_LENGTH *
+          (strokeStyle !== "solid" ? 2 : 1) *
+          Math.sin(angleHeadAngle - Math.PI / 6)
+    );
+    this.ctx.moveTo(toX, toY);
+    this.ctx.lineTo(
+      toX -
+        ARROW_HEAD_LENGTH *
+          (strokeStyle !== "solid" ? 2 : 1) *
+          Math.cos(angleHeadAngle + Math.PI / 6),
+      toY -
+        ARROW_HEAD_LENGTH *
+          (strokeStyle !== "solid" ? 2 : 1) *
+          Math.sin(angleHeadAngle + Math.PI / 6)
+    );
+    this.ctx.stroke();
   }
 
   drawPencil(

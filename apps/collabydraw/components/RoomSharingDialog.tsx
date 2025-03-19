@@ -93,7 +93,6 @@ export function RoomSharingDialog({ open, onOpenChange, link }: { open: boolean,
                 <DialogFooter className="flex items-center justify-center sm:justify-center">
                     <Button
                         onClick={stopSession}
-                        variant=""
                         className="py-2 px-6 min-h-12 rounded-md text-[.875rem] font-semibold shadow-none bg-red-500 hover:bg-red-600 active:bg-red-700 active:scale-[.98] text-white"
                         disabled={isPending}
                     >

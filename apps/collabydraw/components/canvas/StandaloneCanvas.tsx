@@ -15,6 +15,8 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import ScreenLoading from "../ScreenLoading";
 import CollaborationStart from "../CollaborationStartBtn";
 import { cn } from "@/lib/utils";
+import UserRoomsList from "../UserRoomsList";
+import { useSession } from "next-auth/react";
 
 export function StandaloneCanvas() {
     const { theme } = useTheme()
@@ -39,6 +41,7 @@ export function StandaloneCanvas() {
     const [canvasColor, setCanvasColor] = useState<string>(canvasBgLight[0]);
     const canvasColorRef = useRef(canvasColor);
     const [isCanvasEmpty, setIsCanvasEmpty] = useState(true);
+    const { data: session } = useSession();
 
     const { matches, isLoading } = useMediaQuery("md");
 
@@ -149,28 +152,31 @@ export function StandaloneCanvas() {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             switch (e.key) {
-                case "0":
+                case "1":
                     setActiveTool("selection");
                     break;
-                case "1":
+                case "2":
                     setActiveTool("grab");
                     break;
-                case "2":
+                case "3":
                     setActiveTool("rectangle");
                     break;
-                case "3":
+                case "4":
                     setActiveTool("ellipse");
                     break;
-                case "4":
+                case "5":
                     setActiveTool("diamond");
                     break;
-                case "5":
+                case "6":
                     setActiveTool("line");
                     break;
-                case "6":
+                case "7":
                     setActiveTool("pen");
                     break;
-                case "7":
+                case "8":
+                    setActiveTool("arrow");
+                    break;
+                case "9":
                     setActiveTool("eraser");
                     break;
                 default:
@@ -343,8 +349,9 @@ export function StandaloneCanvas() {
                         selectedTool={activeTool}
                         onToolSelect={handleToolSelect}
                     />
-
-                    <CollaborationStart />
+                    {!isLoading && matches && (
+                        <CollaborationStart />
+                    )}
                 </div>
             )}
             {activeTool === "grab" && isCanvasEmpty && !isLoading && (
@@ -355,6 +362,10 @@ export function StandaloneCanvas() {
 
             {!isLoading && matches && (
                 <Scale scale={scale} setScale={setScale} />
+            )}
+
+            {!isLoading && matches && session?.user && (
+                <UserRoomsList />
             )}
 
             {!isLoading && !matches && (
@@ -373,6 +384,11 @@ export function StandaloneCanvas() {
                     setStrokeWidth={setStrokeWidth}
                     bgFill={bgFill}
                     setBgFill={setBgFill}
+
+                    strokeEdge={strokeEdge}
+                    setStrokeEdge={setStrokeEdge}
+                    strokeStyle={strokeStyle}
+                    setStrokeStyle={setStrokeStyle}
 
                     isStandalone={true}
                     onClearCanvas={clearCanvas}

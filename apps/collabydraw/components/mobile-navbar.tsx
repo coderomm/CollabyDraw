@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils"
 import { MainMenuStack } from "./MainMenuStack"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Button } from "./ui/button"
-import { PaletteFilled } from "./SvgIcons"
+import { ListBullet, PaletteFilled } from "./SvgIcons"
 import { ToolMenuStack } from "./ToolMenuStack"
-import { BgFill, StrokeFill, StrokeWidth, ToolType } from "@/types/canvas"
+import { BgFill, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas"
+import { UserRoomsListDialog } from "./UserRoomsListDialog"
 
 interface MobileNavbarProps {
     canvasColor: string
@@ -28,6 +29,11 @@ interface MobileNavbarProps {
     setStrokeWidth: React.Dispatch<React.SetStateAction<StrokeWidth>>;
     bgFill: BgFill;
     setBgFill: React.Dispatch<React.SetStateAction<BgFill>>;
+    strokeEdge: StrokeEdge;
+    setStrokeEdge: React.Dispatch<React.SetStateAction<StrokeEdge>>;
+    strokeStyle: StrokeStyle;
+    setStrokeStyle: React.Dispatch<React.SetStateAction<StrokeStyle>>;
+
     roomName?: string
 
     isStandalone?: boolean;
@@ -49,13 +55,18 @@ export function MobileNavbar({ canvasColor,
     setStrokeWidth,
     bgFill,
     setBgFill,
+    strokeEdge,
+    setStrokeEdge,
+    strokeStyle,
+    setStrokeStyle,
     roomName,
     isStandalone = false,
     onClearCanvas,
     onExportCanvas,
     onImportCanvas
 }: MobileNavbarProps) {
-    const [colorPickerOpen, setColorPickerOpen] = useState(false)
+    const [colorPickerOpen, setColorPickerOpen] = useState(false);
+    const [roomsListOpen, setRoomsListOpen] = useState(false);
 
     const handleMenuButton = () => {
         setSidebarOpen(!sidebarOpen);
@@ -70,6 +81,7 @@ export function MobileNavbar({ canvasColor,
                         {activeTool !== 'grab' && activeTool !== 'eraser' && (
                             <NavbarButton icon={PaletteFilled} label="Colors" onClick={() => setColorPickerOpen(true)} active={colorPickerOpen} />
                         )}
+                        <NavbarButton icon={ListBullet} label="Rooms" onClick={() => setRoomsListOpen(true)} active={roomsListOpen} />
                         <ScaleWidget scale={scale} setScale={setScale} />
                     </div>
                 </div>
@@ -110,48 +122,26 @@ export function MobileNavbar({ canvasColor,
                         setStrokeWidth={setStrokeWidth}
                         bgFill={bgFill}
                         setBgFill={setBgFill}
+                        strokeEdge={strokeEdge}
+                        setStrokeEdge={setStrokeEdge}
+                        strokeStyle={strokeStyle}
+                        setStrokeStyle={setStrokeStyle}
                     />
                 </SheetContent>
             </Sheet>
 
-            {/* <Sheet open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
-                <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-6 py-6 Island">
+            <Sheet open={roomsListOpen} onOpenChange={setRoomsListOpen}>
+                <SheetContent side="bottom" className="h-auto max-h-[80vh] min-h-[50vh] rounded-t-[20px] px-6 py-6 Island">
                     <SheetHeader className="mb-5">
-                        <SheetTitle>Canvas Background</SheetTitle>
+                        <SheetTitle>All Your Rooms</SheetTitle>
                     </SheetHeader>
-                    <div className="mx-auto max-w-md">
-                        <ColorPicker value={canvasColor} onChange={setCanvasColor} />
-                    </div>
-                </SheetContent>
-            </Sheet> */}
-
-            {/* <Sheet open={commandsOpen} onOpenChange={setCommandsOpen}>
-                <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-6 py-6 Island">
-                    <SheetHeader className="mb-5">
-                        <SheetTitle>Commands</SheetTitle>
-                    </SheetHeader>
-                    <div className="space-y-4">
-                        <CommandItem icon={Zap} label="Quick Actions" description="Access frequently used tools" />
-                        <CommandItem icon={Layers} label="Layers" description="Manage your canvas layers" />
-                        <CommandItem icon={FileText} label="Templates" description="Start from pre-made designs" />
-                        <CommandItem icon={Users} label="Collaboration" description="Invite others to your canvas" />
-                    </div>
+                    <UserRoomsListDialog
+                        open={roomsListOpen}
+                        onOpenChange={setRoomsListOpen}
+                        isMobile={true}
+                    />
                 </SheetContent>
             </Sheet>
-
-            <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-                <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-6 py-6 Island">
-                    <SheetHeader className="mb-5">
-                        <SheetTitle>Settings</SheetTitle>
-                    </SheetHeader>
-                    <div className="space-y-4">
-                        <SettingsItem title="Canvas Size" description="Adjust the dimensions of your canvas" />
-                        <SettingsItem title="Grid & Snapping" description="Configure alignment helpers" />
-                        <SettingsItem title="Export Options" description="Set format and quality preferences" />
-                        <SettingsItem title="Keyboard Shortcuts" description="Customize your workflow" />
-                    </div>
-                </SheetContent>
-            </Sheet> */}
         </>
     )
 }
@@ -235,46 +225,3 @@ function ScaleWidget({ scale, setScale }: {
         </>
     )
 }
-
-// interface CommandItemProps {
-//     icon: React.ElementType
-//     label: string
-//     description: string
-// }
-
-// function CommandItem({ icon: Icon, label, description }: CommandItemProps) {
-//     return (
-//         <Button
-//             variant="ghost"
-//             className="flex w-full items-start justify-start gap-3 rounded-lg p-3 text-left hover:bg-accent"
-//         >
-//             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-//                 <Icon className="h-5 w-5" />
-//             </div>
-//             <div>
-//                 <h3 className="font-medium">{label}</h3>
-//                 <p className="text-sm text-muted-foreground">{description}</p>
-//             </div>
-//         </Button>
-//     )
-// }
-
-// interface SettingsItemProps {
-//     title: string
-//     description: string
-// }
-
-// function SettingsItem({ title, description }: SettingsItemProps) {
-//     return (
-//         <div className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent/50 transition-colors">
-//             <div>
-//                 <h3 className="font-medium">{title}</h3>
-//                 <p className="text-sm text-muted-foreground">{description}</p>
-//             </div>
-//             <Button variant="ghost" size="icon" className="shrink-0 rounded-full">
-//                 <Settings className="h-4 w-4" />
-//                 <span className="sr-only">Adjust {title}</span>
-//             </Button>
-//         </div>
-//     )
-// }

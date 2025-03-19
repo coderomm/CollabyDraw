@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function SignUpPage() {
     return (
-        <Card className="border-0 shadow-none lg:shadow-2xl rounded-3xl mt-10 mx-auto px-6 py-8 lg:mt-0 lg:p-16 relative z-10 dark:!bg-surface-loww max-w-[480px] bg-yellow-light">
+        <Card className="border-0 shadow-none lg:shadow-2xl rounded-3xl m-0 mx-auto px-6 py-8 lg:p-16 relative z-10 max-w-[480px] bg-yellow-light">
             <CardHeader className="p-0">
                 <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
                 <CardDescription className="text-sm pb-4 text-primary text-center">Enter your email below to create your account</CardDescription>
