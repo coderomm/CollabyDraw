@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
       token.accessToken = jwt.sign(
         { id: token.id, email: token.email },
         process.env.NEXTAUTH_SECRET || "",
-        { expiresIn: "3d" }
+        { expiresIn: "7d" }
       );
       return token;
     },

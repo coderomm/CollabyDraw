@@ -307,7 +307,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                     onToolSelect={setActiveTool}
                 />
                 {matches && (
-                    <CollaborationStart participantsCount={participants.length} slug={roomName} />
+                    <CollaborationStart participants={participants} slug={roomName} />
                 )}
             </div>
 

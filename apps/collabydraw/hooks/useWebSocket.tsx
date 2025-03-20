@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RoomParticipants, WS_DATA_TYPE, WebSocketChatMessage, WebSocketMessage } from '@repo/common/types';
+import { useSession } from 'next-auth/react';
+
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 export function useWebSocket(roomId: string, roomName: string, userId: string, userName: string) {
     const [isConnected, setIsConnected] = useState(false);
@@ -10,23 +14,31 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
     const socketRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
     const reconnectAttemptsRef = useRef(0);
-    const MAX_RECONNECT_ATTEMPTS = 5;
     const paramsRef = useRef({ roomId, roomName, userId, userName });
+    const { data: session, status } = useSession();
 
     useEffect(() => {
         paramsRef.current = { roomId, roomName, userId, userName };
     }, [roomId, roomName, userId, userName]);
 
     const connectWebSocket = useCallback(() => {
-        if (socketRef.current?.readyState === WebSocket.OPEN) {
+        if (status === "loading") {
             return;
         }
         if (socketRef.current?.readyState === WebSocket.OPEN) {
+            return;
+        }
+        if (socketRef.current?.readyState === WebSocket.CONNECTING) {
             socketRef.current.close();
         }
 
         try {
-            const ws = new WebSocket(`ws://localhost:8080`);
+            let wsUrl = WS_URL;
+            if (status === "authenticated" && session?.accessToken) {
+                wsUrl = `${WS_URL}?token=${encodeURIComponent(session.accessToken)}`;
+            }
+
+            const ws = new WebSocket(wsUrl);
 
             const handleOpen = () => {
                 setIsConnected(true);
@@ -120,9 +132,12 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
         } catch (error) {
             console.error('Failed to create WebSocket connection:', error);
         }
-    }, []);
+    }, [session, status]);
 
     useEffect(() => {
+        if (status !== "loading") {
+            connectWebSocket();
+        }
         connectWebSocket();
 
         return () => {
@@ -138,7 +153,7 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                 socketRef.current.close(1000, 'Component unmounted');
             }
         };
-    }, [connectWebSocket]);
+    }, [connectWebSocket, status]);
 
     const sendMessage = useCallback((content: string) => {
         if (!content?.trim()) {

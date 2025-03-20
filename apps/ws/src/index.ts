@@ -3,7 +3,6 @@ import { JWT_SECRET, WebSocketMessage, WS_DATA_TYPE } from "@repo/common/types";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import http from "http";
-const cookie = require("cookie");
 
 declare module "http" {
   interface IncomingMessage {
@@ -18,17 +17,23 @@ const server = http.createServer();
 const wss = new WebSocketServer({
   server,
   verifyClient: (info, callback) => {
-    const cookies = cookie.parse(info.req.headers.cookie || "");
-    const sessionToken = cookies["accessToken"];
-    if (!sessionToken) {
-      console.error("No session token found");
+    const url = info.req.url;
+    if (!url) {
+      console.error("No valid url found");
       callback(false, 401, "Unauthorized");
       return;
     }
+    const queryParams = new URLSearchParams(url.split("?")[1]);
+    const token = queryParams.get("token");
+    if (!token || token === null) {
+      console.error("No valid token found");
+      callback(false, 401, "Unauthorized");
+      return;
+    }
+
     try {
-      const decoded = jwt.verify(sessionToken, JWT_SECRET) as JwtPayload;
-      if (!decoded || !decoded.id) {
-        console.error("Invalid token payload:", decoded);
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+      if (!decoded?.id) {
         callback(false, 401, "Invalid token");
         return;
       }
@@ -36,7 +41,10 @@ const wss = new WebSocketServer({
         id: decoded.id,
         email: decoded.email,
       };
-      callback(true);
+      callback(true, 101, "Switching Protocols", {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Credentials": "true",
+      });
     } catch (err) {
       console.error(
         "Direct JWT verification failed, trying NextAuth token format..."
@@ -133,9 +141,7 @@ wss.on("connection", function connection(ws, req) {
 
           const uniqueParticipantsMap = new Map();
           users
-            .filter(
-              (u) => u.rooms.includes(parsedData.roomId!)
-            )
+            .filter((u) => u.rooms.includes(parsedData.roomId!))
             .forEach((u) =>
               uniqueParticipantsMap.set(u.userId, {
                 userId: u.userId,
