@@ -40,7 +40,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
     const [canvasColor, setCanvasColor] = useState<string>(canvasBgLight[0]);
     const canvasColorRef = useRef(canvasColor);
 
-    const { isConnected, messages, sendMessage } = useWebSocket(
+    const { isConnected, messages, sendMessage, participants } = useWebSocket(
         roomId,
         roomName,
         userId,
@@ -77,6 +77,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                 messages.forEach((message) => {
                     try {
                         const data = JSON.parse(message.content);
+                        console.log('ws msg data = ', data)
                         if (data.type === "draw") {
                             const shape = JSON.parse(data.data).shape;
                             setExistingShapes((prevShapes) => [...prevShapes, shape]);
@@ -95,6 +96,14 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
             }
         }
     }, [messages]);
+
+    useEffect(() => {
+        try {
+            console.log('participants = ', participants)
+        } catch (e) {
+            console.error("Error processing messages:", e);
+        }
+    }, [participants]);
 
     useEffect(() => {
         game?.setTool(activeTool)
@@ -298,7 +307,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                     onToolSelect={setActiveTool}
                 />
                 {matches && (
-                    <CollaborationStart slug={roomName} />
+                    <CollaborationStart participantsCount={participants.length} slug={roomName} />
                 )}
             </div>
 
@@ -322,6 +331,11 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
                     setStrokeWidth={setStrokeWidth}
                     bgFill={bgFill}
                     setBgFill={setBgFill}
+
+                    strokeEdge={strokeEdge}
+                    setStrokeEdge={setStrokeEdge}
+                    strokeStyle={strokeStyle}
+                    setStrokeStyle={setStrokeStyle}
 
                     roomName={roomName}
                 />

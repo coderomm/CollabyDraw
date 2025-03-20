@@ -55,6 +55,7 @@ export enum WS_DATA_TYPE {
   DRAW = "DRAW",
   ERASER = "ERASER",
   UPDATE = "UPDATE",
+  EXISTING_PARTICIPANTS = "EXISTING_PARTICIPANTS",
 }
 
 export type WebSocketMessage = {
@@ -66,6 +67,7 @@ export type WebSocketMessage = {
   userName?: string;
   message?: string;
   timestamp?: string;
+  participants?: any[];
 };
 
 export type WebSocketChatMessage = {

@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { CollaborationAdDialog } from "./CollaborationAdDialog";
+import CollaborationStartdDialog from "./CollaborationStartdDialog";
+import { useSession } from "next-auth/react";
 
 export function CollaborationButton() {
     const [isOpen, setIsOpen] = useState(false);
+    const { data: session } = useSession();
 
     const handleCollaborationClick = () => {
         setIsOpen(true);
@@ -26,7 +29,12 @@ export function CollaborationButton() {
                 </div>
                 <div className="welcome-screen-menu-item__text">Live collaboration...</div>
             </button>
-            <CollaborationAdDialog open={isOpen} onOpenChange={setIsOpen} />
+
+            {session?.user && session?.user.id ? (
+                <CollaborationStartdDialog open={isOpen} onOpenChange={setIsOpen} />
+            ) : (
+                <CollaborationAdDialog open={isOpen} onOpenChange={setIsOpen} />
+            )}
         </>
     );
 }

@@ -8,6 +8,7 @@ import { getUserRooms, joinRoom, deleteRoom } from "@/actions/room";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Skeleton } from "./ui/skeleton";
+import CollaborationStartdDialog from "./CollaborationStartdDialog";
 
 type RoomType = {
     id: number;
@@ -27,6 +28,7 @@ export function UserRoomsListDialog({
     onOpenChange,
     isMobile = false
 }: UserRoomsListDialogProps) {
+    const [isOpen, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [rooms, setRooms] = useState<RoomType[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -185,14 +187,11 @@ export function UserRoomsListDialog({
                         ))
                     ) : (
                         <div className="text-center py-8 text-gray-400">
-                            <p>No rooms found.</p>
-                            <Button
-                                onClick={() => router.push('/create-room')}
-                                className="mt-4 bg-blue-500 hover:bg-blue-600 text-white"
-                                size="sm"
-                            >
-                                Create a Room
-                            </Button>
+                            <p className="mb-4">No rooms found.</p>
+                            <Button type="button" onClick={() => { setIsOpen(true); }}
+                                className="excalidraw-button collab-button relative w-auto py-3 px-4 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]"
+                                title="Live collaboration...">Create a Room</Button>
+                            <CollaborationStartdDialog open={isOpen} onOpenChange={setIsOpen} />
                         </div>
                     )}
                 </div>

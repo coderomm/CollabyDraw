@@ -63,12 +63,41 @@ wss.on("connection", function connection(ws, req) {
   }
 
   const userId = req.user.id;
-  const user: User = {
+  let user: User = {
     userId,
     userName: userId,
     ws,
     rooms: [],
   };
+
+  const existingUserIndex = users.findIndex((u) => u.userId === userId);
+  if (existingUserIndex !== -1) {
+    console.log(`User ${userId} reconnecting - cleaning up old connection`);
+    const existingUser = users[existingUserIndex];
+    if (!existingUser) {
+      console.error("Error: Existing User not found.");
+      return;
+    }
+    // Keep the rooms they were in
+    const existingRooms = [...existingUser.rooms];
+    // Remove old connection
+    users.splice(existingUserIndex, 1);
+    // Add back with new connection but keep rooms
+    user = {
+      userId,
+      userName: existingUser.userName || userId,
+      ws,
+      rooms: existingRooms,
+    };
+  } else {
+    user = {
+      userId,
+      userName: userId,
+      ws,
+      rooms: [],
+    };
+  }
+
   users.push(user);
 
   console.log(`User ${userId} connected`);
@@ -97,8 +126,40 @@ wss.on("connection", function connection(ws, req) {
             console.error("No roomId provided for JOIN message");
             return;
           }
+
+          if (!user.rooms.includes(parsedData.roomId)) {
+            user.rooms.push(parsedData.roomId);
+          }
+
+          const uniqueParticipantsMap = new Map();
+          users
+            .filter(
+              (u) => u.rooms.includes(parsedData.roomId!)
+            )
+            .forEach((u) =>
+              uniqueParticipantsMap.set(u.userId, {
+                userId: u.userId,
+                userName: u.userName,
+              })
+            );
+
+          const currentParticipants = Array.from(
+            uniqueParticipantsMap.values()
+          );
+
+          ws.send(
+            JSON.stringify({
+              type: WS_DATA_TYPE.USER_JOINED,
+              userId: user.userId,
+              roomId: parsedData.roomId,
+              userName: parsedData.userName,
+              timestamp: new Date().toISOString(),
+              participants: currentParticipants,
+            })
+          );
+
           console.log(`User ${userId} joining room ${parsedData.roomId}`);
-          user.rooms.push(parsedData.roomId);
+
           broadcastToRoom(
             parsedData.roomId,
             {
@@ -107,8 +168,10 @@ wss.on("connection", function connection(ws, req) {
               roomId: parsedData.roomId,
               userName: parsedData.userName,
               timestamp: new Date().toISOString(),
+              participants: currentParticipants,
             },
-            []
+            [user.userId],
+            false
           );
           break;
 
@@ -124,7 +187,8 @@ wss.on("connection", function connection(ws, req) {
               userName: user.userName,
               roomId: parsedData.roomId,
             },
-            [user.userId]
+            [user.userId],
+            true
           );
           break;
 
@@ -266,8 +330,23 @@ wss.on("connection", function connection(ws, req) {
 function broadcastToRoom(
   roomId: string,
   message: WebSocketMessage,
-  excludeUsers: string[] = []
+  excludeUsers: string[] = [],
+  includeParticipants: boolean = false
 ) {
+  if (includeParticipants && !message.participants) {
+    const uniqueParticipantsMap = new Map();
+    users
+      .filter((u) => u.rooms.includes(roomId))
+      .forEach((u) =>
+        uniqueParticipantsMap.set(u.userId, {
+          userId: u.userId,
+          userName: u.userName,
+        })
+      );
+
+    const currentParticipants = Array.from(uniqueParticipantsMap.values());
+    message.participants = currentParticipants;
+  }
   users.forEach((u) => {
     if (u.rooms.includes(roomId) && !excludeUsers.includes(u.userId)) {
       u.ws.send(JSON.stringify(message));
