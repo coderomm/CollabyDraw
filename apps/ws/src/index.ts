@@ -1,8 +1,14 @@
+import dotenv from "dotenv";
+dotenv.config();
 import client from "@repo/db/client";
-import { JWT_SECRET, WebSocketMessage, WS_DATA_TYPE } from "@repo/common/types";
+import {
+  JWT_SECRET as JWT_SECRET_TYPE,
+  WebSocketMessage,
+  WS_DATA_TYPE,
+} from "@repo/common/types";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import http from "http";
+const JWT_SECRET = process.env.JWT_SECRET || (JWT_SECRET_TYPE as string);
 
 declare module "http" {
   interface IncomingMessage {
@@ -13,46 +19,23 @@ declare module "http" {
   }
 }
 
-const server = http.createServer();
-const wss = new WebSocketServer({
-  server,
-  verifyClient: (info, callback) => {
-    const url = info.req.url;
-    if (!url) {
-      console.error("No valid url found");
-      callback(false, 401, "Unauthorized");
-      return;
-    }
-    const queryParams = new URLSearchParams(url.split("?")[1]);
-    const token = queryParams.get("token");
-    if (!token || token === null) {
-      console.error("No valid token found");
-      callback(false, 401, "Unauthorized");
-      return;
-    }
+const wss = new WebSocketServer({ port: Number(process.env.PORT) || 8080 });
 
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-      if (!decoded?.id) {
-        callback(false, 401, "Invalid token");
-        return;
-      }
-      info.req.user = {
-        id: decoded.id,
-        email: decoded.email,
-      };
-      callback(true, 101, "Switching Protocols", {
-        "Access-Control-Allow-Origin": "http://localhost:3000",
-        "Access-Control-Allow-Credentials": "true",
-      });
-    } catch (err) {
-      console.error(
-        "Direct JWT verification failed, trying NextAuth token format..."
-      );
-      callback(false, 401, "Unauthorized");
+function authUser(token: string) {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    if (typeof decoded == "string") {
+      return null;
     }
-  },
-});
+    if (!decoded.id) {
+      console.error("No valid token found in verify");
+      return null;
+    }
+    return decoded.id;
+  } catch (err) {
+    console.error("JWT verification failed.");
+  }
+}
 
 type User = {
   userId: string;
@@ -64,13 +47,25 @@ type User = {
 const users: User[] = [];
 
 wss.on("connection", function connection(ws, req) {
-  if (!req.user || !req.user.id) {
+  const url = req.url;
+  if (!url) {
+    console.error("No valid url found");
+    return;
+  }
+  const queryParams = new URLSearchParams(url.split("?")[1]);
+  const token = queryParams.get("token");
+  if (!token || token === null) {
+    console.error("No valid token found");
+    return;
+  }
+
+  const userId = authUser(token);
+  if (!userId) {
     console.error("Connection without valid user");
     ws.close(1008, "User not authenticated");
     return;
   }
 
-  const userId = req.user.id;
   let user: User = {
     userId,
     userName: userId,
@@ -80,17 +75,14 @@ wss.on("connection", function connection(ws, req) {
 
   const existingUserIndex = users.findIndex((u) => u.userId === userId);
   if (existingUserIndex !== -1) {
-    console.log(`User ${userId} reconnecting - cleaning up old connection`);
     const existingUser = users[existingUserIndex];
     if (!existingUser) {
       console.error("Error: Existing User not found.");
       return;
     }
-    // Keep the rooms they were in
+
     const existingRooms = [...existingUser.rooms];
-    // Remove old connection
     users.splice(existingUserIndex, 1);
-    // Add back with new connection but keep rooms
     user = {
       userId,
       userName: existingUser.userName || userId,
@@ -113,8 +105,10 @@ wss.on("connection", function connection(ws, req) {
   ws.on("error", console.error);
 
   ws.on("message", async function message(data) {
+    console.log("message data in ws = ", JSON.parse(data.toString()));
     try {
       const parsedData: WebSocketMessage = JSON.parse(data.toString());
+      console.log("parsedData in ws = ", parsedData);
       if (!parsedData) {
         console.error("Error in parsing ws data");
         return;
@@ -137,6 +131,10 @@ wss.on("connection", function connection(ws, req) {
 
           if (!user.rooms.includes(parsedData.roomId)) {
             user.rooms.push(parsedData.roomId);
+            console.log(
+              `User ${userId} joined room ${parsedData.roomId}, now in rooms:`,
+              user.rooms
+            );
           }
 
           const uniqueParticipantsMap = new Map();
@@ -152,7 +150,10 @@ wss.on("connection", function connection(ws, req) {
           const currentParticipants = Array.from(
             uniqueParticipantsMap.values()
           );
-
+          console.log(
+            `Room ${parsedData.roomId} participants:`,
+            currentParticipants
+          );
           ws.send(
             JSON.stringify({
               type: WS_DATA_TYPE.USER_JOINED,
@@ -198,35 +199,6 @@ wss.on("connection", function connection(ws, req) {
           );
           break;
 
-        case WS_DATA_TYPE.CHAT:
-          if (!parsedData.message || !parsedData.roomId) {
-            console.error("Missing message or roomId for CHAT");
-            return;
-          }
-          await client.shape.create({
-            data: {
-              message: parsedData.message,
-              roomId: Number(parsedData.roomId),
-              userId: userId,
-            },
-          });
-          console.log(
-            `Chat from ${userId} in room ${parsedData.roomId}: ${parsedData.message.substring(0, 50)}${parsedData.message.length > 50 ? "..." : ""}`
-          );
-          broadcastToRoom(
-            parsedData.roomId,
-            {
-              type: WS_DATA_TYPE.CHAT,
-              message: parsedData.message,
-              roomId: parsedData.roomId,
-              userId: userId,
-              userName: parsedData.userName,
-              timestamp: new Date().toISOString(),
-            },
-            [userId]
-          );
-          break;
-
         case WS_DATA_TYPE.DRAW:
         case WS_DATA_TYPE.ERASER:
           if (!parsedData.roomId || !parsedData.message) {
@@ -234,7 +206,6 @@ wss.on("connection", function connection(ws, req) {
             return;
           }
 
-          // Save drawing data to database
           try {
             await client.shape.create({
               data: {
@@ -250,7 +221,6 @@ wss.on("connection", function connection(ws, req) {
             );
           }
 
-          // Broadcast to room
           broadcastToRoom(
             parsedData.roomId,
             {
@@ -261,7 +231,7 @@ wss.on("connection", function connection(ws, req) {
               userName: user.userName,
               timestamp: new Date().toISOString(),
             },
-            [userId] // Include sender so they get confirmation
+            [userId]
           );
           break;
 
@@ -273,7 +243,6 @@ wss.on("connection", function connection(ws, req) {
             return;
           }
 
-          // Save drawing data to database
           try {
             await client.shape.update({
               where: {
@@ -291,7 +260,6 @@ wss.on("connection", function connection(ws, req) {
             );
           }
 
-          // Broadcast to room
           broadcastToRoom(
             parsedData.roomId,
             {
@@ -302,7 +270,7 @@ wss.on("connection", function connection(ws, req) {
               userName: user.userName,
               timestamp: new Date().toISOString(),
             },
-            [] // Include sender so they get confirmation
+            []
           );
           break;
 
@@ -339,7 +307,10 @@ function broadcastToRoom(
   excludeUsers: string[] = [],
   includeParticipants: boolean = false
 ) {
-  if (includeParticipants && !message.participants) {
+  if (
+    (includeParticipants && !message.participants) ||
+    message.type === WS_DATA_TYPE.USER_JOINED
+  ) {
     const uniqueParticipantsMap = new Map();
     users
       .filter((u) => u.rooms.includes(roomId))
@@ -351,15 +322,25 @@ function broadcastToRoom(
       );
 
     const currentParticipants = Array.from(uniqueParticipantsMap.values());
+    console.log(
+      `Broadcasting participants to room ${roomId}:`,
+      currentParticipants
+    );
     message.participants = currentParticipants;
   }
   users.forEach((u) => {
     if (u.rooms.includes(roomId) && !excludeUsers.includes(u.userId)) {
-      u.ws.send(JSON.stringify(message));
+      try {
+        if (u.ws.readyState === WebSocket.OPEN) {
+          u.ws.send(JSON.stringify(message));
+        }
+      } catch (err) {
+        console.error(`Error sending message to user ${u.userId}:`, err);
+      }
     }
   });
 }
 
-server.listen(8080, () => {
-  console.log("HTTP/WebSocket server started on port 8080");
+wss.on("listening", () => {
+  console.log("WebSocket server started on port 8080");
 });

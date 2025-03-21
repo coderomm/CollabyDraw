@@ -26,7 +26,6 @@ import { ColorPicker } from "@/components/color-picker"
 import { ConfirmDialog } from "./confirm-dialog"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
-import { clearAllChats } from "@/actions/chat"
 import { signOut, useSession } from "next-auth/react"
 import { redirect, usePathname } from "next/navigation"
 import Link from "next/link"
@@ -85,10 +84,8 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                 title="Clear canvas"
                 description="This will clear the whole canvas. Are you sure?"
                 onClearCanvas={isStandalone ? onClearCanvas : undefined}
-                onConfirm={!isStandalone ? () => clearAllChats({ roomName: roomName! }) : undefined}
                 variant="destructive"
             />
-
             <section data-sidebar className={cn("transition-transform duration-300 ease-in-out z-20", isMobile ? "" : "absolute top-full mt-2")}>
                 <div className={cn("flex flex-col", isMobile ? "" : "h-[calc(100vh-150px)] Island rounded-lg")}>
                     <div className={cn("py-1", isMobile ? "" : "flex-1 overflow-auto py-1 custom-scrollbar")}>

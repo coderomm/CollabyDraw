@@ -6,7 +6,7 @@ import { JoinRoomSchema } from "@repo/common/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
 
-export async function getChats(data: { roomName: string }) {
+export async function getShapes(data: { roomName: string }) {
   try {
     const validatedRoomName = JoinRoomSchema.parse(data);
 
@@ -18,15 +18,15 @@ export async function getChats(data: { roomName: string }) {
       return { success: false, error: "Room not found" };
     }
 
-    const chats = await client.chat.findMany({
+    const shapesResponse = await client.shape.findMany({
       where: { roomId: room.id },
     });
 
-    if (!chats.length) {
+    if (!shapesResponse.length) {
       return { success: true, shapes: [] };
     }
 
-    const shapes = chats.map((x: { message: string }) => {
+    const shapes = shapesResponse.map((x: { message: string }) => {
       const messageData = JSON.parse(x.message);
       return messageData.shape;
     });
@@ -36,12 +36,12 @@ export async function getChats(data: { roomName: string }) {
     if (error instanceof z.ZodError) {
       return { success: false, error: "Invalid room code format" };
     }
-    console.error("Failed to get chats:", error);
-    return { success: false, error: "Failed to get chats" };
+    console.error("Failed to get shapes:", error);
+    return { success: false, error: "Failed to get shapes" };
   }
 }
 
-export async function clearAllChats(data: { roomName: string }) {
+export async function clearAllShapes(data: { roomName: string }) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -68,7 +68,7 @@ export async function clearAllChats(data: { roomName: string }) {
       };
     }
 
-    const result = await client.chat.deleteMany({
+    const result = await client.shape.deleteMany({
       where: { roomId: room.id },
     });
 
@@ -80,7 +80,7 @@ export async function clearAllChats(data: { roomName: string }) {
     if (error instanceof z.ZodError) {
       return { success: false, error: "Invalid room code format" };
     }
-    console.error("Failed to clear chats:", error);
-    return { success: false, error: "Failed to clear chats" };
+    console.error("Failed to clear shapes:", error);
+    return { success: false, error: "Failed to clear shapes" };
   }
 }

@@ -89,12 +89,14 @@ export async function getRoom(data: { roomName: string }) {
 
     const room = await client.room.findUnique({
       where: { slug: validatedRoomName.roomName },
-      include: { Chat: true },
+      include: { Shape: true },
     });
 
     if (!room) {
       return { success: false, error: "Room not found" };
     }
+
+    console.log("room = ", room);
 
     const session = await getServerSession(authOptions);
     const cookieToken = session?.accessToken;
@@ -151,7 +153,7 @@ export async function deleteRoom(data: { roomName: string }) {
       };
     }
 
-    await client.chat.deleteMany({
+    await client.shape.deleteMany({
       where: { roomId: room.id },
     });
 

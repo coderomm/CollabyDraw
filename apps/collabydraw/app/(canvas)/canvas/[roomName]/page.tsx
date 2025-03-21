@@ -29,6 +29,7 @@ export default async function CanvasPage({ params }: { params: Promise<{ roomNam
             roomName={room.slug}
             userId={user.id}
             userName={user.name || 'User-' + user.id}
+            token={session.accessToken}
         />
     )
 }

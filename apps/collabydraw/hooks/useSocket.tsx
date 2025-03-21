@@ -4,29 +4,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { RoomParticipants, WS_DATA_TYPE, WebSocketChatMessage, WebSocketMessage } from '@repo/common/types';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
-const MAX_RECONNECT_ATTEMPTS = 5;
 
-export function useWebSocket(roomId: string, roomName: string, userId: string, userName: string, token: string) {
+export function useSocket(roomId: string, roomName: string, userId: string, userName: string, token: string) {
     const [isConnected, setIsConnected] = useState(false);
     const [messages, setMessages] = useState<WebSocketChatMessage[]>([]);
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
     const socketRef = useRef<WebSocket | null>(null);
-    const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
-    const reconnectAttemptsRef = useRef(0);
     const paramsRef = useRef({ roomId, roomName, userId, userName, token });
-    const hasJoinedRoomRef = useRef(false);
 
     useEffect(() => {
         paramsRef.current = { roomId, roomName, userId, userName, token };
-        if (roomId !== paramsRef.current.roomId) {
-            hasJoinedRoomRef.current = false;
-        }
     }, [roomId, roomName, userId, userName, token]);
 
     const connectWebSocket = useCallback(() => {
-        if (socketRef.current?.readyState === WebSocket.OPEN) {
-            return;
-        }
         if (socketRef.current) {
             try {
                 socketRef.current.close();
@@ -41,19 +31,9 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
 
             const ws = new WebSocket(wsUrl);
 
-            const connectionTimeout = setTimeout(() => {
-                if (ws.readyState !== WebSocket.OPEN) {
-                    console.log('WebSocket connection timeout, closing...');
-                    ws.close();
-                }
-            }, 5000);
-
             const handleOpen = () => {
-                clearTimeout(connectionTimeout);
                 console.log('WebSocket connected successfully');
                 setIsConnected(true);
-                reconnectAttemptsRef.current = 0;
-                hasJoinedRoomRef.current = false;
                 setTimeout(() => {
                     const { roomId, roomName, userId, userName } = paramsRef.current;
                     console.log(`Joining room ${roomId} as ${userName}`);
@@ -66,7 +46,6 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                         userName
                     }));
 
-                    hasJoinedRoomRef.current = true;
                 }, 100);
             };
 
@@ -127,18 +106,8 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             };
 
             const handleClose = (event: CloseEvent) => {
-                clearTimeout(connectionTimeout);
                 setIsConnected(false);
                 console.log(`WebSocket closed with code ${event.code}: ${event.reason}`);
-                if (event.code !== 1000 && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-                    const delay = Math.min(1000 * 2 ** reconnectAttemptsRef.current, 30000);
-                    console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1})`);
-
-                    reconnectTimeoutRef.current = setTimeout(() => {
-                        reconnectAttemptsRef.current += 1;
-                        connectWebSocket();
-                    }, delay);
-                }
             };
 
             const handleError = (error: Event) => {
@@ -167,13 +136,9 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
         connectWebSocket();
 
         return () => {
-            if (reconnectTimeoutRef.current) {
-                clearTimeout(reconnectTimeoutRef.current);
-            }
-
             if (socketRef.current) {
                 try {
-                    if (socketRef.current.readyState === WebSocket.OPEN && hasJoinedRoomRef.current) {
+                    if (socketRef.current.readyState === WebSocket.OPEN) {
                         console.log(`Leaving room ${paramsRef.current.roomId}`);
                         socketRef.current.send(JSON.stringify({
                             type: WS_DATA_TYPE.LEAVE,

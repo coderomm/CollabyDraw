@@ -6,7 +6,6 @@ import {
   StrokeStyle,
   ToolType,
 } from "@/types/canvas";
-import { RoughGenerator } from "roughjs/bin/generator";
 import { SelectionManager } from "./SelectionManager";
 import { v4 as uuidv4 } from "uuid";
 
@@ -33,7 +32,7 @@ export class Game {
   private ctx: CanvasRenderingContext2D;
   private roomId: string | null;
   private canvasBgColor: string;
-  private sendMessage: ((data: string) => void) | null;
+  private handleSendDrawing: ((data: string) => void) | null;
   private existingShape: Shape[];
   private clicked: boolean;
   private roomName: string | null;
@@ -51,7 +50,6 @@ export class Game {
   private strokeEdge: StrokeEdge = "round";
   private strokeStyle: StrokeStyle = "solid";
   private isStandalone: boolean = false;
-  private static rg = new RoughGenerator();
 
   private selectedShape: Shape | null = null;
   private selectionManager: SelectionManager;
@@ -60,7 +58,7 @@ export class Game {
     canvas: HTMLCanvasElement,
     roomId: string | null,
     canvasBgColor: string,
-    sendMessage: ((data: string) => void) | null,
+    handleSendDrawing: ((data: string) => void) | null,
     roomName: string | null,
     onScaleChangeCallback: (scale: number) => void,
     initialShapes: Shape[] = [],
@@ -70,7 +68,7 @@ export class Game {
     this.ctx = canvas.getContext("2d")!;
     this.canvasBgColor = canvasBgColor;
     this.roomId = roomId;
-    this.sendMessage = sendMessage;
+    this.handleSendDrawing = handleSendDrawing;
     this.clicked = false;
     this.existingShape = [...initialShapes];
     this.canvas.width = document.body.clientWidth;
@@ -106,15 +104,23 @@ export class Game {
     } else if (!this.isStandalone && this.roomName) {
       try {
         const getRoomResult = await getRoom({ roomName: this.roomName });
-        if (getRoomResult?.success && getRoomResult.room?.Chat) {
+        if (getRoomResult?.success && getRoomResult.room?.Shape) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          getRoomResult.room.Chat.forEach((shape: any) => {
+          getRoomResult.room.Shape.forEach((shape: any, index: number) => {
             try {
-              const parsedShapes = JSON.parse(shape.message);
-              const parsedShapeData = JSON.parse(parsedShapes.data);
-              this.existingShape.push(parsedShapeData.shape);
+              console.log(`Parsing shape ${index}:`, shape);
+              if (shape && shape.message) {
+                const parsedShapes = JSON.parse(shape.message);
+                console.log("parsedShapes = ", parsedShapes);
+                // console.log("parsedShapes.data = ", parsedShapes.data);
+                const parsedShapeData = JSON.parse(parsedShapes.data);
+                console.log("parsedShapeData = ", parsedShapeData);
+                this.existingShape.push(parsedShapeData.shape);
+              } else {
+                console.warn(`Shape ${index} has no message property`);
+              }
             } catch (e) {
-              console.error("Error parsing shape data:", e);
+              console.error(`Error parsing shape ${index} data:`, e);
             }
           });
         } else if (!getRoomResult?.success) {
@@ -306,8 +312,8 @@ export class Game {
                   LOCALSTORAGE_CANVAS_KEY,
                   JSON.stringify(this.existingShape)
                 );
-              } else if (this.sendMessage && this.roomId) {
-                this.sendMessage(
+              } else if (this.handleSendDrawing && this.roomId) {
+                this.handleSendDrawing(
                   JSON.stringify({
                     type: "update",
                     id: selectedShape.id,
@@ -451,8 +457,8 @@ export class Game {
       } catch (e) {
         console.error("Error saving shapes to localStorage:", e);
       }
-    } else if (this.sendMessage && this.roomId) {
-      this.sendMessage(
+    } else if (this.handleSendDrawing && this.roomId) {
+      this.handleSendDrawing(
         JSON.stringify({
           type: "draw",
           data: JSON.stringify({
@@ -1063,8 +1069,8 @@ export class Game {
         } catch (e) {
           console.error("Error saving shapes to localStorage:", e);
         }
-      } else if (this.sendMessage && this.roomId) {
-        this.sendMessage(
+      } else if (this.handleSendDrawing && this.roomId) {
+        this.handleSendDrawing(
           JSON.stringify({
             type: "eraser",
             data: JSON.stringify({

@@ -16,7 +16,7 @@ import ScreenLoading from "../ScreenLoading";
 import CollaborationStart from "../CollaborationStartBtn";
 import { cn } from "@/lib/utils";
 
-export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: string; roomId: string; userId: string; userName: string; }) {
+export function CanvasSheet({ roomName, roomId, userId, userName, token }: { roomName: string; roomId: string; userId: string; userName: string; token: string }) {
     const { theme } = useTheme()
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [game, setGame] = useState<Game>();
@@ -40,11 +40,12 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
     const [canvasColor, setCanvasColor] = useState<string>(canvasBgLight[0]);
     const canvasColorRef = useRef(canvasColor);
 
-    const { isConnected, messages, sendMessage, participants } = useWebSocket(
+    const { isConnected, messages, participants, sendDrawingData } = useWebSocket(
         roomId,
         roomName,
         userId,
-        userName
+        userName,
+        token
     );
 
     const { matches, isLoading } = useMediaQuery('md');
@@ -76,7 +77,7 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
             try {
                 messages.forEach((message) => {
                     try {
-                        const data = JSON.parse(message.content);
+                        const data = JSON.parse(message.message);
                         console.log('ws msg data = ', data)
                         if (data.type === "draw") {
                             const shape = JSON.parse(data.data).shape;
@@ -96,14 +97,6 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
             }
         }
     }, [messages]);
-
-    useEffect(() => {
-        try {
-            console.log('participants = ', participants)
-        } catch (e) {
-            console.error("Error processing messages:", e);
-        }
-    }, [participants]);
 
     useEffect(() => {
         game?.setTool(activeTool)
@@ -197,11 +190,27 @@ export function CanvasSheet({ roomName, roomId, userId, userName }: { roomName: 
         };
     }, [setActiveTool]);
 
-    const handleSendDrawing = useCallback((msgData: string) => {
+    const handleSendDrawing = useCallback((drawingData: string) => {
         if (isConnected) {
-            sendMessage(msgData);
+            sendDrawingData(JSON.stringify(drawingData));
+
         }
-    }, [isConnected, sendMessage]);
+    }, [isConnected, sendDrawingData]);
+
+    // const handleEraserComplete = useCallback((eraserData: string) => {
+    //     if (isConnected) {
+    //         sendEraserData(JSON.stringify(eraserData));
+
+    //     }
+    // }, [isConnected, sendEraserData]);
+
+    useEffect(() => {
+        try {
+            console.log('participants = ', participants)
+        } catch (e) {
+            console.error("Error processing messages:", e);
+        }
+    }, [participants]);
 
     useEffect(() => {
         if (canvasRef.current) {
