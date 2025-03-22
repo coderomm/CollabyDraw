@@ -8,6 +8,7 @@ import {
 } from "@/types/canvas";
 import { SelectionManager } from "./SelectionManager";
 import { v4 as uuidv4 } from "uuid";
+import { WebSocketMessage, WS_DATA_TYPE } from "@repo/common/types";
 
 const CORNER_RADIUS_FACTOR = 20;
 const RECT_CORNER_RADIUS_FACTOR = CORNER_RADIUS_FACTOR;
@@ -32,7 +33,8 @@ export class Game {
   private ctx: CanvasRenderingContext2D;
   private roomId: string | null;
   private canvasBgColor: string;
-  private handleSendDrawing: ((data: string) => void) | null;
+  // private sendMessage: ((data: string) => void) | null;
+  // private socket: WebSocket;
   private existingShape: Shape[];
   private clicked: boolean;
   private roomName: string | null;
@@ -58,17 +60,19 @@ export class Game {
     canvas: HTMLCanvasElement,
     roomId: string | null,
     canvasBgColor: string,
-    handleSendDrawing: ((data: string) => void) | null,
+    // sendMessage: ((data: string) => void) | null,
     roomName: string | null,
     onScaleChangeCallback: (scale: number) => void,
     initialShapes: Shape[] = [],
-    isStandalone: boolean = false
+    isStandalone: boolean = false,
+    public socket: WebSocket | null
   ) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d")!;
     this.canvasBgColor = canvasBgColor;
     this.roomId = roomId;
-    this.handleSendDrawing = handleSendDrawing;
+    // this.sendMessage = sendMessage;
+    this.socket = socket;
     this.clicked = false;
     this.existingShape = [...initialShapes];
     this.canvas.width = document.body.clientWidth;
@@ -78,6 +82,7 @@ export class Game {
     this.selectionManager = new SelectionManager(this.ctx, canvas);
     this.init();
     this.initMouseHandler();
+
     this.isStandalone = isStandalone;
     // Add persistence callback
     this.selectionManager.setOnUpdate(() => {
@@ -88,6 +93,51 @@ export class Game {
         );
       }
     });
+  }
+
+  public handleWebSocketMessage(message: WebSocketMessage) {
+    try {
+      switch (message.type) {
+        case WS_DATA_TYPE.DRAW:
+          const parsedShape = JSON.parse(message.message!);
+          this.existingShape.push(parsedShape);
+          this.clearCanvas();
+          break;
+
+        case WS_DATA_TYPE.ERASER:
+          this.existingShape = this.existingShape.filter(
+            (shape) => shape.id !== message.id
+          );
+          this.clearCanvas();
+          break;
+
+        case WS_DATA_TYPE.UPDATE:
+          const parsedUpdateShape = JSON.parse(message.message!);
+          const shapeIndex = this.existingShape.findIndex(
+            (shape) => shape.id === parsedUpdateShape.id
+          );
+          if (shapeIndex !== -1) {
+            this.existingShape[shapeIndex] = parsedUpdateShape;
+            this.clearCanvas();
+          }
+          break;
+      }
+    } catch (err) {
+      console.error("Error processing WebSocket message:", err);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private sendWSMessage(type: WS_DATA_TYPE, data: any) {
+    if (this.socket?.readyState === WebSocket.OPEN && this.roomId) {
+      this.socket.send(
+        JSON.stringify({
+          type,
+          ...data,
+          roomId: this.roomId,
+        })
+      );
+    }
   }
 
   async init() {
@@ -312,15 +362,10 @@ export class Game {
                   LOCALSTORAGE_CANVAS_KEY,
                   JSON.stringify(this.existingShape)
                 );
-              } else if (this.handleSendDrawing && this.roomId) {
-                this.handleSendDrawing(
-                  JSON.stringify({
-                    type: "update",
-                    id: selectedShape.id,
-                    data: JSON.stringify({ selectedShape }),
-                    roomId: this.roomId,
-                  })
-                );
+              } else if (this.roomId) {
+                this.sendWSMessage(WS_DATA_TYPE.DRAW, {
+                  message: JSON.stringify(selectedShape),
+                });
               }
             }
           }
@@ -457,16 +502,10 @@ export class Game {
       } catch (e) {
         console.error("Error saving shapes to localStorage:", e);
       }
-    } else if (this.handleSendDrawing && this.roomId) {
-      this.handleSendDrawing(
-        JSON.stringify({
-          type: "draw",
-          data: JSON.stringify({
-            shape,
-          }),
-          roomId: this.roomId,
-        })
-      );
+    } else if (this.roomId && shape) {
+      this.sendWSMessage(WS_DATA_TYPE.DRAW, {
+        message: JSON.stringify(shape),
+      });
     }
   };
 
@@ -1049,8 +1088,6 @@ export class Game {
   }
 
   eraser(x: number, y: number) {
-    // We don't need to transform the coordinates here again since they're already transformed
-    // in the mouseDownHandler and mouseMoveHandler
     const shapeIndex = this.existingShape.findIndex((shape) =>
       this.isPointInShape(x, y, shape)
     );
@@ -1069,16 +1106,10 @@ export class Game {
         } catch (e) {
           console.error("Error saving shapes to localStorage:", e);
         }
-      } else if (this.handleSendDrawing && this.roomId) {
-        this.handleSendDrawing(
-          JSON.stringify({
-            type: "eraser",
-            data: JSON.stringify({
-              shape: erasedShape,
-            }),
-            roomId: this.roomId,
-          })
-        );
+      } else if (this.roomId && !this.isStandalone) {
+        this.sendWSMessage(WS_DATA_TYPE.ERASER, {
+          id: erasedShape.id,
+        });
       }
     }
   }
@@ -1088,6 +1119,9 @@ export class Game {
     this.canvas.removeEventListener("mousemove", this.mouseMoveHandler);
     this.canvas.removeEventListener("mouseup", this.mouseUpHandler);
     this.canvas.removeEventListener("wheel", this.mouseWheelHandler);
+    if (this.socket) {
+      this.socket.close();
+    }
   }
 
   onScaleChange(scale: number) {

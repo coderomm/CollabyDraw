@@ -42,7 +42,7 @@ export default function CollaborationStartBtn({ slug, participants }: { slug?: s
                     </TooltipProvider>
                 </div>
             </div>
-            <Button type="button" onClick={() => setIsOpen(true)}
+            <Button type="butt yu65tr4e3qson" onClick={() => setIsOpen(true)}
                 className={cn("excalidraw-button collab-button relative w-auto py-3 px-4 rounded-md text-[.875rem] font-semibold shadow-none active:scale-[.98]", roomSlug ? "bg-[#0fb884] dark:bg-[#0fb884] hover:bg-[#0fb884]" : "bg-color-primary hover:bg-brand-hover active:bg-brand-active")}
                 title="Live collaboration...">Share {roomSlug && participants && participants.length > 0 && (
                     <div className="CollabButton-collaborators text-[.6rem] text-[#2b8a3e] bg-[#b2f2bb] font-bold font-assistant rounded-[50%] p-1 min-w-4 min-h-4 w-4 h-4 flex items-center justify-center absolute bottom-[-5px] right-[-5px]">{participants.length}</div>

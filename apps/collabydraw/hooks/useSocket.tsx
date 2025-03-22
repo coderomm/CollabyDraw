@@ -1,13 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RoomParticipants, WS_DATA_TYPE, WebSocketChatMessage, WebSocketMessage } from '@repo/common/types';
+import { RoomParticipants, WS_DATA_TYPE, WebSocketMessage } from '@repo/common/types';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
 
 export function useSocket(roomId: string, roomName: string, userId: string, userName: string, token: string) {
     const [isConnected, setIsConnected] = useState(false);
-    const [messages, setMessages] = useState<WebSocketChatMessage[]>([]);
+    const [messages, setMessages] = useState<WebSocketMessage[]>([]);
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
     const socketRef = useRef<WebSocket | null>(null);
     const paramsRef = useRef({ roomId, roomName, userId, userName, token });
@@ -56,16 +56,16 @@ export function useSocket(roomId: string, roomName: string, userId: string, user
 
                     if (data.participants && Array.isArray(data.participants)) {
                         console.log('Updating participants list:', data.participants);
-                        setParticipants(data.participants);
+                        setParticipants(data.participants as RoomParticipants[]);
                     }
 
                     switch (data.type) {
                         case WS_DATA_TYPE.USER_JOINED:
                             if (data.participants && Array.isArray(data.participants)) {
-                                setParticipants(data.participants);
+                                setParticipants(data.participants as RoomParticipants[]);
                             }
 
-                            else if (data.userId && data.userName) {
+                            else if (data.userId) {
                                 setParticipants(prev => {
                                     const exists = prev.some(p => p.userId === data.userId);
                                     if (!exists) {
@@ -92,8 +92,10 @@ export function useSocket(roomId: string, roomName: string, userId: string, user
                             if (data.message) {
                                 const timestamp = data.timestamp || new Date().toISOString();
                                 setMessages(prev => [...prev, {
-                                    userId: data.userId! || paramsRef.current.userId,
-                                    userName: data.userName! || paramsRef.current.userName,
+                                    type:data.type,
+                                    roomId:data.roomId!,
+                                    userId: data.userId!,
+                                    userName: data.userName!,
                                     message: data.message!,
                                     timestamp
                                 }]);
@@ -173,26 +175,6 @@ export function useSocket(roomId: string, roomName: string, userId: string, user
         }
     }, []);
 
-    const sendDrawingData = useCallback((drawingData: string) => {
-        if (!drawingData) {
-            console.warn('Cannot send empty drawing data');
-            return;
-        }
-        if (socketRef.current?.readyState === WebSocket.OPEN) {
-            const { roomId, roomName, userId, userName } = paramsRef.current;
-            socketRef.current.send(JSON.stringify({
-                type: WS_DATA_TYPE.DRAW,
-                message: drawingData,
-                roomId,
-                roomName,
-                userId,
-                userName
-            }));
-        } else {
-            console.warn('Cannot send drawing: WebSocket not connected');
-        }
-    }, []);
-
     const sendEraserData = useCallback((eraserData: string) => {
         if (!eraserData) {
             console.warn('Cannot send empty eraser data');
@@ -218,7 +200,6 @@ export function useSocket(roomId: string, roomName: string, userId: string, user
         messages,
         participants,
         sendMessage,
-        sendDrawingData,
         sendEraserData
     };
 }

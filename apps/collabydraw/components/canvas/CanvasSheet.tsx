@@ -1,9 +1,8 @@
 "use client"
 
-import { useWebSocket } from "@/hooks/useWebSocket";
 import { Game } from "@/draw/Game";
-import { BgFill, canvasBgLight, Shape, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { BgFill, canvasBgLight, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
 import { MobileNavbar } from "../mobile-navbar";
 import { useTheme } from "next-themes";
@@ -15,8 +14,11 @@ import Toolbar from "../Toolbar";
 import ScreenLoading from "../ScreenLoading";
 import CollaborationStart from "../CollaborationStartBtn";
 import { cn } from "@/lib/utils";
+import { RoomParticipants, WebSocketMessage, WS_DATA_TYPE } from "@repo/common/types";
 
-export function CanvasSheet({ roomName, roomId, userId, userName, token }: { roomName: string; roomId: string; userId: string; userName: string; token: string }) {
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
+
+export const CanvasSheet = React.memo(function CanvasSheet({ roomName, roomId, userId, userName, token }: { roomName: string; roomId: string; userId: string; userName: string; token: string }) {
     const { theme } = useTheme()
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [game, setGame] = useState<Game>();
@@ -28,7 +30,6 @@ export function CanvasSheet({ roomName, roomId, userId, userName, token }: { roo
     const [strokeEdge, setStrokeEdge] = useState<StrokeEdge>("round");
     const [strokeStyle, setStrokeStyle] = useState<StrokeStyle>("solid");
     const [grabbing, setGrabbing] = useState(false);
-    const [existingShapes, setExistingShapes] = useState<Shape[]>([]);
     const paramsRef = useRef({ roomId, roomName, userId, userName });
     const activeToolRef = useRef(activeTool);
     const strokeFillRef = useRef(strokeFill);
@@ -39,22 +40,73 @@ export function CanvasSheet({ roomName, roomId, userId, userName, token }: { roo
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [canvasColor, setCanvasColor] = useState<string>(canvasBgLight[0]);
     const canvasColorRef = useRef(canvasColor);
-
-    const { isConnected, messages, participants, sendDrawingData } = useWebSocket(
-        roomId,
-        roomName,
-        userId,
-        userName,
-        token
-    );
-
     const { matches, isLoading } = useMediaQuery('md');
+    const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [participants, setParticipants] = useState<RoomParticipants[]>([]);
+    const gameRef = useRef<Game | null>(null);
+    const socketConnected = useRef(false);
 
     useEffect(() => {
+        console.log('E1')
+        if (!roomId || !roomName || !userId || !userName || !token) return;
+        if (socket || socketConnected.current) return;
+        const wsUrl = `${WS_URL}?token=${encodeURIComponent(token)}`;
+        const ws = new WebSocket(wsUrl);
+        socketConnected.current = true;
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify({
+                type: WS_DATA_TYPE.JOIN,
+                roomId,
+                roomName,
+                userId,
+                userName
+            }));
+            setSocket(ws);
+        };
+
+        ws.onmessage = (event) => {
+            const data: WebSocketMessage = JSON.parse(event.data);
+
+            if (data.participants) {
+                setParticipants(data.participants);
+            } else if (data.type === WS_DATA_TYPE.USER_JOINED) {
+                setParticipants(prev => {
+                    const exists = prev.some(p => p.userId === data.userId);
+                    if (!exists) {
+                        return [...prev, { userId: data.userId!, userName: data.userName! }];
+                    }
+                    return prev;
+                });
+            } else if (data.type === WS_DATA_TYPE.USER_LEFT) {
+                setParticipants(prev => prev.filter(user => user.userId !== data.userId));
+            }
+
+            if ([WS_DATA_TYPE.DRAW, WS_DATA_TYPE.ERASER, WS_DATA_TYPE.UPDATE].includes(data.type)) {
+                gameRef.current?.handleWebSocketMessage(data);
+            }
+        };
+
+        ws.onerror = (error) => console.error('WebSocket error:', error);
+
+        return () => {
+            ws.close();
+            socketConnected.current = false;
+        };
+    }, [roomId, roomName, userId, userName, token]);
+
+    useEffect(() => {
+        console.log('E2')
+        paramsRef.current = { roomId, roomName, userId, userName };
+    }, [roomId, roomName, userId, userName]);
+
+    useEffect(() => {
+        console.log('E3')
         setCanvasColor(canvasBgLight[0]);
     }, [theme])
 
     useEffect(() => {
+        console.log('E4')
         const handleResize = () => {
             if (canvasRef.current && game) {
                 const canvas = canvasRef.current;
@@ -68,82 +120,54 @@ export function CanvasSheet({ roomName, roomId, userId, userName, token }: { roo
         return () => window.removeEventListener('resize', handleResize);
     }, [game]);
 
-    useEffect(() => {
-        paramsRef.current = { roomId, roomName, userId, userName };
-    }, [roomId, roomName, userId, userName]);
+    // useEffect(() => {
+    //     console.log('E5')
+    //     game?.setTool(activeTool)
+    //     game?.setStrokeWidth(strokeWidth)
+    //     game?.setStrokeFill(strokeFill)
+    //     game?.setBgFill(bgFill)
+    //     game?.setCanvasBgColor(canvasColor)
+    //     game?.setStrokeEdge(strokeEdge)
+    // });
 
     useEffect(() => {
-        if (messages.length > 0) {
-            try {
-                messages.forEach((message) => {
-                    try {
-                        const data = JSON.parse(message.message);
-                        console.log('ws msg data = ', data)
-                        if (data.type === "draw") {
-                            const shape = JSON.parse(data.data).shape;
-                            setExistingShapes((prevShapes) => [...prevShapes, shape]);
-                        } else if (data.type === "eraser") {
-                            const shape = JSON.parse(data.data).shape;
-                            setExistingShapes((prevShapes) =>
-                                prevShapes.filter((s) => JSON.stringify(s) !== JSON.stringify(shape))
-                            );
-                        }
-                    } catch (e) {
-                        console.error("Error processing message:", e);
-                    }
-                });
-            } catch (e) {
-                console.error("Error processing messages:", e);
-            }
-        }
-    }, [messages]);
-
-    useEffect(() => {
-        game?.setTool(activeTool)
-        game?.setStrokeWidth(strokeWidth)
-        game?.setStrokeFill(strokeFill)
-        game?.setBgFill(bgFill)
-        game?.setCanvasBgColor(canvasColor)
-        game?.setStrokeEdge(strokeEdge)
-    });
-
-    useEffect(() => {
+        console.log('E6')
         strokeEdgeRef.current = strokeEdge;
         game?.setStrokeEdge(strokeEdge);
     }, [strokeEdge, game]);
 
     useEffect(() => {
+        console.log('E7')
         strokeStyleRef.current = strokeStyle;
         game?.setStrokeStyle(strokeStyle);
     }, [strokeStyle, game]);
 
     useEffect(() => {
+        console.log('E8')
         activeToolRef.current = activeTool;
         game?.setTool(activeTool);
     }, [activeTool, game]);
 
     useEffect(() => {
+        console.log('E9')
         strokeWidthRef.current = strokeWidth;
         game?.setStrokeWidth(strokeWidth);
     }, [strokeWidth, game]);
 
     useEffect(() => {
+        console.log('E10')
         strokeFillRef.current = strokeFill;
         game?.setStrokeFill(strokeFill);
     }, [strokeFill, game]);
 
     useEffect(() => {
+        console.log('E11')
         bgFillRef.current = bgFill;
         game?.setBgFill(bgFill);
     }, [bgFill, game]);
 
     useEffect(() => {
-        if (game && existingShapes.length >= 0) {
-            game.updateShapes(existingShapes);
-        }
-    }, [game, existingShapes]);
-
-    useEffect(() => {
+        console.log('E12')
         if (game && canvasColorRef.current !== canvasColor) {
             canvasColorRef.current = canvasColor;
             game.setCanvasBgColor(canvasColor);
@@ -151,12 +175,14 @@ export function CanvasSheet({ roomName, roomId, userId, userName, token }: { roo
     }, [canvasColor, game]);
 
     useEffect(() => {
+        console.log('E13')
         if (game) {
             game.setScale(scale);
         }
     }, [scale, game]);
 
     useEffect(() => {
+        console.log('E14')
         const handleKeyDown = (e: KeyboardEvent) => {
             switch (e.key) {
                 case "1":
@@ -188,60 +214,46 @@ export function CanvasSheet({ roomName, roomId, userId, userName, token }: { roo
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [setActiveTool]);
+    }, []);
 
-    const handleSendDrawing = useCallback((drawingData: string) => {
-        if (isConnected) {
-            sendDrawingData(JSON.stringify(drawingData));
-
-        }
-    }, [isConnected, sendDrawingData]);
-
-    // const handleEraserComplete = useCallback((eraserData: string) => {
-    //     if (isConnected) {
-    //         sendEraserData(JSON.stringify(eraserData));
-
+    // useEffect(() => {
+    //     console.log('E15')
+    //     try {
+    //         console.log('participants = ', participants)
+    //     } catch (e) {
+    //         console.error("Error processing messages:", e);
     //     }
-    // }, [isConnected, sendEraserData]);
+    // }, [participants]);
 
     useEffect(() => {
-        try {
-            console.log('participants = ', participants)
-        } catch (e) {
-            console.error("Error processing messages:", e);
-        }
-    }, [participants]);
+        console.log('E16')
+        if (!canvasRef.current || !socket || gameRef.current) return;
+
+        const game = new Game(
+            canvasRef.current,
+            paramsRef.current.roomId,
+            canvasColorRef.current,
+            paramsRef.current.roomName,
+            (newScale) => setScale(newScale),
+            [],
+            false,
+            socket
+        );
+
+        gameRef.current = game;
+        setGame(game);
+
+        canvasRef.current.width = window.innerWidth;
+        canvasRef.current.height = window.innerHeight;
+
+        return () => {
+            gameRef.current?.destroy();
+            gameRef.current = null;
+        };
+    }, [socket]);
 
     useEffect(() => {
-        if (canvasRef.current) {
-            const game = new Game(
-                canvasRef.current,
-                paramsRef.current.roomId,
-                canvasColorRef.current,
-                handleSendDrawing,
-                paramsRef.current.roomName,
-                (newScale) => setScale(newScale),
-                []
-            )
-            setGame(game);
-
-            game.setTool(activeToolRef.current);
-            game.setStrokeWidth(strokeWidthRef.current);
-            game.setStrokeFill(strokeFillRef.current);
-            game.setBgFill(bgFillRef.current);
-            game.setStrokeEdge(strokeEdgeRef.current);
-
-            canvasRef.current.width = window.innerWidth;
-            canvasRef.current.height = window.innerHeight;
-
-            return () => {
-                game.destroy();
-            }
-        }
-
-    }, [canvasRef, handleSendDrawing]);
-
-    useEffect(() => {
+        console.log('E17')
         if (activeTool === "grab") {
             const handleGrab = () => {
                 setGrabbing((prev) => !prev)
@@ -257,20 +269,24 @@ export function CanvasSheet({ roomName, roomId, userId, userName, token }: { roo
         }
     }, [activeTool]);
 
-    useEffect(() => {
-        if (game?.outputScale) {
-            setScale(game.outputScale);
-        }
-    }, [game?.outputScale]);
+    // useEffect(() => {
+    //     console.log('E18')
+    //     if (game?.outputScale) {
+    //         setScale(game.outputScale);
+    //     }
+    // }, [game?.outputScale]);
 
     const toggleSidebar = useCallback(() => {
+        console.log('E19')
         setSidebarOpen(prev => !prev);
     }, []);
 
     if (isLoading) {
-        return (
-            <ScreenLoading />
-        )
+        return <ScreenLoading />
+    }
+
+    if (!socket) {
+        return <ScreenLoading content="Connecting ..." />
     }
 
     return (
@@ -352,4 +368,4 @@ export function CanvasSheet({ roomName, roomId, userId, userName, token }: { roo
             <canvas className={cn("collabydraw collabydraw-canvas", theme === 'dark' ? 'collabydraw-canvas-dark' : '')} ref={canvasRef} />
         </div >
     )
-}
+});

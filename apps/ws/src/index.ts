@@ -23,123 +23,127 @@ const wss = new WebSocketServer({ port: Number(process.env.PORT) || 8080 });
 
 function authUser(token: string) {
   try {
+    console.log("Authenticating user with token:", token);
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
     if (typeof decoded == "string") {
+      console.error("Decoded token is a string, expected object");
       return null;
     }
     if (!decoded.id) {
-      console.error("No valid token found in verify");
+      console.error("No valid user ID in token");
       return null;
     }
+    console.log("User authenticated successfully:", decoded.id);
     return decoded.id;
   } catch (err) {
-    console.error("JWT verification failed.");
+    console.error("JWT verification failed:", err);
+    return null;
   }
 }
 
-type User = {
-  userId: string;
-  userName: string;
+interface User {
   ws: WebSocket;
   rooms: string[];
-};
+  userId: string;
+  userName: string;
+}
 
 const users: User[] = [];
 
 wss.on("connection", function connection(ws, req) {
+  console.log("New WebSocket connection attempt");
   const url = req.url;
   if (!url) {
-    console.error("No valid url found");
+    console.error("No valid URL found in request");
     return;
   }
   const queryParams = new URLSearchParams(url.split("?")[1]);
   const token = queryParams.get("token");
   if (!token || token === null) {
-    console.error("No valid token found");
+    console.error("No valid token found in query params");
+    ws.close(1008, "User not authenticated");
     return;
   }
 
   const userId = authUser(token);
   if (!userId) {
-    console.error("Connection without valid user");
+    console.error("Connection rejected: invalid user");
     ws.close(1008, "User not authenticated");
     return;
   }
 
-  let user: User = {
-    userId,
-    userName: userId,
-    ws,
-    rooms: [],
-  };
-
-  const existingUserIndex = users.findIndex((u) => u.userId === userId);
-  if (existingUserIndex !== -1) {
-    const existingUser = users[existingUserIndex];
-    if (!existingUser) {
-      console.error("Error: Existing User not found.");
-      return;
-    }
-
-    const existingRooms = [...existingUser.rooms];
-    users.splice(existingUserIndex, 1);
-    user = {
-      userId,
-      userName: existingUser.userName || userId,
-      ws,
-      rooms: existingRooms,
-    };
+  console.log(`User ${userId} attempting to connect`);
+  console.log("users1 = ", users);
+  let comingUser = users.find((u) => u.userId === userId);
+  if (comingUser) {
+    comingUser.ws = ws;
+    console.log(`Existing user ${userId} found, updating WebSocket connection`);
   } else {
-    user = {
-      userId,
-      userName: userId,
-      ws,
-      rooms: [],
-    };
+    users.push({ userId, userName: userId, ws, rooms: [] });
+    console.log(`New user ${userId} added`);
+    console.log("users2 = ", users);
   }
 
-  users.push(user);
+  console.log(`User ${userId} connected successfully`);
 
-  console.log(`User ${userId} connected`);
-
-  ws.on("error", console.error);
+  ws.on("error", (err) =>
+    console.error(`WebSocket error for user ${userId}:`, err)
+  );
 
   ws.on("message", async function message(data) {
-    console.log("message data in ws = ", JSON.parse(data.toString()));
+    console.log(`Received message from ${userId}:`, data.toString());
     try {
       const parsedData: WebSocketMessage = JSON.parse(data.toString());
-      console.log("parsedData in ws = ", parsedData);
       if (!parsedData) {
         console.error("Error in parsing ws data");
         return;
       }
+      console.log("Parsed message:", parsedData);
 
-      if (parsedData.userName && user.userName === userId) {
-        user.userName = parsedData.userName;
+      const user = users.find((x) => x.userId === parsedData.userId);
+      if (!user) {
+        console.error("No user found");
+        ws.close();
+        return;
       }
 
-      console.log(
-        `Received ${parsedData.type} message from user ${userId} in room ${parsedData.roomId}`
-      );
+      if (!parsedData.roomId) {
+        console.error("No roomId provided for WS message");
+        return;
+      }
+
+      if (!parsedData.userId) {
+        console.error("No userId provided for WS message");
+        return;
+      }
 
       switch (parsedData.type) {
         case WS_DATA_TYPE.JOIN:
-          if (!parsedData.roomId) {
-            console.error("No roomId provided for JOIN message");
+          console.log(`User ${userId} joining room ${parsedData.roomId}`);
+          user.rooms.push(parsedData.roomId);
+          
+          const roomRespon = await client.room.findMany();
+          console.log('roomRespon = ',roomRespon)
+
+          const room = await client.room.findUnique({
+            where: { id: Number(parsedData.roomId) },
+          });
+
+          if (!room) {
+            console.log("No room found", room);
+            ws.close();
             return;
           }
 
-          if (!user.rooms.includes(parsedData.roomId)) {
-            user.rooms.push(parsedData.roomId);
-            console.log(
-              `User ${userId} joined room ${parsedData.roomId}, now in rooms:`,
-              user.rooms
-            );
+          if (parsedData.userName && user.userName === parsedData.userId) {
+            user.userName = parsedData.userName;
           }
 
+          console.log(`User ${userId} rooms after join:`, user.rooms);
+          console.log("users after new user joined: ", users);
           const uniqueParticipantsMap = new Map();
           users
-            .filter((u) => u.rooms.includes(parsedData.roomId!))
+            .filter((u) => u.rooms.includes(parsedData.roomId))
             .forEach((u) =>
               uniqueParticipantsMap.set(u.userId, {
                 userId: u.userId,
@@ -157,28 +161,28 @@ wss.on("connection", function connection(ws, req) {
           ws.send(
             JSON.stringify({
               type: WS_DATA_TYPE.USER_JOINED,
-              userId: user.userId,
               roomId: parsedData.roomId,
+              roomName: parsedData.roomName,
+              userId: user.userId,
               userName: parsedData.userName,
-              timestamp: new Date().toISOString(),
               participants: currentParticipants,
+              timestamp: new Date().toISOString(),
             })
           );
-
-          console.log(`User ${userId} joining room ${parsedData.roomId}`);
 
           broadcastToRoom(
             parsedData.roomId,
             {
               type: WS_DATA_TYPE.USER_JOINED,
-              userId: user.userId,
               roomId: parsedData.roomId,
+              roomName: parsedData.roomName,
+              userId: user.userId,
               userName: parsedData.userName,
-              timestamp: new Date().toISOString(),
               participants: currentParticipants,
+              timestamp: new Date().toISOString(),
             },
             [user.userId],
-            false
+            true
           );
           break;
 
@@ -284,17 +288,21 @@ wss.on("connection", function connection(ws, req) {
 
   ws.on("close", () => {
     console.log(`User ${userId} disconnected`);
-    user.rooms.forEach((roomId) => {
-      broadcastToRoom(
-        roomId,
-        {
-          type: WS_DATA_TYPE.USER_LEFT,
-          userId: user.userId,
+    const user = users.find((u) => u.userId === userId);
+    if (user) {
+      user.rooms.forEach((roomId) => {
+        broadcastToRoom(
           roomId,
-        },
-        [user.userId]
-      );
-    });
+          {
+            type: WS_DATA_TYPE.USER_LEFT,
+            userId: user.userId,
+            userName: user.userName,
+            roomId,
+          },
+          [user.userId]
+        );
+      });
+    }
 
     const index = users.findIndex((u) => u.userId === userId);
     if (index !== -1) users.splice(index, 1);

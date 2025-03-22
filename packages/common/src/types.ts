@@ -47,8 +47,8 @@ export const GetRoomBySlug = z.object({
 });
 
 export enum WS_DATA_TYPE {
-  JOIN = "JOIN_ROOM",
-  LEAVE = "LEAVE_ROOM",
+  JOIN = "JOIN",
+  LEAVE = "LEAVE",
   USER_JOINED = "USER_JOINED",
   USER_LEFT = "USER_LEFT",
   DRAW = "DRAW",
@@ -65,8 +65,12 @@ export type WebSocketMessage = {
   userId: string;
   userName?: string;
   message?: string;
-  timestamp?: string;
   participants?: any[];
+  timestamp?: string;
+};
+export type RoomParticipants = {
+  userId: string;
+  userName: string;
 };
 
 export type WebSocketChatMessage = {
@@ -74,11 +78,6 @@ export type WebSocketChatMessage = {
   userName: string;
   message: string;
   timestamp: string;
-};
-
-export type RoomParticipants = {
-  userId: string;
-  userName: string;
 };
 
 export interface Room {

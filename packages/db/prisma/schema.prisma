@@ -21,10 +21,6 @@ model User {
   password      String
   image         String?
   Room          Room[]
-  Chat          Chat[]
-
-  accounts Account[]
-  sessions Session[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -36,19 +32,9 @@ model Room {
   slug      String   @unique
   adminId   String
   admin     User     @relation(fields: [adminId], references: [id])
-  Chat      Chat[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Shape     Shape[]
-}
-
-model Chat {
-  id      Int    @id @default(autoincrement())
-  message String
-  userId  String
-  user    User   @relation(fields: [userId], references: [id])
-  roomId  Int
-  room    Room   @relation(fields: [roomId], references: [id])
 }
 
 model Shape {
@@ -60,31 +46,4 @@ model Shape {
   room      Room     @relation(fields: [roomId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
