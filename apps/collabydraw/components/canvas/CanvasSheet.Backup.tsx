@@ -1,7 +1,7 @@
 "use client"
 
 import { Game } from "@/draw/Game";
-import { BgFill, canvasBgLight, Shape, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgLight, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
 import { MobileNavbar } from "../mobile-navbar";
@@ -14,15 +14,16 @@ import Toolbar from "../Toolbar";
 import ScreenLoading from "../ScreenLoading";
 import CollaborationStart from "../CollaborationStartBtn";
 import { cn } from "@/lib/utils";
-import { useWebSocket } from "@/hooks/useWebSocket";
-import { WS_DATA_TYPE } from "@repo/common/types";
+import { RoomParticipants } from "@repo/common/types";
 
-export default function CanvasSheet({ roomName, roomId, userId, userName, token }: {
-    roomName: string; roomId: string; userId: string; userName: string; token: string;
+// const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
+
+export default function CanvasSheet({ roomName, roomId, userId, userName, socket, isConnected }: {
+    roomName: string; roomId: string; userId: string; userName: string; token: string; socket: WebSocket | null; isConnected: boolean;
 }) {
     const { theme } = useTheme()
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [game, setGame] = useState<Game>();
+    // const [game, setGame] = useState<Game>();
     const [scale, setScale] = useState<number>(1);
     const [activeTool, setActiveTool] = useState<ToolType>("grab");
     const [strokeFill, setStrokeFill] = useState<StrokeFill>("#f08c00");
@@ -42,16 +43,43 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     const [canvasColor, setCanvasColor] = useState<string>(canvasBgLight[0]);
     const canvasColorRef = useRef(canvasColor);
     const { matches, isLoading } = useMediaQuery('md');
-    const [existingShapes, setExistingShapes] = useState<Shape[]>([]);
+    const [participants, setParticipants] = useState<RoomParticipants[]>([]);
     const gameRef = useRef<Game>();
+    const [isSocketReady, setIsSocketReady] = useState(false);
+    const connectionRef = useRef<number>(0);
 
-    const { isConnected, messages, sendMessage, participants } = useWebSocket(
-        roomId,
-        roomName,
-        userId,
-        userName,
-        token
-    );
+    useEffect(() => {
+        if (!socket) {
+            setIsSocketReady(false);
+            return;
+        }
+
+        const currentConnection = ++connectionRef.current;
+        let timeout: NodeJS.Timeout;
+
+        const handleOpen = () => {
+            if (currentConnection !== connectionRef.current) return;
+            console.log('Socket ready in CanvasSheet');
+            setIsSocketReady(true);
+        };
+
+        if (socket.readyState === WebSocket.OPEN) {
+            // Add slight delay to ensure parent state updates
+            timeout = setTimeout(handleOpen, 50);
+        } else {
+            socket.addEventListener('open', handleOpen);
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        let connectionRefValue = connectionRef.current;
+
+        return () => {
+            connectionRefValue++;
+            clearTimeout(timeout);
+            socket.removeEventListener('open', handleOpen);
+            setIsSocketReady(false);
+        };
+    }, [socket, isConnected, setIsSocketReady]); // Add isConnected to dependencies
 
     useEffect(() => {
         console.log('E2')
@@ -59,18 +87,9 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     }, [roomId, roomName, userId, userName]);
 
     useEffect(() => {
+        console.log('E3')
         setCanvasColor(canvasBgLight[0]);
     }, [theme])
-
-    useEffect(() => {
-        game?.setTool(activeTool)
-        game?.setStrokeWidth(strokeWidth)
-        game?.setStrokeFill(strokeFill)
-        game?.setBgFill(bgFill)
-        game?.setCanvasBgColor(canvasColor)
-        game?.setStrokeEdge(strokeEdge)
-        game?.setStrokeStyle(strokeStyle)
-    });
 
     useEffect(() => {
         console.log('E4')
@@ -173,43 +192,32 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
         };
     }, []);
 
-    const handleSendDrawing = useCallback((msgData: string) => {
-        if (isConnected) {
-            sendMessage(msgData);
-        }
-    }, [isConnected, sendMessage]);
-
-    useEffect(() => {
-        if (game && existingShapes.length >= 0) {
-            game.updateShapes(existingShapes);
-        }
-    }, [game, existingShapes]);
-
     useEffect(() => {
         console.log('E16')
-        if (!canvasRef.current || !isConnected) return;
+        if (!isSocketReady || !socket || !canvasRef.current) return;
         console.log('Initializing game with valid socket');
         const game = new Game(
             canvasRef.current,
             paramsRef.current.roomId,
             canvasColorRef.current,
-            handleSendDrawing,
             paramsRef.current.roomName,
             (newScale) => setScale(newScale),
             false,
+            socket,
+            (newParticipants) => setParticipants(newParticipants)
         );
 
         gameRef.current = game;
-        setGame(game);
+        // setGame(game);
 
         canvasRef.current.width = window.innerWidth;
         canvasRef.current.height = window.innerHeight;
 
         return () => {
             gameRef.current?.destroy();
-            game.destroy();
+            gameRef.current = undefined;
         };
-    }, [handleSendDrawing, isConnected]);
+    }, [isSocketReady, socket]);
 
     useEffect(() => {
         console.log('E17')
@@ -228,34 +236,35 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
         }
     }, [activeTool]);
 
-    useEffect(() => {
-        console.log('messages in canvassheet = ', messages)
-        if (messages.length > 0) {
-            try {
-                messages.forEach((message, index: number) => {
-                    console.log(`looping messages ${index}= `, message)
-                    try {
-                        if (message.type === WS_DATA_TYPE.DRAW) {
-                            setExistingShapes((prevShapes) => [...prevShapes, message.message!]);
-                        } else if (message.type === WS_DATA_TYPE.ERASER) {
-                            setExistingShapes((prevShapes) =>
-                                prevShapes.filter((s) => s.id !== message.id)
-                            );
-                        }
-                    } catch (e) {
-                        console.error("Error processing message:", e);
-                    }
-                });
-            } catch (e) {
-                console.error("Error processing messages:", e);
-            }
-        }
-    }, [messages]);
-
     const toggleSidebar = useCallback(() => {
         console.log('E19')
         setSidebarOpen(prev => !prev);
     }, []);
+
+    // useEffect(() => {
+    //     if (!socket) {
+    //         setIsSocketReady(false);
+    //         return;
+    //     }
+
+    //     const handleOpen = () => setIsSocketReady(true);
+
+    //     if (socket.readyState === WebSocket.OPEN) {
+    //         handleOpen();
+    //     } else {
+    //         socket.addEventListener('open', handleOpen);
+    //     }
+
+    //     console.log('isSocketReady = ', isSocketReady)
+
+    //     return () => {
+    //         socket.removeEventListener('open', handleOpen);
+    //     };
+    // }, [isSocketReady, socket]);
+
+    // useEffect(() => {
+    //     console.log('socket in CanvasSheet = ', socket)
+    // }, [socket])
 
     useEffect(() => {
         console.log('participants = ', participants)
@@ -263,6 +272,10 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
 
     if (isLoading) {
         return <ScreenLoading />
+    }
+
+    if (!socket || !isSocketReady) {
+        return <ScreenLoading content={isConnected ? "Finalizing connection..." : "Connecting..."} />;
     }
 
     return (

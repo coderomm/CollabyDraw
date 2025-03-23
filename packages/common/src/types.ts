@@ -68,6 +68,7 @@ export type WebSocketMessage = {
   participants?: any[];
   timestamp?: string;
 };
+
 export type RoomParticipants = {
   userId: string;
   userName: string;
@@ -78,6 +79,7 @@ export type WebSocketChatMessage = {
   userName: string;
   message: string;
   timestamp: string;
+  type: WS_DATA_TYPE;
 };
 
 export interface Room {

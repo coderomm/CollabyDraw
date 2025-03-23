@@ -162,3 +162,23 @@ export type Shape =
       rounded: StrokeEdge;
       strokeStyle: StrokeStyle;
     };
+
+export enum WS_DATA_TYPE {
+  JOIN = "JOIN",
+  LEAVE = "LEAVE",
+  USER_JOINED = "USER_JOINED",
+  USER_LEFT = "USER_LEFT",
+  DRAW = "DRAW",
+  ERASER = "ERASER",
+  UPDATE = "UPDATE",
+  EXISTING_PARTICIPANTS = "EXISTING_PARTICIPANTS",
+}
+
+export type WsMessage = {
+  id?: string;
+  userId: string;
+  userName: string;
+  message?: Shape;
+  timestamp: string;
+  type: WS_DATA_TYPE;
+};

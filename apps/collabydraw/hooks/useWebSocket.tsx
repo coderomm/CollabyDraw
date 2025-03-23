@@ -1,14 +1,15 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RoomParticipants, WS_DATA_TYPE, WebSocketChatMessage, WebSocketMessage } from '@repo/common/types';
+import { RoomParticipants, WS_DATA_TYPE, WebSocketMessage } from '@repo/common/types';
+import { WsMessage } from '@/types/canvas';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
 const MAX_RECONNECT_ATTEMPTS = 5;
 
 export function useWebSocket(roomId: string, roomName: string, userId: string, userName: string, token: string) {
     const [isConnected, setIsConnected] = useState(false);
-    const [messages, setMessages] = useState<WebSocketChatMessage[]>([]);
+    const [messages, setMessages] = useState<WsMessage[]>([]);
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
     const socketRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
@@ -73,12 +74,7 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             const handleMessage = (event: MessageEvent) => {
                 try {
                     const data: WebSocketMessage = JSON.parse(event.data);
-                    console.log('Received WebSocket message:', data.type);
-
-                    if (data.participants && Array.isArray(data.participants)) {
-                        console.log('Updating participants list:', data.participants);
-                        setParticipants(data.participants);
-                    }
+                    console.log('Received WebSocket message:', data);
 
                     switch (data.type) {
                         case WS_DATA_TYPE.USER_JOINED:
@@ -108,15 +104,28 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                             break;
 
                         case WS_DATA_TYPE.DRAW:
-                        case WS_DATA_TYPE.ERASER:
                         case WS_DATA_TYPE.UPDATE:
                             if (data.message) {
+                                const parsedMessage = JSON.parse(data.message);
                                 const timestamp = data.timestamp || new Date().toISOString();
                                 setMessages(prev => [...prev, {
+                                    type: data.type,
                                     userId: data.userId! || paramsRef.current.userId,
                                     userName: data.userName! || paramsRef.current.userName,
-                                    message: data.message!,
+                                    message: parsedMessage,
                                     timestamp
+                                }]);
+                            }
+                            break;
+
+                        case WS_DATA_TYPE.ERASER:
+                            if (data.id) {
+                                setMessages(prev => [...prev, {
+                                    type: data.type,
+                                    id: data.id,
+                                    userId: data.userId || paramsRef.current.userId,
+                                    userName: data.userName || paramsRef.current.userName,
+                                    timestamp: data.timestamp!
                                 }]);
                             }
                             break;
@@ -193,58 +202,42 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             console.warn('Cannot send empty message');
             return;
         }
+        console.log("sendMessage content = ", JSON.parse(content))
+        const parsedContent = JSON.parse(content);
         if (socketRef.current?.readyState === WebSocket.OPEN) {
-            const { roomId, roomName, userId, userName } = paramsRef.current;
-            socketRef.current.send(JSON.stringify({
-                type: WS_DATA_TYPE.DRAW,
-                message: content,
-                roomId,
-                roomName,
-                userId,
-                userName
-            }));
+            const { roomName, userId, userName } = paramsRef.current;
+            if (parsedContent.type === WS_DATA_TYPE.DRAW) {
+                socketRef.current.send(JSON.stringify({
+                    type: WS_DATA_TYPE.DRAW,
+                    id: parsedContent.id,
+                    message: JSON.stringify(parsedContent.message),
+                    roomId: parsedContent.roomId,
+                    roomName,
+                    userId,
+                    userName
+                }));
+            } else if (parsedContent.type === WS_DATA_TYPE.UPDATE) {
+                socketRef.current.send(JSON.stringify({
+                    type: WS_DATA_TYPE.UPDATE,
+                    message: JSON.stringify(parsedContent.message),
+                    id: parsedContent.id,
+                    roomId: parsedContent.roomId,
+                    roomName,
+                    userId,
+                    userName
+                }));
+            } else if (parsedContent.type === WS_DATA_TYPE.ERASER) {
+                socketRef.current.send(JSON.stringify({
+                    type: WS_DATA_TYPE.ERASER,
+                    id: parsedContent.id,
+                    roomId: parsedContent.roomId,
+                    roomName,
+                    userId,
+                    userName
+                }));
+            }
         } else {
             console.warn('Cannot send message: WebSocket not connected');
-        }
-    }, []);
-
-    const sendDrawingData = useCallback((drawingData: string) => {
-        if (!drawingData) {
-            console.warn('Cannot send empty drawing data');
-            return;
-        }
-        if (socketRef.current?.readyState === WebSocket.OPEN) {
-            const { roomId, roomName, userId, userName } = paramsRef.current;
-            socketRef.current.send(JSON.stringify({
-                type: WS_DATA_TYPE.DRAW,
-                message: drawingData,
-                roomId,
-                roomName,
-                userId,
-                userName
-            }));
-        } else {
-            console.warn('Cannot send drawing: WebSocket not connected');
-        }
-    }, []);
-
-    const sendEraserData = useCallback((eraserData: string) => {
-        if (!eraserData) {
-            console.warn('Cannot send empty eraser data');
-            return;
-        }
-        if (socketRef.current?.readyState === WebSocket.OPEN) {
-            const { roomId, roomName, userId, userName } = paramsRef.current;
-            socketRef.current.send(JSON.stringify({
-                type: WS_DATA_TYPE.ERASER,
-                message: eraserData,
-                roomId,
-                roomName,
-                userId,
-                userName
-            }));
-        } else {
-            console.warn('Cannot send eraser data: WebSocket not connected');
         }
     }, []);
 
@@ -252,8 +245,6 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
         isConnected,
         messages,
         participants,
-        sendMessage,
-        sendDrawingData,
-        sendEraserData
+        sendMessage
     };
 }
