@@ -28,8 +28,8 @@ export default function CollaborationStartBtn({ slug, participants }: { slug?: s
                                 <Tooltip key={participant.userId}>
                                     <TooltipTrigger asChild>
                                         <div style={{ backgroundColor: getClientColor(participant) }} className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer`}>
-                                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                                {participant.userName.charAt(0)}
+                                            <span className="text-sm font-bold text-gray-900 dark:text-gray-900">
+                                                {participant.userName.charAt(0).toUpperCase()}
                                             </span>
                                         </div>
                                     </TooltipTrigger>

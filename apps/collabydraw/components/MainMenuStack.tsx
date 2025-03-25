@@ -18,7 +18,7 @@ import {
     DownloadIcon,
     Upload,
     Linkedin,
-    Share,
+    Share2,
 } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -97,7 +97,7 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                                     <SidebarItem icon={TrashIcon} label="Clear canvas" onClick={() => setClearDialogOpen(true)} />
                                     <SidebarItem icon={DownloadIcon} label="Export Drawing" onClick={onExportCanvas} />
                                     <SidebarItem icon={Upload} label="Import Drawing" onClick={onImportCanvas} />
-                                    <SidebarItem icon={Share} label="Live collaboration" onClick={() => setIsShareOpen(true)} />
+                                    <SidebarItem icon={Share2} label="Live collaboration" onClick={() => setIsShareOpen(true)} />
                                     {session?.user && session?.user.id ? (
                                         <CollaborationStartdDialog open={isShareOpen} onOpenChange={setIsShareOpen} />
                                     ) : (
@@ -114,8 +114,9 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                                         <CopyIcon className="h-4 w-4" />
                                         Room Name: <span>{roomName}</span>
                                     </Button>
-                                    <SidebarItem icon={Trash} label="Reset the canvas" onClick={() => setClearDialogOpen(true)} />
                                     <RoomSharingDialog open={isShareOpen} onOpenChange={setIsShareOpen} link={`${process.env.NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://collabydraw.com'}/${decodedPathname}`} />
+                                    <SidebarItem icon={Share2} label="Share collaboration" onClick={() => setIsShareOpen(true)} />
+                                    <SidebarItem icon={Trash} label="Reset the canvas" onClick={() => setClearDialogOpen(true)} />
                                 </>
                             )}
                             {session?.user && session?.user.id ? (

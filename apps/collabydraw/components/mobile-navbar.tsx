@@ -3,13 +3,13 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Menu, Plus, Minus } from "lucide-react"
+import { Menu, Plus, Minus, Share2 } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { MainMenuStack } from "./MainMenuStack"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Button } from "./ui/button"
-import { ListBullet, PaletteFilled } from "./SvgIcons"
+import { PaletteFilled } from "./SvgIcons"
 import { ToolMenuStack } from "./ToolMenuStack"
 import { BgFill, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas"
 import { UserRoomsListDialog } from "./UserRoomsListDialog"
@@ -60,7 +60,7 @@ export function MobileNavbar({ canvasColor,
     strokeStyle,
     setStrokeStyle,
     roomName,
-    isStandalone = false,
+    isStandalone,
     onClearCanvas,
     onExportCanvas,
     onImportCanvas
@@ -81,7 +81,7 @@ export function MobileNavbar({ canvasColor,
                         {activeTool !== 'grab' && activeTool !== 'eraser' && (
                             <NavbarButton icon={PaletteFilled} label="Colors" onClick={() => setColorPickerOpen(true)} active={colorPickerOpen} />
                         )}
-                        <NavbarButton icon={ListBullet} label="Rooms" onClick={() => setRoomsListOpen(true)} active={roomsListOpen} />
+                        <NavbarButton icon={Share2} label="Rooms" onClick={() => setRoomsListOpen(true)} active={roomsListOpen} />
                         <ScaleWidget scale={scale} setScale={setScale} />
                     </div>
                 </div>

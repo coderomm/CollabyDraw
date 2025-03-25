@@ -1,4 +1,3 @@
-import { getRoom } from "@/actions/room";
 import {
   LOCALSTORAGE_CANVAS_KEY,
   Shape,
@@ -9,6 +8,7 @@ import {
 import { SelectionManager } from "./SelectionManager";
 import { v4 as uuidv4 } from "uuid";
 import { WS_DATA_TYPE } from "@repo/common/types";
+import { getShapes } from "@/actions/shape";
 
 const CORNER_RADIUS_FACTOR = 20;
 const RECT_CORNER_RADIUS_FACTOR = CORNER_RADIUS_FACTOR;
@@ -80,7 +80,6 @@ export class Game {
     this.initMouseHandler();
 
     this.isStandalone = isStandalone;
-    // Add persistence callback
     this.selectionManager.setOnUpdate(() => {
       if (this.isStandalone) {
         localStorage.setItem(
@@ -104,24 +103,27 @@ export class Game {
       }
     } else if (!this.isStandalone && this.roomName) {
       try {
-        const getRoomResult = await getRoom({ roomName: this.roomName });
-        if (getRoomResult?.success && getRoomResult.room?.Shape) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          getRoomResult.room.Shape.forEach((shape: any, index: number) => {
+        const getShapesResult = await getShapes({ roomName: this.roomName });
+
+        if (getShapesResult.success && getShapesResult.shapes?.length) {
+          getShapesResult.shapes.forEach((shape: Shape, index: number) => {
             try {
-              if (shape && shape.message) {
-                const parsedShapeMessage = JSON.parse(shape.message);
-                this.existingShape.push(parsedShapeMessage);
-                console.log("init(): Pushing shapes from getRoomResult");
+              const alreadyExists = this.existingShape.some(
+                (s) => s.id === shape.id
+              );
+
+              if (!alreadyExists) {
+                this.existingShape.push(shape);
+                console.log("init(): Pushing shape from getShapesResult");
               } else {
-                console.warn(`Shape ${index} has no message property`);
+                console.log(`Shape ${shape.id} already exists. Skipping.`);
               }
             } catch (e) {
-              console.error(`Error parsing shape ${index} data:`, e);
+              console.error(`Error processing shape ${index}:`, e);
             }
           });
-        } else if (!getRoomResult?.success) {
-          console.error("Error fetching room: " + getRoomResult?.error);
+        } else if (!getShapesResult.success) {
+          console.error("Error fetching room: " + getShapesResult.error);
         }
       } catch (error) {
         console.error("Error in init:", error);
@@ -440,9 +442,10 @@ export class Game {
       return;
     }
 
+    this.existingShape.push(shape);
+
     if (this.isStandalone) {
       try {
-        this.existingShape.push(shape);
         localStorage.setItem(
           LOCALSTORAGE_CANVAS_KEY,
           JSON.stringify(this.existingShape)

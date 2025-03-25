@@ -26,10 +26,7 @@ export async function getShapes(data: { roomName: string }) {
       return { success: true, shapes: [] };
     }
 
-    const shapes = shapesResponse.map((x: { message: string }) => {
-      const messageData = JSON.parse(x.message);
-      return messageData.shape;
-    });
+    const shapes = shapesResponse.map((x) => JSON.parse(x.message));
 
     return { success: true, shapes };
   } catch (error) {
