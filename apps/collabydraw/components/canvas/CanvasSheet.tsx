@@ -54,7 +54,7 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     );
 
     useEffect(() => {
-        console.log('E2')
+        // console.log('E2')
         paramsRef.current = { roomId, roomName, userId, userName };
     }, [roomId, roomName, userId, userName]);
 
@@ -73,7 +73,7 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     });
 
     useEffect(() => {
-        console.log('E4')
+        // console.log('E4')
         const handleResize = () => {
             if (canvasRef.current && gameRef.current) {
                 const canvas = canvasRef.current;
@@ -88,43 +88,43 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     }, [gameRef]);
 
     useEffect(() => {
-        console.log('E6')
+        // console.log('E6')
         strokeEdgeRef.current = strokeEdge;
         gameRef?.current?.setStrokeEdge(strokeEdge);
     }, [strokeEdge, gameRef]);
 
     useEffect(() => {
-        console.log('E7')
+        // console.log('E7')
         strokeStyleRef.current = strokeStyle;
         gameRef?.current?.setStrokeStyle(strokeStyle);
     }, [strokeStyle, gameRef]);
 
     useEffect(() => {
-        console.log('E8')
+        // console.log('E8')
         activeToolRef.current = activeTool;
         gameRef?.current?.setTool(activeTool);
     }, [activeTool, gameRef]);
 
     useEffect(() => {
-        console.log('E9')
+        // console.log('E9')
         strokeWidthRef.current = strokeWidth;
         gameRef?.current?.setStrokeWidth(strokeWidth);
     }, [strokeWidth, gameRef]);
 
     useEffect(() => {
-        console.log('E10')
+        // console.log('E10')
         strokeFillRef.current = strokeFill;
         gameRef?.current?.setStrokeFill(strokeFill);
     }, [strokeFill, gameRef]);
 
     useEffect(() => {
-        console.log('E11')
+        // console.log('E11')
         bgFillRef.current = bgFill;
         gameRef?.current?.setBgFill(bgFill);
     }, [bgFill, gameRef]);
 
     useEffect(() => {
-        console.log('E12')
+        // console.log('E12')
         if (gameRef.current && canvasColorRef.current !== canvasColor) {
             canvasColorRef.current = canvasColor;
             gameRef.current.setCanvasBgColor(canvasColor);
@@ -132,14 +132,14 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     }, [canvasColor, gameRef]);
 
     useEffect(() => {
-        console.log('E13')
+        // console.log('E13')
         if (gameRef.current) {
             gameRef.current.setScale(scale);
         }
     }, [scale, gameRef]);
 
     useEffect(() => {
-        console.log('E14')
+        // console.log('E14')
         const handleKeyDown = (e: KeyboardEvent) => {
             switch (e.key) {
                 case "1":
@@ -180,13 +180,7 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     }, [isConnected, sendMessage]);
 
     useEffect(() => {
-        if (game && existingShapes.length >= 0) {
-            game.updateShapes(existingShapes);
-        }
-    }, [game, existingShapes]);
-
-    useEffect(() => {
-        console.log('E16')
+        // console.log('E16')
         if (!canvasRef.current || !isConnected) return;
         console.log('Initializing game with valid socket');
         const game = new Game(
@@ -212,7 +206,11 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     }, [handleSendDrawing, isConnected]);
 
     useEffect(() => {
-        console.log('E17')
+        console.log('isConnected = ', isConnected);
+    }, [isConnected])
+
+    useEffect(() => {
+        // console.log('E17')
         if (activeTool === "grab") {
             const handleGrab = () => {
                 setGrabbing((prev) => !prev)
@@ -236,8 +234,18 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
                     console.log(`looping messages ${index}= `, message)
                     try {
                         if (message.type === WS_DATA_TYPE.DRAW) {
-                            setExistingShapes((prevShapes) => [...prevShapes, message.message!]);
-                        } else if (message.type === WS_DATA_TYPE.ERASER) {
+                            setExistingShapes((prevShapes) => {
+                                const alreadyExists = prevShapes.some(s => s.id === message.id);
+                                console.log('alreadyExists = ', alreadyExists)
+                                if (alreadyExists) return prevShapes;
+                                return [...prevShapes, message.message!];
+                            });
+                        } else if (message.type === WS_DATA_TYPE.UPDATE) {
+                            setExistingShapes((prevShapes) =>
+                                prevShapes.map((shape) =>
+                                    shape.id === message.id ? { ...shape, ...message.message } : shape));
+                        }
+                        else if (message.type === WS_DATA_TYPE.ERASER) {
                             setExistingShapes((prevShapes) =>
                                 prevShapes.filter((s) => s.id !== message.id)
                             );
@@ -252,14 +260,21 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
         }
     }, [messages]);
 
+    useEffect(() => {
+        if (game && existingShapes.length >= 0) {
+            game.updateShapes(existingShapes);
+            console.log('Called game.updateShapes(existingShapes);')
+        }
+    }, [game, existingShapes]);
+
     const toggleSidebar = useCallback(() => {
-        console.log('E19')
+        // console.log('E19')
         setSidebarOpen(prev => !prev);
     }, []);
 
-    useEffect(() => {
-        console.log('participants = ', participants)
-    }, [participants])
+    // useEffect(() => {
+    //     console.log('participants = ', participants)
+    // }, [participants])
 
     if (isLoading) {
         return <ScreenLoading />

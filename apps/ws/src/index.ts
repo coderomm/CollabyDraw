@@ -32,7 +32,7 @@ function authUser(token: string) {
       console.error("No valid user ID in token");
       return null;
     }
-    console.log("User authenticated successfully:", decoded.id);
+    // console.log("User authenticated successfully:", decoded.id);
     return decoded.id;
   } catch (err) {
     console.error("JWT verification failed:", err);
@@ -70,17 +70,17 @@ wss.on("connection", function connection(ws, req) {
     return;
   }
 
-  console.log(`User ${userId} attempting to connect`);
+  // console.log(`User ${userId} attempting to connect`);
   let comingUser = users.find((u) => u.userId === userId);
   if (comingUser) {
     comingUser.ws = ws;
-    console.log(`Existing user ${userId} found, updating WebSocket connection`);
+    // console.log(`Existing user ${userId} found, updating WebSocket connection`);
   } else {
     users.push({ userId, userName: userId, ws, rooms: [] });
-    console.log(`New user ${userId} added: `, users);
+    // console.log(`New user ${userId} added: `, users);
   }
 
-  console.log(`User ${userId} connected successfully`);
+  // console.log(`User ${userId} connected successfully`);
 
   ws.on("error", (err) =>
     console.error(`WebSocket error for user ${userId}:`, err)
@@ -111,19 +111,19 @@ wss.on("connection", function connection(ws, req) {
       if (parsedData.userName && user.userName === userId) {
         // Check later if userId works or parsedData.userId
         user.userName = parsedData.userName;
-        console.log(
-          `parsedData.userName && user.userName (${parsedData.userName}) === userId(${userId})`
-        );
+        // console.log(
+        //   `parsedData.userName && user.userName (${parsedData.userName}) === userId(${userId})`
+        // );
       }
 
       switch (parsedData.type) {
         case WS_DATA_TYPE.JOIN:
-          console.log(`User ${userId} joining room ${parsedData.roomId}`);
+          // console.log(`User ${userId} joining room ${parsedData.roomId}`);
 
           const roomCheckResponse = await client.room.findUnique({
             where: { id: Number(parsedData.roomId) },
           });
-          console.log("roomCheckResponse = ", roomCheckResponse);
+          // console.log("roomCheckResponse = ", roomCheckResponse);
 
           if (!roomCheckResponse) {
             console.log("No room found", roomCheckResponse);
@@ -133,8 +133,8 @@ wss.on("connection", function connection(ws, req) {
 
           user.rooms.push(parsedData.roomId);
 
-          console.log(`User ${userId} rooms after join:`, user.rooms);
-          console.log("users after new user joined: ", users);
+          console.log(`User ${userId} joined room ${parsedData.roomId}`);
+          // console.log("users after new user joined: ", users);
 
           const uniqueParticipantsMap = new Map();
           users
@@ -150,10 +150,10 @@ wss.on("connection", function connection(ws, req) {
             uniqueParticipantsMap.values()
           );
 
-          console.log(
-            `Room ${parsedData.roomId} participants:`,
-            currentParticipants
-          );
+          // console.log(
+          //   `Room ${parsedData.roomId} participants:`,
+          //   currentParticipants
+          // );
 
           ws.send(
             JSON.stringify({
@@ -184,9 +184,8 @@ wss.on("connection", function connection(ws, req) {
           break;
 
         case WS_DATA_TYPE.LEAVE:
-          if (!parsedData.roomId) return;
-          console.log(`User ${userId} leaving room ${parsedData.roomId}`);
           user.rooms = user.rooms.filter((r) => r !== parsedData.roomId);
+          console.log(`User ${userId} left room ${parsedData.roomId}`);
           broadcastToRoom(
             parsedData.roomId,
             {
@@ -201,15 +200,17 @@ wss.on("connection", function connection(ws, req) {
           break;
 
         case WS_DATA_TYPE.DRAW:
-          if (!parsedData.roomId || !parsedData.message) {
-            console.error(`Missing roomId or data for ${parsedData.type}`);
+          if (!parsedData.message || !parsedData.id) {
+            console.error(
+              `Missing shape Id or shape message data for ${parsedData.type}`
+            );
             return;
           }
 
           try {
             await client.shape.create({
               data: {
-                id: parsedData.id!,
+                id: parsedData.id,
                 message: parsedData.message,
                 roomId: Number(parsedData.roomId),
                 userId: userId,
@@ -222,6 +223,8 @@ wss.on("connection", function connection(ws, req) {
             );
           }
 
+          console.log(`User ${userId} has drawn shape with ID: ${parsedData.id}`);
+
           broadcastToRoom(
             parsedData.roomId,
             {
@@ -232,14 +235,15 @@ wss.on("connection", function connection(ws, req) {
               userName: user.userName,
               timestamp: new Date().toISOString(),
             },
-            [userId]
+            [userId],
+            false
           );
           break;
 
         case WS_DATA_TYPE.UPDATE:
-          if (!parsedData.roomId || !parsedData.message || !parsedData.id) {
+          if (!parsedData.message || !parsedData.id) {
             console.error(
-              `Missing shape Id or roomId or data for ${parsedData.type}`
+              `Missing shape Id or shape message data for ${parsedData.type}`
             );
             return;
           }
@@ -260,6 +264,7 @@ wss.on("connection", function connection(ws, req) {
               err
             );
           }
+          console.log(`User ${userId} has updated shape with ID: ${parsedData.id}`);
 
           broadcastToRoom(
             parsedData.roomId,
@@ -272,18 +277,18 @@ wss.on("connection", function connection(ws, req) {
               userName: user.userName,
               timestamp: new Date().toISOString(),
             },
-            []
+            [],
+            false
           );
           break;
 
         case WS_DATA_TYPE.ERASER:
-          if (!parsedData.roomId || !parsedData.id) {
-            console.error(`Missing roomId or data for ${parsedData.type}`);
+          if (!parsedData.id) {
+            console.error(`Missing shape Id for ${parsedData.type}`);
             return;
           }
 
           try {
-            // First check if the shape exists
             const shapeExists = await client.shape.findUnique({
               where: {
                 id: parsedData.id,
@@ -295,7 +300,6 @@ wss.on("connection", function connection(ws, req) {
               console.log(
                 `Shape with id ${parsedData.id} does not exist in room ${parsedData.roomId}.`
               );
-              // Still broadcast the deletion to clients to keep UI in sync
               broadcastToRoom(
                 parsedData.roomId,
                 {
@@ -307,12 +311,11 @@ wss.on("connection", function connection(ws, req) {
                   timestamp: new Date().toISOString(),
                 },
                 [userId],
-                true
+                false
               );
               return;
             }
 
-            // Delete the shape if it exists
             const deleteResponse = await client.shape.delete({
               where: {
                 id: parsedData.id,
@@ -320,9 +323,8 @@ wss.on("connection", function connection(ws, req) {
               },
             });
 
-            console.log("deleteResponse = ", deleteResponse);
+            console.log(`User ${userId} has erased shape with ID: ${parsedData.id}`);
 
-            // Broadcast the deletion to other clients
             broadcastToRoom(
               parsedData.roomId,
               {
@@ -334,7 +336,7 @@ wss.on("connection", function connection(ws, req) {
                 timestamp: new Date().toISOString(),
               },
               [userId],
-              true
+              false
             );
           } catch (err) {
             console.error(
@@ -396,10 +398,10 @@ function broadcastToRoom(
       );
 
     const currentParticipants = Array.from(uniqueParticipantsMap.values());
-    console.log(
-      `Broadcasting participants to room ${roomId}:`,
-      currentParticipants
-    );
+    // console.log(
+    //   `Broadcasting participants to room ${roomId}:`,
+    //   currentParticipants
+    // );
     message.participants = currentParticipants;
   }
   users.forEach((u) => {

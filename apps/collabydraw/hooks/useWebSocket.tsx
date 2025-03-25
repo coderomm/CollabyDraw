@@ -38,26 +38,26 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
 
         try {
             const wsUrl = `${WS_URL}?token=${encodeURIComponent(paramsRef.current.token)}`;
-            console.log('Connecting to WebSocket...');
+            // console.log('Connecting to WebSocket...');
 
             const ws = new WebSocket(wsUrl);
 
             const connectionTimeout = setTimeout(() => {
                 if (ws.readyState !== WebSocket.OPEN) {
-                    console.log('WebSocket connection timeout, closing...');
+                    // console.log('WebSocket connection timeout, closing...');
                     ws.close();
                 }
             }, 5000);
 
             const handleOpen = () => {
                 clearTimeout(connectionTimeout);
-                console.log('WebSocket connected successfully');
+                // console.log('WebSocket connected successfully');
                 setIsConnected(true);
                 reconnectAttemptsRef.current = 0;
                 hasJoinedRoomRef.current = false;
                 setTimeout(() => {
                     const { roomId, roomName, userId, userName } = paramsRef.current;
-                    console.log(`Joining room ${roomId} as ${userName}`);
+                    // console.log(`Joining room ${roomId} as ${userName}`);
 
                     ws.send(JSON.stringify({
                         type: WS_DATA_TYPE.JOIN,
@@ -74,7 +74,7 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             const handleMessage = (event: MessageEvent) => {
                 try {
                     const data: WebSocketMessage = JSON.parse(event.data);
-                    console.log('Received WebSocket message:', data);
+                    console.log('Received WS Message:', data);
 
                     switch (data.type) {
                         case WS_DATA_TYPE.USER_JOINED:
@@ -87,8 +87,8 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                                     const exists = prev.some(p => p.userId === data.userId);
                                     if (!exists) {
                                         return [...prev, {
-                                            userId: data.userId!,
-                                            userName: data.userName!
+                                            userId: data.userId,
+                                            userName: data.userName || paramsRef.current.userName
                                         }];
                                     }
                                     return prev;
@@ -104,16 +104,28 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                             break;
 
                         case WS_DATA_TYPE.DRAW:
+                            if (data.message) {
+                                const parsedMessage = JSON.parse(data.message);
+                                setMessages(prev => [...prev, {
+                                    type: data.type,
+                                    userId: data.userId || paramsRef.current.userId,
+                                    userName: data.userName || paramsRef.current.userName,
+                                    message: parsedMessage,
+                                    timestamp: data.timestamp || new Date().toISOString()
+                                }]);
+                            }
+                            break;
+
                         case WS_DATA_TYPE.UPDATE:
                             if (data.message) {
                                 const parsedMessage = JSON.parse(data.message);
-                                const timestamp = data.timestamp || new Date().toISOString();
                                 setMessages(prev => [...prev, {
                                     type: data.type,
-                                    userId: data.userId! || paramsRef.current.userId,
-                                    userName: data.userName! || paramsRef.current.userName,
+                                    id: data.id,
                                     message: parsedMessage,
-                                    timestamp
+                                    userId: data.userId || paramsRef.current.userId,
+                                    userName: data.userName || paramsRef.current.userName,
+                                    timestamp: data.timestamp || new Date().toISOString()
                                 }]);
                             }
                             break;
@@ -138,10 +150,10 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             const handleClose = (event: CloseEvent) => {
                 clearTimeout(connectionTimeout);
                 setIsConnected(false);
-                console.log(`WebSocket closed with code ${event.code}: ${event.reason}`);
+                // console.log(`WebSocket closed with code ${event.code}: ${event.reason}`);
                 if (event.code !== 1000 && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
                     const delay = Math.min(1000 * 2 ** reconnectAttemptsRef.current, 30000);
-                    console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1})`);
+                    // console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1})`);
 
                     reconnectTimeoutRef.current = setTimeout(() => {
                         reconnectAttemptsRef.current += 1;
@@ -183,7 +195,7 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             if (socketRef.current) {
                 try {
                     if (socketRef.current.readyState === WebSocket.OPEN && hasJoinedRoomRef.current) {
-                        console.log(`Leaving room ${paramsRef.current.roomId}`);
+                        // console.log(`Leaving room ${paramsRef.current.roomId}`);
                         socketRef.current.send(JSON.stringify({
                             type: WS_DATA_TYPE.LEAVE,
                             roomId: paramsRef.current.roomId
@@ -202,7 +214,7 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             console.warn('Cannot send empty message');
             return;
         }
-        console.log("sendMessage content = ", JSON.parse(content))
+        // console.log("Sending WS Content = ", JSON.parse(content))
         const parsedContent = JSON.parse(content);
         if (socketRef.current?.readyState === WebSocket.OPEN) {
             const { roomName, userId, userName } = paramsRef.current;

@@ -8,7 +8,7 @@ import {
 } from "@/types/canvas";
 import { SelectionManager } from "./SelectionManager";
 import { v4 as uuidv4 } from "uuid";
-import { RoomParticipants, WS_DATA_TYPE } from "@repo/common/types";
+import { WS_DATA_TYPE } from "@repo/common/types";
 
 const CORNER_RADIUS_FACTOR = 20;
 const RECT_CORNER_RADIUS_FACTOR = CORNER_RADIUS_FACTOR;
@@ -54,9 +54,6 @@ export class Game {
 
   private selectedShape: Shape | null = null;
   private selectionManager: SelectionManager;
-
-  private participants: RoomParticipants[] = [];
-  private onParticipantsChange?: (participants: RoomParticipants[]) => void;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -115,6 +112,7 @@ export class Game {
               if (shape && shape.message) {
                 const parsedShapeMessage = JSON.parse(shape.message);
                 this.existingShape.push(parsedShapeMessage);
+                console.log("init(): Pushing shapes from getRoomResult");
               } else {
                 console.warn(`Shape ${index} has no message property`);
               }
@@ -291,7 +289,7 @@ export class Game {
       this.activeTool !== "eraser" &&
       this.activeTool !== "line" &&
       this.activeTool !== "arrow"
-    )
+    ) {
       if (this.activeTool === "selection") {
         if (
           this.selectionManager.isDraggingShape() ||
@@ -302,10 +300,8 @@ export class Game {
             const index = this.existingShape.findIndex(
               (shape) => shape.id === selectedShape.id
             );
+            this.existingShape[index] = selectedShape;
             if (index !== -1) {
-              this.existingShape[index] = selectedShape;
-              this.clearCanvas();
-
               if (this.isStandalone) {
                 localStorage.setItem(
                   LOCALSTORAGE_CANVAS_KEY,
@@ -323,12 +319,12 @@ export class Game {
               }
             }
           }
+          this.selectionManager.stopDragging();
+          this.selectionManager.stopResizing();
+          return;
         }
-        this.selectionManager.stopDragging();
-        this.selectionManager.stopResizing();
-        return;
       }
-
+    }
     this.clicked = false;
 
     if (this.selectedShape) {
@@ -336,7 +332,6 @@ export class Game {
         LOCALSTORAGE_CANVAS_KEY,
         JSON.stringify(this.existingShape)
       );
-      this.clearCanvas();
     }
 
     const { x, y } = this.transformPanScale(e.clientX, e.clientY);
@@ -445,10 +440,9 @@ export class Game {
       return;
     }
 
-    this.existingShape.push(shape);
-
     if (this.isStandalone) {
       try {
+        this.existingShape.push(shape);
         localStorage.setItem(
           LOCALSTORAGE_CANVAS_KEY,
           JSON.stringify(this.existingShape)
@@ -466,6 +460,7 @@ export class Game {
         })
       );
     }
+    this.clearCanvas();
   };
 
   mouseWheelHandler = (e: WheelEvent) => {
