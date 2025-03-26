@@ -13,6 +13,7 @@ import { PaletteFilled } from "./SvgIcons"
 import { ToolMenuStack } from "./ToolMenuStack"
 import { BgFill, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas"
 import { UserRoomsListDialog } from "./UserRoomsListDialog"
+import { RoomSharingDialog } from "./RoomSharingDialog"
 
 interface MobileNavbarProps {
     canvasColor: string
@@ -33,13 +34,12 @@ interface MobileNavbarProps {
     setStrokeEdge: React.Dispatch<React.SetStateAction<StrokeEdge>>;
     strokeStyle: StrokeStyle;
     setStrokeStyle: React.Dispatch<React.SetStateAction<StrokeStyle>>;
-
     roomName?: string
-
     isStandalone?: boolean;
     onClearCanvas?: () => void;
     onExportCanvas?: () => void;
     onImportCanvas?: () => void;
+    onCloseRoom?: () => void;
 }
 
 export function MobileNavbar({ canvasColor,
@@ -63,7 +63,8 @@ export function MobileNavbar({ canvasColor,
     isStandalone,
     onClearCanvas,
     onExportCanvas,
-    onImportCanvas
+    onImportCanvas,
+    onCloseRoom
 }: MobileNavbarProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
     const [roomsListOpen, setRoomsListOpen] = useState(false);
@@ -130,18 +131,22 @@ export function MobileNavbar({ canvasColor,
                 </SheetContent>
             </Sheet>
 
-            <Sheet open={roomsListOpen} onOpenChange={setRoomsListOpen}>
-                <SheetContent side="bottom" className="h-auto max-h-[80vh] min-h-[50vh] rounded-t-[20px] px-6 py-6 Island">
-                    <SheetHeader className="mb-5">
-                        <SheetTitle>All Your Rooms</SheetTitle>
-                    </SheetHeader>
-                    <UserRoomsListDialog
-                        open={roomsListOpen}
-                        onOpenChange={setRoomsListOpen}
-                        isMobile={true}
-                    />
-                </SheetContent>
-            </Sheet>
+            {roomName ? (
+                <RoomSharingDialog onCloseRoom={onCloseRoom} open={roomsListOpen} onOpenChange={setRoomsListOpen} link={`${process.env.NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://collabydraw.com'}/${roomName}`} />
+            ) : (
+                <Sheet open={roomsListOpen} onOpenChange={setRoomsListOpen}>
+                    <SheetContent side="bottom" className="h-auto max-h-[80vh] min-h-[50vh] rounded-t-[20px] px-6 py-6 Island">
+                        <SheetHeader className="mb-5">
+                            <SheetTitle>All Your Rooms</SheetTitle>
+                        </SheetHeader>
+                        <UserRoomsListDialog
+                            open={roomsListOpen}
+                            onOpenChange={setRoomsListOpen}
+                            isMobile={true}
+                        />
+                    </SheetContent>
+                </Sheet>
+            )}
         </>
     )
 }

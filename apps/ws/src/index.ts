@@ -200,6 +200,53 @@ wss.on("connection", function connection(ws, req) {
           );
           break;
 
+        case WS_DATA_TYPE.CLOSE_ROOM: {
+          const usersInRoom = users.filter((u) =>
+            u.rooms.includes(parsedData.roomId)
+          );
+          console.log(
+            `Users in room ${parsedData.roomId}:`,
+            usersInRoom.map((u) => u.userId)
+          );
+
+          if (
+            usersInRoom.length === 1 &&
+            usersInRoom[0] &&
+            usersInRoom[0].userId === userId
+          ) {
+            console.log(
+              `Deleting room ${parsedData.roomId} and related shapes — last user: ${userId}`
+            );
+
+            try {
+              await client.shape.deleteMany({
+                where: { roomId: Number(parsedData.roomId) },
+              });
+              await client.room.delete({
+                where: { id: Number(parsedData.roomId) },
+              });
+
+              ws.send(
+                JSON.stringify({
+                  type: "ROOM_CLOSED",
+                  roomId: parsedData.roomId,
+                  timestamp: new Date().toISOString(),
+                })
+              );
+
+              ws.close(1000, "Room deleted");
+            } catch (err) {
+              console.error("Error deleting room and shapes:", err);
+            }
+          } else {
+            console.log(
+              `Room ${parsedData.roomId} not deleted — other users still in room.`
+            );
+          }
+
+          break;
+        }
+
         case WS_DATA_TYPE.DRAW:
           if (!parsedData.message || !parsedData.id) {
             console.error(
@@ -362,7 +409,9 @@ wss.on("connection", function connection(ws, req) {
   });
 
   ws.on("close", (code, reason) => {
-    console.log(`User ${userId} disconnected. Code: ${code}, Reason: ${reason.toString()}`);
+    console.log(
+      `User ${userId} disconnected. Code: ${code}, Reason: ${reason.toString()}`
+    );
     const user = users.find((u) => u.userId === userId);
     if (user) {
       user.rooms.forEach((roomId) => {

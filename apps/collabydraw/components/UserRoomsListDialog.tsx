@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from "./ui/button";
-import { LogIn, Trash } from "lucide-react";
+import { LogIn, Plus, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { toast } from "sonner";
 import { getUserRooms, joinRoom, deleteRoom } from "@/actions/room";
@@ -187,10 +187,18 @@ export function UserRoomsListDialog({
                         ))
                     ) : (
                         <div className="text-center py-8 text-gray-400">
-                            <p className="mb-4">No rooms found.</p>
-                            <Button type="button" onClick={() => { setIsOpen(true); }}
-                                className="excalidraw-button collab-button relative w-auto py-3 px-4 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]"
-                                title="Live collaboration...">Create a Room</Button>
+                            <h3 className="font-assistant font-semibold text-[0.875rem] indent-[150%] text-collaby-textfield-label mb-1 select-none">No rooms found.</h3>
+                            <Button
+                                type="button"
+                                size={"lg"}
+                                onClick={() => { setIsOpen(true); }}
+                                disabled={isPending}
+                                className="py-2 px-6 min-h-12 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]"
+                                title="Create a Room">
+                                <div className="flex items-center justify-center gap-3 shrink-0 flex-nowrap">
+                                    <Plus className="w-5 h-5" />Create a Room
+                                </div>
+                            </Button>
                             <CollaborationStartdDialog open={isOpen} onOpenChange={setIsOpen} />
                         </div>
                     )}

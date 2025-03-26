@@ -55,6 +55,7 @@ export enum WS_DATA_TYPE {
   ERASER = "ERASER",
   UPDATE = "UPDATE",
   EXISTING_PARTICIPANTS = "EXISTING_PARTICIPANTS",
+  CLOSE_ROOM = "CLOSE_ROOM",
 }
 
 export type WebSocketMessage = {
