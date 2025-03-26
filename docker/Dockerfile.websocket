@@ -1,0 +1,25 @@
+FROM node:20-alpine AS base
+
+# Install pnpm
+RUN npm install -g pnpm
+
+WORKDIR /usr/src/app
+
+# Copy necessary files for dependency installation
+COPY ./packages ./packages
+COPY ./package.json ./package.json
+COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
+COPY ./turbo.json ./turbo.json
+COPY ./apps/ws ./apps/ws
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Generate database (assuming you have a db:generate script)
+RUN pnpm run db:generate
+
+# Expose the port
+EXPOSE 8081
+
+# Start the ws service
+CMD ["pnpm", "run", "start:ws"]

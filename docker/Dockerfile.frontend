@@ -1,0 +1,33 @@
+FROM node:20-alpine AS base
+
+# Install pnpm
+RUN npm install -g pnpm
+
+WORKDIR /usr/src/app
+
+# Add ARG for DATABASE_URL
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
+# Copy necessary files for dependency installation
+COPY ./packages ./packages
+COPY ./package.json ./package.json
+COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
+COPY ./turbo.json ./turbo.json
+COPY ./apps/frontend ./apps/frontend
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Generate database
+# add this "db:generate": "cd packages/db && bunx prisma generate && cd ../..",
+RUN pnpm run db:generate
+
+# Build the application with database URL
+RUN DATABASE_URL=${DATABASE_URL} pnpm run build
+
+# Expose the port
+EXPOSE 3000
+
+# Start the web application
+CMD ["pnpm", "run", "start:web"]
