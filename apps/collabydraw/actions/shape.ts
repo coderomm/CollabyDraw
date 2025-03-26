@@ -5,6 +5,7 @@ import client from "@repo/db/client";
 import { JoinRoomSchema } from "@repo/common/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
+import { Shape } from "@/types/canvas";
 
 export async function getShapes(data: { roomName: string }) {
   try {
@@ -26,7 +27,7 @@ export async function getShapes(data: { roomName: string }) {
       return { success: true, shapes: [] };
     }
 
-    const shapes = shapesResponse.map((x) => JSON.parse(x.message));
+    const shapes: Shape[] = shapesResponse.map((x) => JSON.parse(x.message));
 
     return { success: true, shapes };
   } catch (error) {

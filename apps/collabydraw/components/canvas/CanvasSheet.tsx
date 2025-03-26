@@ -51,6 +51,7 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     const {
         isConnected,
         messages,
+        existingMsgs,
         sendMessage,
         participants
     } = useWebSocket(paramsRef.current.roomId, paramsRef.current.roomName, paramsRef.current.userId, paramsRef.current.userName, paramsRef.current.token);
@@ -197,9 +198,18 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
         console.log('E8')
     }, [messages, canvasState.game, processMessages]);
 
+    useEffect(() => {
+        if (existingMsgs?.message && canvasState.game) {
+            console.log('Updating shapes with existing messages:', existingMsgs.message);
+            canvasState.game.updateShapes(existingMsgs.message);
+        }
+        console.log('E9');
+    }, [existingMsgs, canvasState.game]);
+
+
     const toggleSidebar = useCallback(() => {
         setCanvasState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }));
-        console.log('E9')
+        console.log('E10')
     }, []);
 
     if (isLoading) {

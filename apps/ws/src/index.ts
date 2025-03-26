@@ -72,20 +72,44 @@ wss.on("connection", function connection(ws, req) {
     return;
   }
   console.log(`User ${userId} attempting to connect`);
-  let comingUser = users.find((u) => u.userId === userId);
-  if (comingUser) {
-    comingUser.ws = ws;
-    console.log(`Existing user ${userId} found, updating WebSocket connection`);
-  } else {
-    users.push({ userId, userName: userId, ws, rooms: [] });
-    console.log(`New user ${userId} added: `, users);
-  }
+  // let comingUser = users.find((u) => u.userId === userId);
+  // if (comingUser) {
+  //   comingUser.ws = ws;
+  //   console.log(`Existing user ${userId} found, updating WebSocket connection`);
+  // } else {
+  //   users.push({ userId, userName: userId, ws, rooms: [] });
+  //   console.log(`New user ${userId} added: `, users);
+  // }
 
   // console.log(`User ${userId} connected successfully`);
+
+  // Remove all existing entries for this user
+  const existingIndex = users.findIndex(u => u.userId === userId);
+  if (existingIndex !== -1) {
+    users.splice(existingIndex, 1);
+    console.log(`Removed stale connection for ${userId}`);
+  }
+
+  // Add fresh user entry
+  const newUser: User = {
+    userId,
+    userName: userId, // Will be updated from client message
+    ws,
+    rooms: []
+  };
+  users.push(newUser);
+  console.log(`Created new session for ${userId}`);
 
   ws.on("error", (err) =>
     console.error(`WebSocket error for user ${userId}:`, err)
   );
+
+  // Add connection readiness check
+  ws.on('open', () => {
+    console.log(`Connection fully open for ${userId}`);
+    // Queue JOIN message handling until ready
+    ws.send(JSON.stringify({ type: WS_DATA_TYPE.CONNECTION_READY }));
+  });
 
   ws.on("message", async function message(data) {
     try {

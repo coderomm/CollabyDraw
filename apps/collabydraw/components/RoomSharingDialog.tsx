@@ -40,7 +40,7 @@ export function RoomSharingDialog({ open, onOpenChange, link, onCloseRoom }: { o
 
                 <div className="space-y-6">
                     <div className="text-text-primary-color">
-                        <p className="font-semibold mb-2">Linkkkkkkkkkkkkkkkkkkkkk</p>
+                        <p className="font-semibold mb-2">Link</p>
                         <div className="flex items-center gap-2">
                             <div className="flex-1 bg-collaby-textfield border border-collaby-textfield rounded-md px-3 py-2 text-text-primary-color overflow-hidden text-ellipsis">
                                 {roomLink}

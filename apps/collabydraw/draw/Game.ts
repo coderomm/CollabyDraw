@@ -8,7 +8,6 @@ import {
 import { SelectionManager } from "./SelectionManager";
 import { v4 as uuidv4 } from "uuid";
 import { WS_DATA_TYPE } from "@repo/common/types";
-import { getShapes } from "@/actions/shape";
 
 const CORNER_RADIUS_FACTOR = 20;
 const RECT_CORNER_RADIUS_FACTOR = CORNER_RADIUS_FACTOR;
@@ -34,7 +33,7 @@ export class Game {
   private roomId: string | null;
   private canvasBgColor: string;
   private sendMessage: ((data: string) => void) | null;
-  private existingShape: Shape[];
+  private existingShapes: Shape[];
   private clicked: boolean;
   private roomName: string | null;
   private activeTool: ToolType = "grab";
@@ -70,7 +69,7 @@ export class Game {
     this.roomId = roomId;
     this.sendMessage = sendMessage;
     this.clicked = false;
-    this.existingShape = [];
+    this.existingShapes = [];
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = document.body.clientHeight;
     this.onScaleChangeCallback = onScaleChangeCallback;
@@ -84,7 +83,7 @@ export class Game {
       if (this.isStandalone) {
         localStorage.setItem(
           LOCALSTORAGE_CANVAS_KEY,
-          JSON.stringify(this.existingShape)
+          JSON.stringify(this.existingShapes)
         );
       }
     });
@@ -96,37 +95,10 @@ export class Game {
         const storedShapes = localStorage.getItem(LOCALSTORAGE_CANVAS_KEY);
         if (storedShapes) {
           const parsedShapes = JSON.parse(storedShapes);
-          this.existingShape = [...this.existingShape, ...parsedShapes];
+          this.existingShapes = [...this.existingShapes, ...parsedShapes];
         }
       } catch (e) {
         console.error("Error loading shapes from localStorage:", e);
-      }
-    } else if (!this.isStandalone && this.roomName) {
-      try {
-        const getShapesResult = await getShapes({ roomName: this.roomName });
-
-        if (getShapesResult.success && getShapesResult.shapes?.length) {
-          getShapesResult.shapes.forEach((shape: Shape, index: number) => {
-            try {
-              const alreadyExists = this.existingShape.some(
-                (s) => s.id === shape.id
-              );
-
-              if (!alreadyExists) {
-                this.existingShape.push(shape);
-                console.log("init(): Pushing shape from getShapesResult");
-              } else {
-                console.log(`Shape ${shape.id} already exists. Skipping.`);
-              }
-            } catch (e) {
-              console.error(`Error processing shape ${index}:`, e);
-            }
-          });
-        } else if (!getShapesResult.success) {
-          console.error("Error fetching room: " + getShapesResult.error);
-        }
-      } catch (error) {
-        console.error("Error in init:", error);
       }
     }
     this.clearCanvas();
@@ -166,7 +138,20 @@ export class Game {
   }
 
   updateShapes(shapes: Shape[]) {
-    this.existingShape = shapes;
+    shapes.forEach((newShape) => {
+      const existingIndex = this.existingShapes.findIndex(
+        (s) => s.id === newShape.id
+      );
+      if (existingIndex !== -1) {
+        this.existingShapes[existingIndex] = {
+          ...this.existingShapes[existingIndex],
+          ...newShape,
+        };
+      } else {
+        this.existingShapes.push(newShape);
+      }
+    });
+
     this.clearCanvas();
   }
 
@@ -205,7 +190,7 @@ export class Game {
       this.canvas.height / this.scale
     );
 
-    this.existingShape.map((shape: Shape) => {
+    this.existingShapes.map((shape: Shape) => {
       if (shape.type === "rectangle") {
         this.drawRect(
           shape.x,
@@ -299,15 +284,15 @@ export class Game {
         ) {
           const selectedShape = this.selectionManager.getSelectedShape();
           if (selectedShape) {
-            const index = this.existingShape.findIndex(
+            const index = this.existingShapes.findIndex(
               (shape) => shape.id === selectedShape.id
             );
-            this.existingShape[index] = selectedShape;
+            this.existingShapes[index] = selectedShape;
             if (index !== -1) {
               if (this.isStandalone) {
                 localStorage.setItem(
                   LOCALSTORAGE_CANVAS_KEY,
-                  JSON.stringify(this.existingShape)
+                  JSON.stringify(this.existingShapes)
                 );
               } else if (this.sendMessage && this.roomId) {
                 this.sendMessage(
@@ -332,7 +317,7 @@ export class Game {
     if (this.selectedShape) {
       localStorage.setItem(
         LOCALSTORAGE_CANVAS_KEY,
-        JSON.stringify(this.existingShape)
+        JSON.stringify(this.existingShapes)
       );
     }
 
@@ -420,7 +405,8 @@ export class Game {
         break;
 
       case "pen":
-        const currentShape = this.existingShape[this.existingShape.length - 1];
+        const currentShape =
+          this.existingShapes[this.existingShapes.length - 1];
         if (currentShape?.type === "pen") {
           shape = {
             id: uuidv4(),
@@ -442,13 +428,13 @@ export class Game {
       return;
     }
 
-    this.existingShape.push(shape);
+    this.existingShapes.push(shape);
 
     if (this.isStandalone) {
       try {
         localStorage.setItem(
           LOCALSTORAGE_CANVAS_KEY,
-          JSON.stringify(this.existingShape)
+          JSON.stringify(this.existingShapes)
         );
       } catch (e) {
         console.error("Error saving shapes to localStorage:", e);
@@ -511,8 +497,8 @@ export class Game {
           return;
         }
       }
-      for (let i = this.existingShape.length - 1; i >= 0; i--) {
-        const shape = this.existingShape[i];
+      for (let i = this.existingShapes.length - 1; i >= 0; i--) {
+        const shape = this.existingShapes[i];
 
         if (this.selectionManager.isPointInShape(x, y, shape)) {
           this.selectedShape = shape;
@@ -533,7 +519,7 @@ export class Game {
     this.startY = y;
 
     if (this.activeTool === "pen") {
-      this.existingShape.push({
+      this.existingShapes.push({
         id: uuidv4(),
         type: "pen",
         points: [{ x, y }],
@@ -652,7 +638,7 @@ export class Game {
 
         case "pen":
           const currentShape =
-            this.existingShape[this.existingShape.length - 1];
+            this.existingShapes[this.existingShapes.length - 1];
           if (currentShape?.type === "pen") {
             currentShape.points.push({ x, y });
             this.drawPencil(
@@ -1045,20 +1031,20 @@ export class Game {
   }
 
   eraser(x: number, y: number) {
-    const shapeIndex = this.existingShape.findIndex((shape) =>
+    const shapeIndex = this.existingShapes.findIndex((shape) =>
       this.isPointInShape(x, y, shape)
     );
 
     if (shapeIndex !== -1) {
-      const erasedShape = this.existingShape[shapeIndex];
-      this.existingShape.splice(shapeIndex, 1);
+      const erasedShape = this.existingShapes[shapeIndex];
+      this.existingShapes.splice(shapeIndex, 1);
       this.clearCanvas();
 
       if (this.isStandalone) {
         try {
           localStorage.setItem(
             LOCALSTORAGE_CANVAS_KEY,
-            JSON.stringify(this.existingShape)
+            JSON.stringify(this.existingShapes)
           );
         } catch (e) {
           console.error("Error saving shapes to localStorage:", e);
@@ -1103,7 +1089,7 @@ export class Game {
   }
 
   clearAllShapes() {
-    this.existingShape = [];
+    this.existingShapes = [];
     this.clearCanvas();
     if (this.isStandalone) {
       localStorage.removeItem(LOCALSTORAGE_CANVAS_KEY);

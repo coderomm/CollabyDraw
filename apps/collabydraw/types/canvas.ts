@@ -173,6 +173,7 @@ export enum WS_DATA_TYPE {
   UPDATE = "UPDATE",
   EXISTING_PARTICIPANTS = "EXISTING_PARTICIPANTS",
   CLOSE_ROOM = "CLOSE_ROOM",
+  CONNECTION_READY = "CONNECTION_READY",
 }
 
 export type WsMessage = {
@@ -180,6 +181,15 @@ export type WsMessage = {
   userId: string;
   userName: string;
   message?: Shape;
+  timestamp: string;
+  type: WS_DATA_TYPE;
+};
+
+export type EixstingWsMessages = {
+  id?: string;
+  userId: string;
+  userName: string;
+  message?: Shape[];
   timestamp: string;
   type: WS_DATA_TYPE;
 };
