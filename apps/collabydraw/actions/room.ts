@@ -96,8 +96,6 @@ export async function getRoom(data: { roomName: string }) {
       return { success: false, error: "Room not found" };
     }
 
-    console.log("room = ", room);
-
     const session = await getServerSession(authOptions);
     const cookieToken = session?.accessToken;
 

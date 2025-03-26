@@ -8,11 +8,11 @@ export const SignupSchema = z.object({
     .trim(),
   password: z
     .string()
-    .min(6, { message: "Be at least 6 characters long" })
-    .regex(/[a-zA-Z]/, { message: "Contain at least one letter." })
-    .regex(/[0-9]/, { message: "Contain at least one number." })
+    .min(6, { message: "Password must be at least 6 characters long." })
+    .regex(/[a-zA-Z]/, { message: "Must contain at least one letter." })
+    .regex(/[0-9]/, { message: "Must contain at least one number." })
     .regex(/[^a-zA-Z0-9]/, {
-      message: "Contain at least one special character.",
+      message: "Must contain at least one special character.",
     })
     .trim(),
 });
@@ -21,11 +21,11 @@ export const SigninSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }).trim(),
   password: z
     .string()
-    .min(6, { message: "Be at least 6 characters long" })
-    .regex(/[a-zA-Z]/, { message: "Contain at least one letter." })
-    .regex(/[0-9]/, { message: "Contain at least one number." })
+    .min(6, { message: "Password must be at least 6 characters long." })
+    .regex(/[a-zA-Z]/, { message: "Must contain at least one letter." })
+    .regex(/[0-9]/, { message: "Must contain at least one number." })
     .regex(/[^a-zA-Z0-9]/, {
-      message: "Contain at least one special character.",
+      message: "Must contain at least one special character.",
     })
     .trim(),
 });
@@ -46,7 +46,12 @@ export const GetRoomBySlug = z.object({
   slug: z.string(),
 });
 
-export enum WS_DATA_TYPE {
+export type RoomParticipants = {
+  userId: string;
+  userName: string;
+};
+
+export enum WsDataType {
   JOIN = "JOIN",
   LEAVE = "LEAVE",
   USER_JOINED = "USER_JOINED",
@@ -56,33 +61,28 @@ export enum WS_DATA_TYPE {
   UPDATE = "UPDATE",
   EXISTING_PARTICIPANTS = "EXISTING_PARTICIPANTS",
   CLOSE_ROOM = "CLOSE_ROOM",
-  CONNECTION_READY = 'CONNECTION_READY'
+  CONNECTION_READY = "CONNECTION_READY",
 }
 
-export type WebSocketMessage = {
+export interface WebSocketMessage {
   id?: string;
-  type: WS_DATA_TYPE;
+  type: WsDataType;
   roomId: string;
   roomName?: string;
   userId: string;
   userName?: string;
   message?: string;
-  participants?: any[];
+  participants?: RoomParticipants[];
   timestamp?: string;
-};
+}
 
-export type RoomParticipants = {
-  userId: string;
-  userName: string;
-};
-
-export type WebSocketChatMessage = {
+export interface WebSocketChatMessage {
   userId: string;
   userName: string;
   message: string;
   timestamp: string;
-  type: WS_DATA_TYPE;
-};
+  type: WsDataType;
+}
 
 export interface Room {
   id: number;
@@ -95,4 +95,12 @@ export interface RecentRooms {
   visitedAt: string;
 }
 
-export const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+export const JWT_SECRET =
+  process.env.JWT_SECRET ??
+  (() => {
+    throw new Error("JWT_SECRET is not set in environment variables.");
+  })();
+
+export const saltRounds = 10;
+
+// canvas types

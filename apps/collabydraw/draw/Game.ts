@@ -7,25 +7,18 @@ import {
 } from "@/types/canvas";
 import { SelectionManager } from "./SelectionManager";
 import { v4 as uuidv4 } from "uuid";
-import { WS_DATA_TYPE } from "@repo/common/types";
-
-const CORNER_RADIUS_FACTOR = 20;
-const RECT_CORNER_RADIUS_FACTOR = CORNER_RADIUS_FACTOR;
-const DIAMOND_CORNER_RADIUS_PERCENTAGE = CORNER_RADIUS_FACTOR;
-const ERASER_TOLERANCE = 5;
-// const WHEEL_SCALE_FACTOR = 200;
-const DEFAULT_STROKE_WIDTH = 1;
-const DEFAULT_STROKE_FILL = "rgba(255, 255, 255)";
-const DEFAULT_BG_FILL = "rgba(18, 18, 18)";
-const ARROW_HEAD_LENGTH = 20;
-const getDashArrayDashed = (strokeWidth: number) => [
-  strokeWidth,
-  strokeWidth * 4,
-];
-const getDashArrayDotted = (strokeWidth: number) => [
-  strokeWidth,
-  strokeWidth * 2,
-];
+import { WsDataType } from "@repo/common/types";
+import {
+  ARROW_HEAD_LENGTH,
+  DEFAULT_BG_FILL,
+  DEFAULT_STROKE_FILL,
+  DEFAULT_STROKE_WIDTH,
+  DIAMOND_CORNER_RADIUS_PERCENTAGE,
+  ERASER_TOLERANCE,
+  getDashArrayDashed,
+  getDashArrayDotted,
+  RECT_CORNER_RADIUS_FACTOR,
+} from "@/config/constants";
 
 export class Game {
   private canvas: HTMLCanvasElement;
@@ -35,7 +28,6 @@ export class Game {
   private sendMessage: ((data: string) => void) | null;
   private existingShapes: Shape[];
   private clicked: boolean;
-  private roomName: string | null;
   private activeTool: ToolType = "grab";
   private startX: number = 0;
   private startY: number = 0;
@@ -59,7 +51,6 @@ export class Game {
     roomId: string | null,
     canvasBgColor: string,
     sendMessage: ((data: string) => void) | null,
-    roomName: string | null,
     onScaleChangeCallback: (scale: number) => void,
     isStandalone: boolean = false
   ) {
@@ -73,7 +64,6 @@ export class Game {
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = document.body.clientHeight;
     this.onScaleChangeCallback = onScaleChangeCallback;
-    this.roomName = roomName;
     this.selectionManager = new SelectionManager(this.ctx, canvas);
     this.init();
     this.initMouseHandler();
@@ -297,7 +287,7 @@ export class Game {
               } else if (this.sendMessage && this.roomId) {
                 this.sendMessage(
                   JSON.stringify({
-                    type: WS_DATA_TYPE.UPDATE,
+                    type: WsDataType.UPDATE,
                     message: selectedShape,
                     id: selectedShape.id,
                     roomId: this.roomId,
@@ -442,7 +432,7 @@ export class Game {
     } else if (this.sendMessage && this.roomId) {
       this.sendMessage(
         JSON.stringify({
-          type: WS_DATA_TYPE.DRAW,
+          type: WsDataType.DRAW,
           id: shape.id,
           message: shape,
           roomId: this.roomId,
@@ -946,7 +936,6 @@ export class Game {
       this.ctx.lineTo(centerX + halfWidth, centerY); // Right point
       this.ctx.lineTo(centerX, centerY + halfHeight); // Bottom point
       this.ctx.lineTo(centerX - halfWidth, centerY); // Left point
-      // Calculate distance between points for the offset calculation
       this.ctx.closePath();
       this.ctx.fill();
       this.ctx.stroke();
@@ -1052,7 +1041,7 @@ export class Game {
       } else if (this.sendMessage && this.roomId) {
         this.sendMessage(
           JSON.stringify({
-            type: WS_DATA_TYPE.ERASER,
+            type: WsDataType.ERASER,
             id: erasedShape.id,
             roomId: this.roomId,
           })
@@ -1096,7 +1085,6 @@ export class Game {
     }
   }
 
-  // To resize the canvas width height on screen resize
   handleResize(width: number, height: number) {
     this.canvas.width = width;
     this.canvas.height = height;

@@ -14,6 +14,7 @@ import { ToolMenuStack } from "./ToolMenuStack"
 import { BgFill, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas"
 import { UserRoomsListDialog } from "./UserRoomsListDialog"
 import { RoomSharingDialog } from "./RoomSharingDialog"
+import { BASE_URL } from "@/config/constants"
 
 interface MobileNavbarProps {
     canvasColor: string
@@ -132,7 +133,7 @@ export function MobileNavbar({ canvasColor,
             </Sheet>
 
             {roomName ? (
-                <RoomSharingDialog onCloseRoom={onCloseRoom} open={roomsListOpen} onOpenChange={setRoomsListOpen} link={`${process.env.NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://collabydraw.com'}/${roomName}`} />
+                <RoomSharingDialog onCloseRoom={onCloseRoom} open={roomsListOpen} onOpenChange={setRoomsListOpen} link={`${BASE_URL}/${roomName}`} />
             ) : (
                 <Sheet open={roomsListOpen} onOpenChange={setRoomsListOpen}>
                     <SheetContent side="bottom" className="h-auto max-h-[80vh] min-h-[50vh] rounded-t-[20px] px-6 py-6 Island">

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { RoomParticipants } from "@repo/common/types";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { BASE_URL } from "@/config/constants";
 
 export default function CollaborationStartBtn({ slug, participants, onCloseRoom }: { slug?: string, participants?: RoomParticipants[], onCloseRoom?: () => void; }) {
     const pathname = usePathname();
@@ -87,7 +88,7 @@ export default function CollaborationStartBtn({ slug, participants, onCloseRoom 
 
             {session?.user && session?.user.id ? (
                 roomSlug ? (
-                    <RoomSharingDialog onCloseRoom={onCloseRoom} open={isOpen} onOpenChange={setIsOpen} link={`${process.env.NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://collabydraw.com'}/${decodedPathname}`} />
+                    <RoomSharingDialog onCloseRoom={onCloseRoom} open={isOpen} onOpenChange={setIsOpen} link={`${BASE_URL}/${decodedPathname}`} />
                 ) : (
                     <CollaborationStartdDialog open={isOpen} onOpenChange={setIsOpen} />
                 )

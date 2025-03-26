@@ -39,7 +39,7 @@ export function JoinCreateRoom() {
                 if (result!.success) {
                     setIsJoinRoomOpen(false);
                     toast.success(`Joined room: ${result!.roomName}`);
-                    router.push(`/canvas/${data.roomName}`);
+                    router.push(`/room/${data.roomName}`);
                 } else {
                     toast.error('Error: ' + result!.error);
                 }
@@ -57,7 +57,7 @@ export function JoinCreateRoom() {
                 if (result.success) {
                     toast.success(`Created room: ${data.roomName} with code: ${result.room?.slug}`);
                     setIsCreateRoomOpen(false);
-                    router.push(`/canvas/${result.room?.slug}`);
+                    router.push(`/room/${result.room?.slug}`);
                 } else {
                     toast.error('Error: ' + result.error);
                 }

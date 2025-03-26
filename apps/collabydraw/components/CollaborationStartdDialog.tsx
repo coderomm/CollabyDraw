@@ -31,7 +31,7 @@ export default function CollaborationStartdDialog({ open, onOpenChange }: { open
                 if (result.success) {
                     toast.success(`Created room: ${data.roomName} with code: ${result.room?.slug}`);
                     onOpenChange(false);
-                    router.push(`/canvas/${result.room?.slug}`);
+                    router.push(`/room/${result.room?.slug}`);
                 } else {
                     toast.error('Error: ' + result.error);
                 }

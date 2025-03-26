@@ -20,9 +20,8 @@ export default async function CanvasPage({ params }: { params: Promise<{ roomNam
     const user = session?.user;
     if (!user || !user.id) {
         console.error('User from session not found.');
-        redirect('/auth/signin?callbackUrl=' + encodeURIComponent(`/canvas/${decodedParam}`));
+        redirect('/auth/signin?callbackUrl=' + encodeURIComponent(`/room/${decodedParam}`));
     }
-    console.log('CanvasPage loaded')
 
     return (
         <CanvasSheet

@@ -19,15 +19,13 @@ export function RoomSharingDialog({ open, onOpenChange, link, onCloseRoom }: { o
     };
 
     const handleStopSession = () => {
-        console.log('handleStopSession clicked')
         const confirmed = window.confirm(
             "Stopping the session will overwrite your previous, locally stored drawing. Are you sure?\n\n(If you want to keep your local drawing, simply close the browser tab instead.)"
         );
 
         if (confirmed) {
             onCloseRoom?.();
-            // onOpenChange(false);
-            toast.info('Destryoing session...')
+            onOpenChange(false);
         }
     };
 

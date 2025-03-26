@@ -1,20 +1,15 @@
-import type React from "react";
-
-export type Point = {
-  x: number;
-  y: number;
-};
+import React from "react";
+import { WsDataType } from "@repo/common/types";
 
 export type ToolType =
-  | "grab"
   | "selection"
+  | "grab"
   | "rectangle"
   | "diamond"
   | "ellipse"
-  | "arrow"
   | "line"
+  | "arrow"
   | "pen"
-  | "text"
   | "eraser";
 
 export type Tool = {
@@ -58,7 +53,7 @@ export type BgFillDark =
   | "#154163"
   | "#362500";
 
-export const canvasBgLight = [
+export const canvasBgLight: ReadonlyArray<string> = [
   "#ffffff",
   "#f8f9fa",
   "#f5faff",
@@ -66,7 +61,7 @@ export const canvasBgLight = [
   "#fdf8f6",
 ] as const;
 
-export const canvasBgDark = [
+export const canvasBgDark: ReadonlyArray<string> = [
   "#121212",
   "#161718",
   "#13171c",
@@ -163,33 +158,25 @@ export type Shape =
       strokeStyle: StrokeStyle;
     };
 
-export enum WS_DATA_TYPE {
-  JOIN = "JOIN",
-  LEAVE = "LEAVE",
-  USER_JOINED = "USER_JOINED",
-  USER_LEFT = "USER_LEFT",
-  DRAW = "DRAW",
-  ERASER = "ERASER",
-  UPDATE = "UPDATE",
-  EXISTING_PARTICIPANTS = "EXISTING_PARTICIPANTS",
-  CLOSE_ROOM = "CLOSE_ROOM",
-  CONNECTION_READY = "CONNECTION_READY",
-}
-
-export type WsMessage = {
+export interface WsMessage {
   id?: string;
   userId: string;
   userName: string;
   message?: Shape;
   timestamp: string;
-  type: WS_DATA_TYPE;
-};
+  type: WsDataType;
+}
 
-export type EixstingWsMessages = {
+export interface ExistingWsMessages {
   id?: string;
   userId: string;
   userName: string;
   message?: Shape[];
   timestamp: string;
-  type: WS_DATA_TYPE;
-};
+  type: WsDataType;
+}
+
+export interface Point {
+  x: number;
+  y: number;
+}

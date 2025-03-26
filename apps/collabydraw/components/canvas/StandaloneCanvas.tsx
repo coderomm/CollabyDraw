@@ -196,7 +196,6 @@ export function StandaloneCanvas() {
                 null,
                 canvasColorRef.current,
                 null,
-                null,
                 (newScale) => setScale(newScale),
                 true,
             )

@@ -66,7 +66,7 @@ export function UserRoomsListDialog({
                 if (response && response.success) {
                     toast.success(`Joining room: ${roomName}`);
                     onOpenChange(false);
-                    router.push(`/canvas/${roomName}`);
+                    router.push(`/room/${roomName}`);
                 } else {
                     toast.error(response?.error || "Failed to join room.");
                 }

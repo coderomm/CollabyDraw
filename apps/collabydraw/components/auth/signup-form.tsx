@@ -38,8 +38,6 @@ export function SignUpForm() {
                     return
                 }
 
-                console.log('signUp Result = ', signUpResult);
-
                 const signInResult = await signIn("credentials", {
                     email: values.email,
                     password: values.password,
@@ -50,7 +48,6 @@ export function SignUpForm() {
                     toast.error(signInResult.error);
                     return;
                 }
-                console.log('signIn Result = ', signInResult);
                 toast.success("Account created successfully")
                 router.push("/");
             } catch (error) {
