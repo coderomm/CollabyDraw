@@ -9,6 +9,12 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v2
 
+      - name: Debug - Show directory contents
+        run: ls -la
+
+      - name: Debug - Show package.json
+        run: cat package.json
+
       - name: Docker login
         uses: docker/login-action@v2
         with:
@@ -22,6 +28,7 @@ jobs:
           file: ./docker/Dockerfile.websocket
           push: true
           tags: coderomm/collabydraw-websocket:${{ github.sha }}
+          
       - name: Deploy to the VM
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" &> ~/ssh_key
