@@ -9,11 +9,6 @@ WORKDIR /usr/src/app
 ARG DATABASE_URL
 ARG JWT_SECRET
 
-# Set environment variables
-ENV DATABASE_URL=${DATABASE_URL}
-ENV JWT_SECRET=${JWT_SECRET}
-ENV NEXT_PUBLIC_JWT_SECRET=${JWT_SECRET}
-
 # Copy necessary files for dependency installation
 COPY ./packages ./packages
 COPY ./package.json ./package.json
@@ -38,11 +33,30 @@ RUN prisma generate
 # Change back to the root directory
 WORKDIR /usr/src/app
 
+# Set environment variables
+ENV DATABASE_URL=${DATABASE_URL}
+ENV JWT_SECRET=${JWT_SECRET}
+
+# Create .env.local for Next.js
+WORKDIR /usr/src/app/apps/collabydraw
+RUN echo "JWT_SECRET=$JWT_SECRET" > .env.local
+RUN echo "DATABASE_URL=$DATABASE_URL" >> .env.local
+
+# Change back to the root directory
+WORKDIR /usr/src/app
+
+# Debugging step
+# RUN echo "DATABASE_URL length: ${#DATABASE_URL}"
+# RUN echo "JWT_SECRET length: ${#JWT_SECRET}"
+
+# Fail if secrets are not set
+# RUN test -n "$DATABASE_URL" && test -n "$JWT_SECRET"
+
 # Debug step: print environment variables
-RUN echo "DATABASE_URL: ${DATABASE_URL}" && echo "JWT_SECRET set: ${JWT_SECRET:+yes}"
+# RUN echo "DATABASE_URL: ${DATABASE_URL}" && echo "JWT_SECRET set: ${JWT_SECRET:+yes}"
 
 # Build the application with database URL
-RUN pnpm run build
+RUN DATABASE_URL=${DATABASE_URL} JWT_SECRET=${JWT_SECRET} pnpm run build
 
 # Expose the port
 EXPOSE 3000
