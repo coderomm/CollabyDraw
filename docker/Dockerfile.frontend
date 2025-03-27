@@ -8,7 +8,11 @@ WORKDIR /usr/src/app
 # Add ARG for DATABASE_URL
 ARG DATABASE_URL
 ARG JWT_SECRET
-# ENV DATABASE_URL=${DATABASE_URL}
+
+# Set environment variables
+ENV DATABASE_URL=${DATABASE_URL}
+ENV JWT_SECRET=${JWT_SECRET}
+ENV NEXT_PUBLIC_JWT_SECRET=${JWT_SECRET}
 
 # Copy necessary files for dependency installation
 COPY ./packages ./packages
@@ -34,9 +38,10 @@ RUN prisma generate
 # Change back to the root directory
 WORKDIR /usr/src/app
 
+# Debug step: print environment variables
+RUN echo "DATABASE_URL: ${DATABASE_URL}" && echo "JWT_SECRET set: ${JWT_SECRET:+yes}"
+
 # Build the application with database URL
-ENV DATABASE_URL=${DATABASE_URL}
-ENV JWT_SECRET=${JWT_SECRET}
 RUN pnpm run build
 
 # Expose the port

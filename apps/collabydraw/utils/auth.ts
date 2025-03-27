@@ -61,7 +61,7 @@ export const authOptions: NextAuthOptions = {
 
       token.accessToken = jwt.sign(
         { id: token.id, email: token.email },
-        process.env.NEXTAUTH_SECRET || "",
+        process.env.NEXT_PUBLIC_JWT_SECRET || "",
         { expiresIn: "7d" }
       );
       return token;
@@ -75,5 +75,5 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXT_PUBLIC_JWT_SECRET,
 };
