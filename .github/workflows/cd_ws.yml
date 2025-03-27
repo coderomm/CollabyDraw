@@ -33,6 +33,10 @@ jobs:
           tags: |
             coderomm/collabydraw-websocket:latest
             coderomm/collabydraw-websocket:${{ github.sha }}
+
+      - name: Check SSH key presence (for debug)
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | head -n 15
           
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.1.0
