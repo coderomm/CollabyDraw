@@ -20,8 +20,8 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.frontend
-          build-args:
-            - DATABASE_URL=${{ secrets.DATABASE_URL }}
+          build-args: |
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
           push: true
           tags: coderomm/collabydraw:${{ github.sha }}
       ## Step to deploy this to a VM
