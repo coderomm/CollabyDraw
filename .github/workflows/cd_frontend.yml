@@ -22,6 +22,7 @@ jobs:
           file: ./docker/Dockerfile.frontend
           build-args: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
           push: true
           tags: coderomm/collabydraw:${{ github.sha }}
       ## Step to deploy this to a VM

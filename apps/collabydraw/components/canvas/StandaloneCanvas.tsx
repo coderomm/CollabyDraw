@@ -4,7 +4,6 @@ import { Game } from "@/draw/Game";
 import { BgFill, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
-import Toolbar from "../Toolbar";
 import { MobileNavbar } from "../mobile-navbar";
 import { useTheme } from "next-themes";
 import { MainMenuStack } from "../MainMenuStack";
@@ -17,6 +16,7 @@ import CollaborationStart from "../CollaborationStartBtn";
 import { cn } from "@/lib/utils";
 import UserRoomsList from "../UserRoomsList";
 import { useSession } from "next-auth/react";
+import Toolsbar from "../Toolsbar";
 
 export function StandaloneCanvas() {
     const { theme } = useTheme()
@@ -343,7 +343,7 @@ export function StandaloneCanvas() {
                         </div>
                     )}
 
-                    <Toolbar
+                    <Toolsbar
                         selectedTool={activeTool}
                         onToolSelect={handleToolSelect}
                     />

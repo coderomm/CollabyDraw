@@ -7,6 +7,7 @@ WORKDIR /usr/src/app
 
 # Add ARG for DATABASE_URL
 ARG DATABASE_URL
+ARG JWT_SECRET
 # ENV DATABASE_URL=${DATABASE_URL}
 
 # Copy necessary files for dependency installation
@@ -34,7 +35,9 @@ RUN prisma generate
 WORKDIR /usr/src/app
 
 # Build the application with database URL
-RUN DATABASE_URL=${DATABASE_URL} pnpm run build
+ENV DATABASE_URL=${DATABASE_URL}
+ENV JWT_SECRET=${JWT_SECRET}
+RUN pnpm run build
 
 # Expose the port
 EXPOSE 3000

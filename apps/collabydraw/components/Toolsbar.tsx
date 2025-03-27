@@ -8,7 +8,7 @@ interface ToolbarProps {
     onToolSelect: (tool: ToolType) => void
 }
 
-export default function Toolbar({ selectedTool, onToolSelect }: ToolbarProps) {
+export default function Toolsbar({ selectedTool, onToolSelect }: ToolbarProps) {
     return (
         <TooltipProvider delayDuration={0}>
             <header className="Tool_Bar flex items-center gap-1 p-1.5 rounded-lg Island">

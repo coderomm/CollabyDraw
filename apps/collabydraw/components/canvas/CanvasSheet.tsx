@@ -10,13 +10,13 @@ import { MainMenuStack } from "../MainMenuStack";
 import { ToolMenuStack } from "../ToolMenuStack";
 import SidebarTriggerButton from "../SidebarTriggerButton";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import Toolbar from "../Toolbar";
 import ScreenLoading from "../ScreenLoading";
 import CollaborationStart from "../CollaborationStartBtn";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { WsDataType } from "@repo/common/types";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import Toolsbar from "../Toolsbar";
 
 export default function CanvasSheet({ roomName, roomId, userId, userName, token }: {
     roomName: string; roomId: string; userId: string; userName: string; token: string;
@@ -259,7 +259,7 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
 
                     </div>
                 )}
-                <Toolbar
+                <Toolsbar
                     selectedTool={canvasState.activeTool}
                     onToolSelect={(newTool: SetStateAction<ToolType>) =>
                         setCanvasState(prev => ({ ...prev, activeTool: typeof newTool === 'function' ? newTool(prev.activeTool) : newTool }))
