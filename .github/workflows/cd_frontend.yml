@@ -2,12 +2,21 @@ name: Deploy the frontend
 on:
   push:
     branches: [main]
+    paths:
+      - 'apps/collabydraw/**'
+      - 'packages/**'
+      - '.github/workflows/cd_frontend.yml'
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Docker login
         uses: docker/login-action@v3
@@ -25,14 +34,38 @@ jobs:
             echo "Error: JWT_SECRET secret is not set"
             exit 1
           fi
+          $secrets_valid
 
-      - name: Build and push
+      - name: Build and push Frontend
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./docker/Dockerfile.frontend
+          provenance: false
           build-args: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
+            WEBSOCKET_URL=${{ secrets.WEBSOCKET_URL }}
           push: true
-          tags: coderomm/collabydraw:${{ github.sha }}
+          tags: |
+            coderomm/collabydraw:latest
+            coderomm/collabydraw:${{ github.sha }}
+
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull coderomm/collabydraw:${{ github.sha }}
+            docker stop collabydraw-frontend || true
+            docker rm collabydraw-frontend || true
+            docker run -d \
+              --name collabydraw-frontend \
+              -p 3000:3000 \
+              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+              -e WEBSOCKET_URL=${{ secrets.WEBSOCKET_URL }} \
+              coderomm/collabydraw:${{ github.sha }}
+
