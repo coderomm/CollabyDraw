@@ -8,7 +8,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db:generate": "cd packages/db && prisma generate && cd ../..",
     "start:collabydraw": "cd apps/collabydraw && pnpm run start",
-    "start:ws": "cd apps/ws && pnpm run build"
+    "start:ws": "cd apps/ws && pnpm run start"
   },
   "devDependencies": {
     "prettier": "^3.5.0",

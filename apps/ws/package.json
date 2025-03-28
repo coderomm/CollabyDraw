@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npx tsc -b",
     "start": "node dist/index.js",
-    "dev": "pnpm run build && pnpm run start"
+    "start:ws": "cd apps/ws && pnpm run build && pnpm run start"
   },
   "devDependencies": {
     "@repo/common": "workspace:*",
