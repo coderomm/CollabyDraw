@@ -61,5 +61,5 @@ RUN DATABASE_URL=${DATABASE_URL} JWT_SECRET=${JWT_SECRET} pnpm run build
 # Expose the port
 EXPOSE 3000
 
-# Start the web application
-CMD ["pnpm", "run", "start:web"]
+# Start the collabydraw application
+CMD ["pnpm", "run", "start:collabydraw"]

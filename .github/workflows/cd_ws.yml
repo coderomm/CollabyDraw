@@ -50,6 +50,7 @@ jobs:
             docker rm collabydraw-websocket || true
             docker run -d \
               --name collabydraw-websocket \
+              --restart always \
               -p 8080:8080 \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               coderomm/collabydraw-websocket:${{ github.sha }}

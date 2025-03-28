@@ -67,6 +67,7 @@ jobs:
             docker rm collabydraw-frontend || true
             docker run -d \
               --name collabydraw-frontend \
+              --restart always \
               -p 3000:3000 \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
