@@ -1,7 +1,7 @@
 "use client"
 
 import { Game } from "@/draw/Game";
-import { BgFill, canvasBgLight, Shape, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgLight, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import React, { SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
 import { MobileNavbar } from "../mobile-navbar";
@@ -22,7 +22,6 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     roomName: string; roomId: string; userId: string; userName: string; token: string;
 }) {
     const { theme } = useTheme()
-    const [canvasColor, setCanvasColor] = useState<string>(canvasBgLight[0]);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const paramsRef = useRef({ roomId, roomName, userId, userName, token });
     const router = useRouter();
@@ -56,7 +55,7 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     } = useWebSocket(paramsRef.current.roomId, paramsRef.current.roomName, paramsRef.current.userId, paramsRef.current.userName, paramsRef.current.token);
 
     useEffect(() => {
-        setCanvasColor(canvasBgLight[0]);
+        setCanvasState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
     }, [theme])
 
     useEffect(() => {
@@ -64,6 +63,7 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
         if (game) {
             game.setScale(scale);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [canvasState.game, canvasState.scale]);
 
     useEffect(() => {
@@ -97,37 +97,6 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
         }
     }, []);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const processMessages = useCallback((messages: any[]) => {
-        const newExistingShapes: Shape[] = [];
-
-        messages.forEach(message => {
-            switch (message.type) {
-                case WsDataType.DRAW:
-                    if (!newExistingShapes.some(s => s.id === message.id)) {
-                        newExistingShapes.push(message.message);
-                    }
-                    break;
-                case WsDataType.UPDATE:
-                    const index = newExistingShapes.findIndex(s => s.id === message.id);
-                    if (index !== -1) {
-                        newExistingShapes[index] = {
-                            ...newExistingShapes[index],
-                            ...message.message
-                        };
-                    }
-                    break;
-                case WsDataType.ERASER:
-                    const filteredShapes = newExistingShapes.filter(s => s.id !== message.id);
-                    newExistingShapes.length = 0;
-                    newExistingShapes.push(...filteredShapes);
-                    break;
-            }
-        });
-
-        return newExistingShapes;
-    }, []);
-
     const initializeGame = useCallback(() => {
         if (!canvasRef.current || !isConnected) return null;
 
@@ -140,6 +109,9 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
         const game = new Game(
             canvasRef.current,
             paramsRef.current.roomId,
+            paramsRef.current.roomName,
+            paramsRef.current.userId,
+            paramsRef.current.userName,
             canvasState.canvasColor,
             handleSendDrawing,
             (newScale) => setCanvasState(prev => ({ ...prev, scale: newScale })),
@@ -177,11 +149,12 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     }, [initializeGame, handleKeyDown]);
 
     useEffect(() => {
+        console.log('messages length = ', messages.length)
         if (messages.length > 0 && canvasState.game) {
-            const processedShapes = processMessages(messages);
-            canvasState.game.updateShapes(processedShapes);
+            canvasState.game.updateShapes(messages);
+            console.log('messages = ', messages)
         }
-    }, [messages, canvasState.game, processMessages]);
+    }, [messages, canvasState.game]);
 
     useEffect(() => {
         if (existingMsgs?.message && canvasState.game) {
@@ -215,8 +188,10 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
                                 <MainMenuStack
                                     isOpen={canvasState.sidebarOpen}
                                     onClose={() => setCanvasState(prev => ({ ...prev, sidebarOpen: false }))}
-                                    canvasColor={canvasColor}
-                                    setCanvasColor={setCanvasColor}
+                                    canvasColor={canvasState.canvasColor}
+                                    setCanvasColor={(newCanvasColor: SetStateAction<string>) =>
+                                        setCanvasState(prev => ({ ...prev, canvasColor: typeof newCanvasColor === 'function' ? newCanvasColor(prev.canvasColor) : newCanvasColor }))
+                                    }
                                     roomName={roomName}
                                     onCloseRoom={() => {
                                         sendMessage(
@@ -300,8 +275,10 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
                 <MobileNavbar
                     sidebarOpen={canvasState.sidebarOpen}
                     setSidebarOpen={() => setCanvasState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }))}
-                    canvasColor={canvasColor}
-                    setCanvasColor={setCanvasColor}
+                    canvasColor={canvasState.canvasColor}
+                    setCanvasColor={(newCanvasColor: SetStateAction<string>) =>
+                        setCanvasState(prev => ({ ...prev, canvasColor: typeof newCanvasColor === 'function' ? newCanvasColor(prev.canvasColor) : newCanvasColor }))
+                    }
                     scale={canvasState.scale}
                     setScale={(newScale: SetStateAction<number>) =>
                         setCanvasState(prev => ({ ...prev, scale: typeof newScale === 'function' ? newScale(prev.scale) : newScale }))

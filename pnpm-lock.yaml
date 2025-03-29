@@ -189,6 +189,9 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
+      esbuild:
+        specifier: ^0.25.1
+        version: 0.25.1
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2

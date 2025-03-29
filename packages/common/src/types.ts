@@ -65,15 +65,15 @@ export enum WsDataType {
 }
 
 export interface WebSocketMessage {
-  id?: string;
+  id: string | null;
   type: WsDataType;
   roomId: string;
-  roomName?: string;
+  roomName: string | null;
   userId: string;
-  userName?: string;
-  message?: string;
-  participants?: RoomParticipants[];
-  timestamp?: string;
+  userName: string | null;
+  message: string | null;
+  participants: RoomParticipants[] | null;
+  timestamp: string | null;
 }
 
 export interface WebSocketChatMessage {
@@ -95,12 +95,4 @@ export interface RecentRooms {
   visitedAt: string;
 }
 
-export const JWT_SECRET =
-  process.env.JWT_SECRET ??
-  (() => {
-    throw new Error("JWT_SECRET is not set in environment variables.");
-  })();
-
 export const saltRounds = 10;
-
-// canvas types

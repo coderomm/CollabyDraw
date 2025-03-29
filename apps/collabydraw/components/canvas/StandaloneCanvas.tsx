@@ -194,6 +194,9 @@ export function StandaloneCanvas() {
             const game = new Game(
                 canvasRef.current,
                 null,
+                null,
+                null,
+                null,
                 canvasColorRef.current,
                 null,
                 (newScale) => setScale(newScale),
@@ -290,6 +293,7 @@ export function StandaloneCanvas() {
     const handleToolSelect = (tool: ToolType) => {
         setActiveTool(tool);
         game?.setTool(tool);
+        console.log('existingShapes = ', existingShapes)
         if (tool !== "selection") {
             game?.updateShapes(existingShapes);
         }

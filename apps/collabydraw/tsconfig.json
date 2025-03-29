@@ -19,6 +19,9 @@
       }
     ],
     "paths": {
+      "@/components/*": ["./components/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/hooks/*": ["./hooks/*"],
       "@/*": ["./*"]
     }
   },

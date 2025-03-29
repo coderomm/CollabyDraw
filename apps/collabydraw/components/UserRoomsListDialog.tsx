@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from "./ui/button";
-import { LogIn, Plus, Trash } from "lucide-react";
+import { LogIn, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { toast } from "sonner";
 import { getUserRooms, joinRoom, deleteRoom } from "@/actions/room";
@@ -151,10 +151,10 @@ export function UserRoomsListDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="glass-panel gap-6 max-w-lg bg-island-bg-color border border-dialog-border-color shadow-modal-shadow rounded-lg p-10" overlayClassName="bg-[#12121233]">
                 <DialogHeader className="gap-6">
-                    <DialogTitle className="flex items-center justify-center w-full font-bold text-xl text-color-primary tracking-[0.75px]">All Your Rooms</DialogTitle>
+                    <DialogTitle className="flex items-center justify-center w-full font-bold text-xl text-color-primary tracking-[0.75px]">{isLoading ? 'Loading' : rooms.length > 0 ? ('All Your Rooms') : ('No room found')}</DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-4 max-h-60 overflow-y-auto">
+                <div className="space-y-4 max-h-60">
                     {isLoading ? (
                         Array(3).fill(0).map((_, index) => (
                             <div key={index} className="border border-gray-700 p-3 rounded-md">
@@ -186,19 +186,14 @@ export function UserRoomsListDialog({
                             </div>
                         ))
                     ) : (
-                        <div className="text-center py-8 text-gray-400">
-                            <h3 className="font-assistant font-semibold text-[0.875rem] indent-[150%] text-collaby-textfield-label mb-1 select-none">No rooms found.</h3>
+                        <div className="text-center py-8">
                             <Button
                                 type="button"
                                 size={"lg"}
                                 onClick={() => { setIsOpen(true); }}
                                 disabled={isPending}
                                 className="py-2 px-6 min-h-12 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]"
-                                title="Create a Room">
-                                <div className="flex items-center justify-center gap-3 shrink-0 flex-nowrap">
-                                    <Plus className="w-5 h-5" />Create a Room
-                                </div>
-                            </Button>
+                                title="Create a Room">Create a Room</Button>
                             <CollaborationStartdDialog open={isOpen} onOpenChange={setIsOpen} />
                         </div>
                     )}

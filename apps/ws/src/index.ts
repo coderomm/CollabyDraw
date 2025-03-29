@@ -1,14 +1,15 @@
 import dotenv from "dotenv";
 dotenv.config();
 import client from "@repo/db/client";
-import {
-  JWT_SECRET as JWT_SECRET_TYPE,
-  WebSocketMessage,
-  WsDataType,
-} from "@repo/common/types";
+import { WebSocketMessage, WsDataType } from "@repo/common/types";
 import { WebSocketServer, WebSocket } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
-const JWT_SECRET = process.env.JWT_SECRET || (JWT_SECRET_TYPE as string);
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET is ABSOLUTELY REQUIRED and not set");
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 declare module "http" {
   interface IncomingMessage {
@@ -162,6 +163,8 @@ wss.on("connection", function connection(ws, req) {
               userName: parsedData.userName,
               participants: currentParticipants,
               timestamp: new Date().toISOString(),
+              id: null,
+              message: null,
             },
             [user.userId],
             true
@@ -177,6 +180,11 @@ wss.on("connection", function connection(ws, req) {
               userId: user.userId,
               userName: user.userName,
               roomId: parsedData.roomId,
+              roomName: null,
+              id: null,
+              message: null,
+              participants: null,
+              timestamp: new Date().toISOString(),
             },
             [user.userId],
             true
@@ -194,12 +202,12 @@ wss.on("connection", function connection(ws, req) {
             usersInRoom[0].userId === userId
           ) {
             try {
-              await client.shape.deleteMany({
-                where: { roomId: Number(parsedData.roomId) },
-              });
-              await client.room.delete({
-                where: { id: Number(parsedData.roomId) },
-              });
+              // await client.shape.deleteMany({
+              //   where: { roomId: Number(parsedData.roomId) },
+              // });
+              // await client.room.delete({
+              //   where: { id: Number(parsedData.roomId) },
+              // });
 
               ws.send(
                 JSON.stringify({
@@ -225,21 +233,21 @@ wss.on("connection", function connection(ws, req) {
             return;
           }
 
-          try {
-            await client.shape.create({
-              data: {
-                id: parsedData.id,
-                message: parsedData.message,
-                roomId: Number(parsedData.roomId),
-                userId: userId,
-              },
-            });
-          } catch (err) {
-            console.error(
-              `Error saving ${parsedData.type} data to database:`,
-              err
-            );
-          }
+          // try {
+          //   await client.shape.create({
+          //     data: {
+          //       id: parsedData.id,
+          //       message: parsedData.message,
+          //       roomId: Number(parsedData.roomId),
+          //       userId: userId,
+          //     },
+          //   });
+          // } catch (err) {
+          //   console.error(
+          //     `Error saving ${parsedData.type} data to database:`,
+          //     err
+          //   );
+          // }
 
           broadcastToRoom(
             parsedData.roomId,
@@ -250,8 +258,11 @@ wss.on("connection", function connection(ws, req) {
               userId: userId,
               userName: user.userName,
               timestamp: new Date().toISOString(),
+              roomName: null,
+              id: null,
+              participants: null,
             },
-            [userId],
+            [],
             false
           );
           break;
@@ -264,22 +275,22 @@ wss.on("connection", function connection(ws, req) {
             return;
           }
 
-          try {
-            await client.shape.update({
-              where: {
-                id: parsedData.id,
-                roomId: Number(parsedData.roomId),
-              },
-              data: {
-                message: parsedData.message,
-              },
-            });
-          } catch (err) {
-            console.error(
-              `Error saving ${parsedData.type} data to database:`,
-              err
-            );
-          }
+          // try {
+          //   await client.shape.update({
+          //     where: {
+          //       id: parsedData.id,
+          //       roomId: Number(parsedData.roomId),
+          //     },
+          //     data: {
+          //       message: parsedData.message,
+          //     },
+          //   });
+          // } catch (err) {
+          //   console.error(
+          //     `Error saving ${parsedData.type} data to database:`,
+          //     err
+          //   );
+          // }
 
           broadcastToRoom(
             parsedData.roomId,
@@ -288,8 +299,10 @@ wss.on("connection", function connection(ws, req) {
               id: parsedData.id,
               message: parsedData.message,
               roomId: parsedData.roomId,
+              roomName: null,
               userId: userId,
               userName: user.userName,
+              participants: null,
               timestamp: new Date().toISOString(),
             },
             [],
@@ -303,61 +316,88 @@ wss.on("connection", function connection(ws, req) {
             return;
           }
 
-          try {
-            const shapeExists = await client.shape.findUnique({
-              where: {
-                id: parsedData.id,
-                roomId: Number(parsedData.roomId),
-              },
-            });
+          broadcastToRoom(
+            parsedData.roomId,
+            {
+              id: parsedData.id,
+              type: parsedData.type,
+              roomId: parsedData.roomId,
+              userId: userId,
+              userName: user.userName,
+              timestamp: new Date().toISOString(),
+              roomName: null,
+              message: null,
+              participants: null,
+            },
+            [],
+            false
+          );
 
-            if (!shapeExists) {
-              broadcastToRoom(
-                parsedData.roomId,
-                {
-                  id: parsedData.id,
-                  type: parsedData.type,
-                  roomId: parsedData.roomId,
-                  userId: userId,
-                  userName: user.userName,
-                  timestamp: new Date().toISOString(),
-                },
-                [userId],
-                false
-              );
-              return;
-            }
+          // try {
+          //   const shapeExists = await client.shape.findUnique({
+          //     where: {
+          //       id: parsedData.id,
+          //       roomId: Number(parsedData.roomId),
+          //     },
+          //   });
 
-            await client.shape.delete({
-              where: {
-                id: parsedData.id,
-                roomId: Number(parsedData.roomId),
-              },
-            });
+          //   if (!shapeExists) {
+          //     broadcastToRoom(
+          //       parsedData.roomId,
+          //       {
+          //         id: parsedData.id,
+          //         type: parsedData.type,
+          //         roomId: parsedData.roomId,
+          //         roomName: null,
+          //         userId: userId,
+          //         userName: user.userName,
+          //         participants: null,
+          //         message: null,
+          //         timestamp: new Date().toISOString(),
+          //       },
+          //       [userId],
+          //       false
+          //     );
+          //     return;
+          //   }
 
-            broadcastToRoom(
-              parsedData.roomId,
-              {
-                id: parsedData.id,
-                type: parsedData.type,
-                roomId: parsedData.roomId,
-                userId: userId,
-                userName: user.userName,
-                timestamp: new Date().toISOString(),
-              },
-              [userId],
-              false
-            );
-          } catch (err) {
-            console.error(
-              `Error erasing ${parsedData.type} data to database:`,
-              err
-            );
-          }
+          //   await client.shape.delete({
+          //     where: {
+          //       id: parsedData.id,
+          //       roomId: Number(parsedData.roomId),
+          //     },
+          //   });
+
+          //   broadcastToRoom(
+          //     parsedData.roomId,
+          //     {
+          //       id: parsedData.id,
+          //       type: parsedData.type,
+          //       roomId: parsedData.roomId,
+          //       userId: userId,
+          //       userName: user.userName,
+          //       timestamp: new Date().toISOString(),
+          //       roomName: null,
+          //       message: null,
+          //       participants: null,
+          //     },
+          //     [],
+          //     false
+          //   );
+          // } catch (err) {
+          //   console.error(
+          //     `Error erasing ${parsedData.type} data to database:`,
+          //     err
+          //   );
+          // }
           break;
 
         default:
-          console.warn(`Unknown message type: ${parsedData.type}`);
+          console.warn(
+            `Unknown message type received from user ${userId}:`,
+            parsedData.type
+          );
+          break;
       }
     } catch (error) {
       console.error("Error processing message:", error);
@@ -375,6 +415,11 @@ wss.on("connection", function connection(ws, req) {
             userId: user.userId,
             userName: user.userName,
             roomId,
+            roomName: null,
+            id: null,
+            message: null,
+            participants: null,
+            timestamp: Date.now().toString(),
           },
           [user.userId]
         );

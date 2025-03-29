@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RoomParticipants, WsDataType, WebSocketMessage } from '@repo/common/types';
-import { ExistingWsMessages, WsMessage } from '@/types/canvas';
+import { ExistingWsMessages, Shape } from '@/types/canvas';
 import { getShapes } from '@/actions/shape';
 import { WS_URL } from '@/config/constants';
+import { MessageQueue } from '@/draw/MessageQueue';
 
 export function useWebSocket(roomId: string, roomName: string, userId: string, userName: string, token: string) {
     const [isConnected, setIsConnected] = useState(false);
-    const [messages, setMessages] = useState<WsMessage[]>([]);
+    const [messages, setMessages] = useState<Shape[]>([]);
     const [existingMsgs, setExistingMsgs] = useState<ExistingWsMessages | null>(null);
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
     const socketRef = useRef<WebSocket | null>(null);
@@ -87,20 +88,34 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                         }
                         break;
 
-                    case WsDataType.DRAW:
-                    case WsDataType.UPDATE:
-                    case WsDataType.ERASER:
-                        if (data.message || data.id) {
-                            setMessages(prev => [...prev, {
-                                type: data.type,
-                                id: data.id,
-                                userId: data.userId || userId,
-                                userName: data.userName || userName,
-                                message: data.message ? JSON.parse(data.message) : undefined,
-                                timestamp: data.timestamp || new Date().toISOString()
-                            }]);
+                    case WsDataType.DRAW: {
+                        // const shape = JSON.parse(data.message!);
+                        // setMessages(prev => [...prev, shape]);
+                        if (data.userId !== userId) {
+                            const shape = JSON.parse(data.message!);
+                            setMessages(prev => [...prev, shape]);
                         }
                         break;
+                    }
+
+                    case WsDataType.UPDATE: {
+                        if (data.userId !== userId) {
+                            const updatedShape = JSON.parse(data.message!);
+                            setMessages(prev =>
+                                prev.map(shape =>
+                                    shape.id === data.id ? updatedShape : shape
+                                )
+                            );
+                        }
+                        break;
+                    }
+
+                    case WsDataType.ERASER: {
+                        if (data.userId !== userId) {
+                            setMessages(prev => prev.filter(shape => shape.id !== data.id));
+                        }
+                        break;
+                    }
                 }
             } catch (err) {
                 console.error('Error processing message:', err);
@@ -117,7 +132,7 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
         };
 
         ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
+            console.warn('WebSocket error:', error);
             setIsConnected(false);
         };
 
@@ -198,6 +213,32 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
             console.warn('Cannot send message: WebSocket not connected');
         }
     }, []);
+
+    useEffect(() => {
+        if (isConnected) {
+            MessageQueue.flush((message) => {
+                if (socketRef.current?.readyState === WebSocket.OPEN) {
+                    socketRef.current.send(JSON.stringify(message));
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        const interval = setInterval(() => {
+            if (isConnected) {
+                MessageQueue.flush((message) => {
+                    if (socketRef.current?.readyState === WebSocket.OPEN) {
+                        socketRef.current.send(JSON.stringify(message));
+                        return true;
+                    }
+                    return false;
+                });
+            }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [isConnected]);
 
     return {
         isConnected,

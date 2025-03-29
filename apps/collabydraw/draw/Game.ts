@@ -19,11 +19,15 @@ import {
   getDashArrayDotted,
   RECT_CORNER_RADIUS_FACTOR,
 } from "@/config/constants";
+import { MessageQueue } from "./MessageQueue";
 
 export class Game {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private roomId: string | null;
+  private roomName: string | null;
+  private userId: string | null;
+  private userName: string | null;
   private canvasBgColor: string;
   private sendMessage: ((data: string) => void) | null;
   private existingShapes: Shape[];
@@ -49,6 +53,9 @@ export class Game {
   constructor(
     canvas: HTMLCanvasElement,
     roomId: string | null,
+    roomName: string | null,
+    userId: string | null,
+    userName: string | null,
     canvasBgColor: string,
     sendMessage: ((data: string) => void) | null,
     onScaleChangeCallback: (scale: number) => void,
@@ -58,6 +65,9 @@ export class Game {
     this.ctx = canvas.getContext("2d")!;
     this.canvasBgColor = canvasBgColor;
     this.roomId = roomId;
+    this.roomName = roomName;
+    this.userId = userId;
+    this.userName = userName;
     this.sendMessage = sendMessage;
     this.clicked = false;
     this.existingShapes = [];
@@ -128,20 +138,7 @@ export class Game {
   }
 
   updateShapes(shapes: Shape[]) {
-    shapes.forEach((newShape) => {
-      const existingIndex = this.existingShapes.findIndex(
-        (s) => s.id === newShape.id
-      );
-      if (existingIndex !== -1) {
-        this.existingShapes[existingIndex] = {
-          ...this.existingShapes[existingIndex],
-          ...newShape,
-        };
-      } else {
-        this.existingShapes.push(newShape);
-      }
-    });
-
+    this.existingShapes = [...this.existingShapes, ...shapes];
     this.clearCanvas();
   }
 
@@ -277,22 +274,37 @@ export class Game {
             const index = this.existingShapes.findIndex(
               (shape) => shape.id === selectedShape.id
             );
-            this.existingShapes[index] = selectedShape;
             if (index !== -1) {
+              this.existingShapes[index] = selectedShape;
               if (this.isStandalone) {
                 localStorage.setItem(
                   LOCALSTORAGE_CANVAS_KEY,
                   JSON.stringify(this.existingShapes)
                 );
               } else if (this.sendMessage && this.roomId) {
-                this.sendMessage(
-                  JSON.stringify({
+                try {
+                  this.sendMessage?.(
+                    JSON.stringify({
+                      type: WsDataType.UPDATE,
+                      id: selectedShape.id,
+                      message: selectedShape,
+                      roomId: this.roomId,
+                    })
+                  );
+                } catch (e) {
+                  MessageQueue.enqueue({
                     type: WsDataType.UPDATE,
-                    message: selectedShape,
                     id: selectedShape.id,
+                    message: JSON.stringify(selectedShape),
                     roomId: this.roomId,
-                  })
-                );
+                    roomName: this.roomName,
+                    userId: this.userId!,
+                    userName: this.userName!,
+                    timestamp: new Date().toISOString(),
+                    participants: null,
+                  });
+                  console.error("Error sending shape update ws message", e);
+                }
               }
             }
           }
@@ -418,10 +430,11 @@ export class Game {
       return;
     }
 
-    this.existingShapes.push(shape);
+    // this.existingShapes.push(shape);
 
     if (this.isStandalone) {
       try {
+        this.existingShapes.push(shape);
         localStorage.setItem(
           LOCALSTORAGE_CANVAS_KEY,
           JSON.stringify(this.existingShapes)
@@ -430,14 +443,32 @@ export class Game {
         console.error("Error saving shapes to localStorage:", e);
       }
     } else if (this.sendMessage && this.roomId) {
-      this.sendMessage(
-        JSON.stringify({
-          type: WsDataType.DRAW,
+      this.existingShapes.push(shape);
+      this.clearCanvas();
+
+      const message = {
+        type: WsDataType.DRAW,
+        id: shape.id,
+        message: shape,
+        roomId: this.roomId,
+      };
+
+      try {
+        this.sendMessage?.(JSON.stringify(message));
+      } catch (e) {
+        MessageQueue.enqueue({
+          type: WsDataType.UPDATE,
           id: shape.id,
-          message: shape,
+          message: JSON.stringify(shape),
           roomId: this.roomId,
-        })
-      );
+          roomName: this.roomName,
+          userId: this.userId!,
+          userName: this.userName!,
+          timestamp: new Date().toISOString(),
+          participants: null,
+        });
+        console.error("Error sending shape update ws message", e);
+      }
     }
     this.clearCanvas();
   };
@@ -487,6 +518,7 @@ export class Game {
           return;
         }
       }
+
       for (let i = this.existingShapes.length - 1; i >= 0; i--) {
         const shape = this.existingShapes[i];
 
@@ -523,6 +555,7 @@ export class Game {
       this.startX = e.clientX;
       this.startY = e.clientY;
     }
+    this.clearCanvas();
   };
 
   mouseMoveHandler = (e: MouseEvent) => {
@@ -826,7 +859,15 @@ export class Game {
           : []
     );
     this.ctx.fillStyle = bgFill;
-    this.ctx.ellipse(x, y, width, height, 0, 0, 2 * Math.PI);
+    this.ctx.ellipse(
+      x,
+      y,
+      width < 0 ? 1 : width,
+      height < 0 ? 1 : height,
+      0,
+      0,
+      2 * Math.PI
+    );
     this.ctx.fill();
     this.ctx.stroke();
   }
@@ -1039,13 +1080,28 @@ export class Game {
           console.error("Error saving shapes to localStorage:", e);
         }
       } else if (this.sendMessage && this.roomId) {
-        this.sendMessage(
-          JSON.stringify({
-            type: WsDataType.ERASER,
+        try {
+          this.sendMessage?.(
+            JSON.stringify({
+              type: WsDataType.ERASER,
+              id: erasedShape.id,
+              roomId: this.roomId,
+            })
+          );
+        } catch (e) {
+          MessageQueue.enqueue({
+            type: WsDataType.UPDATE,
             id: erasedShape.id,
+            message: null,
             roomId: this.roomId,
-          })
-        );
+            roomName: this.roomName,
+            userId: this.userId!,
+            userName: this.userName!,
+            timestamp: new Date().toISOString(),
+            participants: null,
+          });
+          console.error("Error sending shape update ws message", e);
+        }
       }
     }
   }

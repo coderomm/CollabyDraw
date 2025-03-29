@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc -b",
+    "build": "npx esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node --tsconfig=tsconfig.json",
     "start": "node dist/index.js",
+    "dev": "pnpm run build && pnpm run start",
     "start:ws": "cd apps/ws && pnpm run build && pnpm run start"
   },
   "devDependencies": {
@@ -25,6 +26,7 @@
     "@types/jsonwebtoken": "^9.0.8",
     "cookie": "^1.0.2",
     "dotenv": "^16.4.7",
+    "esbuild": "^0.25.1",
     "jsonwebtoken": "^9.0.2",
     "uuid": "^11.1.0",
     "ws": "^8.18.0"
