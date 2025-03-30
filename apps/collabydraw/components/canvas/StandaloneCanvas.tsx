@@ -3,20 +3,20 @@
 import { CanvasEngine } from "@/canvas-engine/CanvasEngine";
 import { BgFill, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Scale } from "../Scale";
-import { MobileNavbar } from "../mobile-navbar";
+import { MobileCommandBar } from "../MobileCommandBar";
 import { useTheme } from "next-themes";
-import { MainMenuStack } from "../MainMenuStack";
-import { ToolMenuStack } from "../ToolMenuStack";
-import SidebarTriggerButton from "../SidebarTriggerButton";
 import { HomeWelcome, MainMenuWelcome, ToolMenuWelcome } from "../welcome-screen";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import ScreenLoading from "../ScreenLoading";
-import CollaborationStart from "../CollaborationStartBtn";
+import CollaborationToolbar from "../CollaborationToolbar";
 import { cn } from "@/lib/utils";
 import UserRoomsList from "../UserRoomsList";
 import { useSession } from "next-auth/react";
-import Toolsbar from "../Toolsbar";
+import AppMenuButton from "../AppMenuButton";
+import { AppSidebar } from "../AppSidebar";
+import { StyleConfigurator } from "../StyleConfigurator";
+import ToolSelector from "../ToolSelector";
+import ZoomControl from "../ZoomControl";
 
 export function StandaloneCanvas() {
     const { theme } = useTheme()
@@ -312,10 +312,10 @@ export function StandaloneCanvas() {
                     {matches && !isLoading && (
                         <div className="Main_Menu_Stack Sidebar_Trigger_Button md:grid md:gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
                             <div className="relative">
-                                <SidebarTriggerButton onClick={toggleSidebar} />
+                                <AppMenuButton onClick={toggleSidebar} />
 
                                 {sidebarOpen && (
-                                    <MainMenuStack
+                                    <AppSidebar
                                         isOpen={sidebarOpen}
                                         onClose={() => setSidebarOpen(false)}
                                         canvasColor={canvasColor}
@@ -332,7 +332,7 @@ export function StandaloneCanvas() {
                                 )}
                             </div>
 
-                            <ToolMenuStack activeTool={activeTool}
+                            <StyleConfigurator activeTool={activeTool}
                                 strokeFill={strokeFill}
                                 setStrokeFill={setStrokeFill}
                                 strokeWidth={strokeWidth}
@@ -347,12 +347,12 @@ export function StandaloneCanvas() {
                         </div>
                     )}
 
-                    <Toolsbar
+                    <ToolSelector
                         selectedTool={activeTool}
                         onToolSelect={handleToolSelect}
                     />
                     {!isLoading && matches && (
-                        <CollaborationStart />
+                        <CollaborationToolbar />
                     )}
                 </div>
             )}
@@ -363,7 +363,7 @@ export function StandaloneCanvas() {
             )}
 
             {!isLoading && matches && (
-                <Scale scale={scale} setScale={setScale} />
+                <ZoomControl scale={scale} setScale={setScale} />
             )}
 
             {!isLoading && matches && session?.user && (
@@ -371,7 +371,7 @@ export function StandaloneCanvas() {
             )}
 
             {!isLoading && !matches && (
-                <MobileNavbar
+                <MobileCommandBar
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
                     canvasColor={canvasColor}

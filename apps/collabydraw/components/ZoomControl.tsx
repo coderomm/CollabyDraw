@@ -2,10 +2,10 @@ import { Minus, Plus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
-export const Scale = ({
+export default function ZoomControl({
     scale,
     setScale
-}: { scale: number; setScale: React.Dispatch<React.SetStateAction<number>> }) => {
+}: { scale: number; setScale: React.Dispatch<React.SetStateAction<number>> }) {
 
     const zoomIn = () => {
         setScale((prevScale: number) => Math.min(prevScale * 1.1, 5));
@@ -26,7 +26,7 @@ export const Scale = ({
                     <TooltipTrigger asChild>
                         <Button variant="ghost" size="icon" onClick={zoomOut} className="w-9 h-9 rounded-l-lg rounded-r-none bg-light-btn-bg text-text-primary-color dark:bg-w-bg dark:hover:bg-d-btn-hover-bg dark:text-w-text select-none">
                             <Minus className="h-4 w-4" />
-                        </Button> 
+                        </Button>
                     </TooltipTrigger>
                     <TooltipContent className="dark:bg-w-bg dark:text-white">Zoom Out</TooltipContent>
                 </Tooltip>

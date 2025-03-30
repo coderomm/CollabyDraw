@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { redirect } from "next/navigation";
 
-export function CollaborationAdDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+export function CollabAuthPrompt({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
 
     const handleSubmit = () => {
         redirect('/auth/signin');

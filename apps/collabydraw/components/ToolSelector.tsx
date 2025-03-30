@@ -3,12 +3,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import type { ToolType } from "@/types/canvas"
 import { tools } from "@/types/Tools"
 
-interface ToolbarProps {
+interface ToolSelectorProps {
     selectedTool: ToolType
     onToolSelect: (tool: ToolType) => void
 }
 
-export default function Toolsbar({ selectedTool, onToolSelect }: ToolbarProps) {
+export default function ToolSelector({ selectedTool, onToolSelect }: ToolSelectorProps) {
     return (
         <TooltipProvider delayDuration={0}>
             <header className="Tool_Bar flex items-center gap-1 p-1.5 rounded-lg Island">

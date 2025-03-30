@@ -2,11 +2,11 @@
 
 import { Button } from "./ui/button";
 import { useState } from "react";
-import CollaborationStartdDialog from "./CollaborationStartdDialog";
+import CreateRoomDialog from "./CreateRoomDialog";
 import { useSession } from "next-auth/react";
 import { RoomSharingDialog } from "./RoomSharingDialog";
 import { usePathname } from "next/navigation";
-import { CollaborationAdDialog } from "./CollaborationAdDialog";
+import { CollabAuthPrompt } from "./CollabAuthPrompt";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { RoomParticipants } from "@repo/common/types";
@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { BASE_URL } from "@/config/constants";
 import { Share2 } from "lucide-react";
 
-export default function CollaborationStartBtn({ slug, participants }: { slug?: string, participants?: RoomParticipants[] }) {
+export default function CollaborationToolbar({ slug, participants }: { slug?: string, participants?: RoomParticipants[] }) {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const { data: session } = useSession();
@@ -83,8 +83,8 @@ export default function CollaborationStartBtn({ slug, participants }: { slug?: s
             </div>
             <Button type="button" onClick={() => setIsOpen(true)}
                 className={cn("excalidraw-button collab-button relative w-auto py-2 px-3 md:py-3 md:px-4 rounded-md text-[.875rem] font-semibold shadow-none active:scale-[.98]", roomSlug ? "bg-[#0fb884] dark:bg-[#0fb884] hover:bg-[#0fb884]" : "bg-color-primary hover:bg-brand-hover active:bg-brand-active")}
-                title="Live collaboration..."><Share2 size={16} className="hidden xs670:inline" />
-  <span className="inline-block xs670:hidden">Share</span> {roomSlug && participants && participants.length > 0 && (
+                title="Live collaboration..."><Share2 size={16} className="hidden xs670:inline md:hidden" />
+                <span className="inline-block xs670:hidden md:inline-block">Share</span> {roomSlug && participants && participants.length > 0 && (
                     <div className="CollabButton-collaborators text-[.6rem] text-[#2b8a3e] bg-[#b2f2bb] font-bold font-assistant rounded-[50%] p-1 min-w-4 min-h-4 w-4 h-4 flex items-center justify-center absolute bottom-[-5px] right-[-5px]">{participants.length}</div>
                 )}</Button>
 
@@ -92,10 +92,10 @@ export default function CollaborationStartBtn({ slug, participants }: { slug?: s
                 roomSlug ? (
                     <RoomSharingDialog open={isOpen} onOpenChange={setIsOpen} link={`${BASE_URL}/${decodedPathname}`} />
                 ) : (
-                    <CollaborationStartdDialog open={isOpen} onOpenChange={setIsOpen} />
+                    <CreateRoomDialog open={isOpen} onOpenChange={setIsOpen} />
                 )
             ) : (
-                <CollaborationAdDialog open={isOpen} onOpenChange={setIsOpen} />
+                <CollabAuthPrompt open={isOpen} onOpenChange={setIsOpen} />
             )}
         </div>
     )

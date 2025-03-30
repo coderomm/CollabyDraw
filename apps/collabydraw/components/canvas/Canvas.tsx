@@ -7,16 +7,30 @@ import { MobileCommandBar } from "../MobileCommandBar";
 import { useTheme } from "next-themes";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import ScreenLoading from "../ScreenLoading";
-import CollaborationToolbar from "../CollaborationToolbar";
 import { RoomParticipants } from "@repo/common/types";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 import AppMenuButton from "../AppMenuButton";
 import { AppSidebar } from "../AppSidebar";
 import { StyleConfigurator } from "../StyleConfigurator";
 import ToolSelector from "../ToolSelector";
+import CollaborationToolbar from "../CollaborationToolbar";
 import ZoomControl from "../ZoomControl";
 
-export default function CanvasSheet({ roomName, roomId, userId, userName, token }: {
+/** Modes */
+type Mode = "standalone" | "room";
+
+/** Room Params parsed from #room=roomId,key */
+// function getRoomParamsFromHash() {
+//     if (typeof window === "undefined") return null;
+//     const hash = window.location.hash;
+//     if (!hash.startsWith("#room=")) return null;
+//     const [, roomIdAndKey] = hash.split("#room=");
+//     const [roomId, encryptionKey] = roomIdAndKey.split(",");
+//     return { roomId, encryptionKey };
+// }
+
+export default function CanvasRoot({ roomName, roomId, userId, userName, token }: {
     roomName: string; roomId: string; userId: string; userName: string; token: string;
 }) {
     const { theme } = useTheme()
@@ -26,6 +40,19 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     const [isConnected, setIsConnected] = useState(false);
     const [isCanvasReady, setIsCanvasReady] = useState(false);
     const initialized = useRef(false);
+    const [mode, setMode] = useState<Mode>("standalone");
+    const { data: session, status } = useSession();
+    const userRef = useRef({ roomId, roomName, userId, userName, token });
+
+    if (status === 'unauthenticated') {
+        setMode('standalone')
+    }
+    if (status === 'authenticated') {
+        setMode('room')
+        userRef.current.userId = session.user.id;
+        userRef.current.userName = session.user.name!;
+        userRef.current.token = session.accessToken;
+    }
 
     const [canvasEngineState, setCanvasEngineState] = useState({
         engine: null as CanvasEngine | null,
@@ -90,19 +117,16 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
         }
     }, []);
 
-    // Use an effect with a check interval to detect when canvas is available
     useEffect(() => {
-        // Create an interval that checks if canvas is ready
         const checkCanvasInterval = setInterval(() => {
             if (canvasRef.current) {
                 setIsCanvasReady(true);
                 clearInterval(checkCanvasInterval);
             }
-        }, 100); // Check every 100ms
+        }, 100);
 
-        // Cleanup
         return () => clearInterval(checkCanvasInterval);
-    }, []); // Empty dependency array so it only runs once
+    }, []);
 
     const initializeCanvasEngine = useCallback(() => {
         if (!canvasRef.current) return null;
@@ -116,20 +140,17 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
             paramsRef.current.token,
             canvasEngineState.canvasColor,
             (newScale) => setCanvasEngineState(prev => ({ ...prev, scale: newScale })),
-            false,
+            mode === 'room' ? false : true,
             (updatedParticipants) => {
                 setParticipants(updatedParticipants);
             },
             (connectionStatus) => setIsConnected(connectionStatus)
         );
         return engine;
-    }, [canvasEngineState.canvasColor]);
+    }, [canvasEngineState.canvasColor, mode]);
 
     useEffect(() => {
         if (!isCanvasReady || initialized.current) return;
-        console.log('isCanvasReady = ', isCanvasReady)
-        console.log('canvasRef.current = ', canvasRef.current)
-        console.log('isConnected = ', isConnected)
         const waitReaddy = setTimeout(() => {
             if (!canvasRef.current) return;
             initialized.current = true;
@@ -191,7 +212,7 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
                                     setCanvasColor={(newCanvasColor: SetStateAction<string>) =>
                                         setCanvasEngineState(prev => ({ ...prev, canvasColor: typeof newCanvasColor === 'function' ? newCanvasColor(prev.canvasColor) : newCanvasColor }))
                                     }
-                                    roomName={roomName}
+                                    isStandalone={mode === 'room' ? false : true}
                                 />
                             )}
                         </div>
@@ -280,7 +301,7 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
                     setStrokeStyle={(newStrokeStyle: SetStateAction<StrokeStyle>) =>
                         setCanvasEngineState(prev => ({ ...prev, strokeStyle: typeof newStrokeStyle === 'function' ? newStrokeStyle(prev.strokeStyle) : newStrokeStyle }))
                     }
-                    roomName={roomName}
+                    isStandalone={mode === 'room' ? false : true}
                 />
 
             )}

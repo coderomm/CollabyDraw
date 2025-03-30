@@ -4,11 +4,11 @@ import React, { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 
-interface SidebarTriggerButtonProps {
+interface AppMenuButtonProps {
     onClick: () => void;
 }
 
-const SidebarTriggerButton = memo(function SidebarTriggerButton({ onClick }: SidebarTriggerButtonProps) {
+const AppMenuButton = memo(function AppMenuButton({ onClick }: AppMenuButtonProps) {
     return (
         <Button
             variant="ghost"
@@ -23,4 +23,4 @@ const SidebarTriggerButton = memo(function SidebarTriggerButton({ onClick }: Sid
     );
 });
 
-export default SidebarTriggerButton;
+export default AppMenuButton;

@@ -6,17 +6,17 @@ import { useState } from "react"
 import { Menu, Plus, Minus, Share2 } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-import { MainMenuStack } from "./MainMenuStack"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Button } from "./ui/button"
 import { PaletteFilled } from "./SvgIcons"
-import { ToolMenuStack } from "./ToolMenuStack"
 import { BgFill, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas"
 import { UserRoomsListDialog } from "./UserRoomsListDialog"
 import { RoomSharingDialog } from "./RoomSharingDialog"
 import { BASE_URL } from "@/config/constants"
+import { AppSidebar } from "./AppSidebar"
+import { StyleConfigurator } from "./StyleConfigurator"
 
-interface MobileNavbarProps {
+interface MobileCommandBarProps {
     canvasColor: string
     setCanvasColor: (color: string) => void
     sidebarOpen: boolean
@@ -42,7 +42,7 @@ interface MobileNavbarProps {
     onImportCanvas?: () => void;
 }
 
-export function MobileNavbar({ canvasColor,
+export function MobileCommandBar({ canvasColor,
     setCanvasColor,
     sidebarOpen,
     setSidebarOpen,
@@ -64,7 +64,7 @@ export function MobileNavbar({ canvasColor,
     onClearCanvas,
     onExportCanvas,
     onImportCanvas,
-}: MobileNavbarProps) {
+}: MobileCommandBarProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
     const [roomsListOpen, setRoomsListOpen] = useState(false);
 
@@ -93,7 +93,7 @@ export function MobileNavbar({ canvasColor,
                         <SheetHeader className="mb-5">
                             <SheetTitle>Settings</SheetTitle>
                         </SheetHeader>
-                        <MainMenuStack
+                        <AppSidebar
                             isOpen={sidebarOpen}
                             onClose={() => setSidebarOpen(false)}
                             canvasColor={canvasColor}
@@ -113,7 +113,7 @@ export function MobileNavbar({ canvasColor,
                     <SheetHeader className="mb-5">
                         <SheetTitle>Canvas Settings</SheetTitle>
                     </SheetHeader>
-                    <ToolMenuStack
+                    <StyleConfigurator
                         isMobile={true}
                         activeTool={activeTool}
                         strokeFill={strokeFill}

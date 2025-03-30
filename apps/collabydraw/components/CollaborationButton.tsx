@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from "react";
-import { CollaborationAdDialog } from "./CollaborationAdDialog";
-import CollaborationStartdDialog from "./CollaborationStartdDialog";
+import { CollabAuthPrompt } from "./CollabAuthPrompt";
+import CreateRoomDialog from "./CreateRoomDialog";
 import { useSession } from "next-auth/react";
 
 export function CollaborationButton() {
@@ -31,9 +31,9 @@ export function CollaborationButton() {
             </button>
 
             {session?.user && session?.user.id ? (
-                <CollaborationStartdDialog open={isOpen} onOpenChange={setIsOpen} />
+                <CreateRoomDialog open={isOpen} onOpenChange={setIsOpen} />
             ) : (
-                <CollaborationAdDialog open={isOpen} onOpenChange={setIsOpen} />
+                <CollabAuthPrompt open={isOpen} onOpenChange={setIsOpen} />
             )}
         </>
     );

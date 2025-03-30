@@ -8,7 +8,7 @@ import { getUserRooms, joinRoom, deleteRoom } from "@/actions/room";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Skeleton } from "./ui/skeleton";
-import CollaborationStartdDialog from "./CollaborationStartdDialog";
+import CreateRoomDialog from "./CreateRoomDialog";
 
 type RoomType = {
     id: number;
@@ -194,7 +194,7 @@ export function UserRoomsListDialog({
                                 disabled={isPending}
                                 className="py-2 px-6 min-h-12 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]"
                                 title="Create a Room">Create a Room</Button>
-                            <CollaborationStartdDialog open={isOpen} onOpenChange={setIsOpen} />
+                            <CreateRoomDialog open={isOpen} onOpenChange={setIsOpen} />
                         </div>
                     )}
                 </div>

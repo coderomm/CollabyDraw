@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 
-export default function CollaborationStartdDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+export default function CreateRoomDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
@@ -85,9 +85,6 @@ export default function CollaborationStartdDialog({ open, onOpenChange }: { open
                             </DialogFooter>
                         </form>
                     </Form>
-                    <DialogFooter className="flex items-center justify-center sm:justify-center">
-
-                    </DialogFooter>
                 </DialogContent>
             </Dialog >
         </>

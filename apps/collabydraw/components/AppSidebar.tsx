@@ -29,10 +29,10 @@ import { useTheme } from "next-themes"
 import { signOut, useSession } from "next-auth/react"
 import { redirect, usePathname } from "next/navigation"
 import Link from "next/link"
-import { CollaborationAdDialog } from "./CollaborationAdDialog"
+import { CollabAuthPrompt } from "./CollabAuthPrompt"
 import { RoomSharingDialog } from "./RoomSharingDialog"
-import CollaborationStartdDialog from "./CollaborationStartdDialog"
 import { BASE_URL } from "@/config/constants"
+import CreateRoomDialog from "./CreateRoomDialog"
 
 interface SidebarProps {
     isOpen: boolean
@@ -47,7 +47,7 @@ interface SidebarProps {
     onImportCanvas?: () => void;
 }
 
-export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, isMobile, roomName, isStandalone, onClearCanvas, onExportCanvas, onImportCanvas }: SidebarProps) {
+export function AppSidebar({ isOpen, onClose, canvasColor, setCanvasColor, isMobile, roomName, isStandalone, onClearCanvas, onExportCanvas, onImportCanvas }: SidebarProps) {
     const [clearDialogOpen, setClearDialogOpen] = useState(false);
     const { theme, setTheme } = useTheme();
     const { data: session } = useSession();
@@ -105,9 +105,9 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                                     <SidebarItem icon={Upload} label="Import Drawing" onClick={onImportCanvas} />
                                     <SidebarItem icon={Share2} label="Live collaboration" onClick={() => setIsShareOpen(true)} />
                                     {session?.user && session?.user.id ? (
-                                        <CollaborationStartdDialog open={isShareOpen} onOpenChange={setIsShareOpen} />
+                                        <CreateRoomDialog open={isShareOpen} onOpenChange={setIsShareOpen} />
                                     ) : (
-                                        <CollaborationAdDialog open={isShareOpen} onOpenChange={setIsShareOpen} />
+                                        <CollabAuthPrompt open={isShareOpen} onOpenChange={setIsShareOpen} />
                                     )}
                                 </>
                             ) : (

@@ -7,7 +7,7 @@ import ItemLabel from "./ItemLabel";
 import { Input } from "./ui/input";
 import { cn } from "@/lib/utils";
 
-interface SidebarProps {
+interface StyleConfiguratorProps {
     activeTool: ToolType;
     strokeFill: StrokeFill;
     setStrokeFill: React.Dispatch<React.SetStateAction<StrokeFill>>;
@@ -22,7 +22,7 @@ interface SidebarProps {
     isMobile?: boolean
 }
 
-export function ToolMenuStack({
+export function StyleConfigurator({
     activeTool,
     strokeFill,
     setStrokeFill,
@@ -35,7 +35,7 @@ export function ToolMenuStack({
     strokeStyle,
     setStrokeStyle,
     isMobile
-}: SidebarProps) {
+}: StyleConfiguratorProps) {
 
     const lineThicknessOptions: StrokeWidth[] = [1, 2, 4]
     const edgeRoundnessOptions: StrokeEdge[] = ["sharp", "round"]
@@ -46,7 +46,7 @@ export function ToolMenuStack({
     }
     return (
         <>
-            <section className={cn("ToolMenuStack p-3 overflow-auto custom-scrollbar transition-transform duration-300 ease-in-out z-10 mt-2",
+            <section className={cn("StyleConfigurator p-3 overflow-auto custom-scrollbar transition-transform duration-300 ease-in-out z-10 mt-2",
                 isMobile ? "" : "absolute top-full w-56 h-[calc(100vh-150px)] bg-background dark:bg-w-bg rounded-lg Island"
             )}>
                 <h2 className="sr-only">Selected shape actions</h2>
