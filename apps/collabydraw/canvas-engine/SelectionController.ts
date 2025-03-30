@@ -9,7 +9,7 @@ export interface ResizeHandle {
   position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
 }
 
-export class SelectionManager {
+export class SelectionController {
   private canvas: HTMLCanvasElement;
   private selectedShape: Tool | null = null;
   private isDragging: boolean = false;

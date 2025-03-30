@@ -14,7 +14,7 @@ const SidebarTriggerButton = memo(function SidebarTriggerButton({ onClick }: Sid
             variant="ghost"
             size="icon"
             onClick={onClick}
-            className="mr-2 bg-[#ececf4] dark:bg-w-bg dark:hover:bg-w-button-hover-bg border-none surface-box-shadow p-2.5 rounded-lg hidden md:flex"
+            className="mr-2 bg-[#ececf4] dark:bg-w-bg dark:hover:bg-w-button-hover-bg border-none surface-box-shadow p-2.5 rounded-lg hidden xs670:flex"
             data-sidebar-trigger
         >
             <Menu className="h-5 w-5" />

@@ -1,6 +1,6 @@
 "use client"
 
-import { Game } from "@/draw/Game";
+import { CanvasEngine } from "@/canvas-engine/CanvasEngine";
 import { BgFill, canvasBgLight, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import React, { SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
@@ -12,9 +12,7 @@ import SidebarTriggerButton from "../SidebarTriggerButton";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import ScreenLoading from "../ScreenLoading";
 import CollaborationStart from "../CollaborationStartBtn";
-import { useWebSocket } from "@/hooks/useWebSocket";
-import { WsDataType } from "@repo/common/types";
-import { useRouter } from "next/navigation";
+import { RoomParticipants } from "@repo/common/types";
 import { cn } from "@/lib/utils";
 import Toolsbar from "../Toolsbar";
 
@@ -24,10 +22,13 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
     const { theme } = useTheme()
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const paramsRef = useRef({ roomId, roomName, userId, userName, token });
-    const router = useRouter();
+    const [participants, setParticipants] = useState<RoomParticipants[]>([]);
+    const [isConnected, setIsConnected] = useState(false);
+    const [isCanvasReady, setIsCanvasReady] = useState(false);
+    const initialized = useRef(false);
 
-    const [canvasState, setCanvasState] = useState({
-        game: null as Game | null,
+    const [canvasEngineState, setCanvasEngineState] = useState({
+        engine: null as CanvasEngine | null,
         scale: 1,
         activeTool: "grab" as ToolType,
         strokeFill: "#f08c00" as StrokeFill,
@@ -40,45 +41,37 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
         canvasColor: canvasBgLight[0]
     });
 
-    const { matches, isLoading } = useMediaQuery('md');
+    const { matches, isLoading } = useMediaQuery(670);
 
     useEffect(() => {
         paramsRef.current = { roomId, roomName, userId, userName, token };
     }, [roomId, roomName, userId, userName, token]);
 
-    const {
-        isConnected,
-        messages,
-        existingMsgs,
-        sendMessage,
-        participants
-    } = useWebSocket(paramsRef.current.roomId, paramsRef.current.roomName, paramsRef.current.userId, paramsRef.current.userName, paramsRef.current.token);
-
     useEffect(() => {
-        setCanvasState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
+        setCanvasEngineState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
     }, [theme])
 
     useEffect(() => {
-        const { game, scale } = canvasState;
-        if (game) {
-            game.setScale(scale);
+        const { engine, scale } = canvasEngineState;
+        if (engine) {
+            engine.setScale(scale);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [canvasState.game, canvasState.scale]);
+    }, [canvasEngineState.engine, canvasEngineState.scale]);
 
     useEffect(() => {
-        const { game, activeTool, strokeWidth, strokeFill, bgFill, canvasColor, strokeEdge, strokeStyle } = canvasState;
+        const { engine, activeTool, strokeWidth, strokeFill, bgFill, canvasColor, strokeEdge, strokeStyle } = canvasEngineState;
 
-        if (game) {
-            game.setTool(activeTool);
-            game.setStrokeWidth(strokeWidth);
-            game.setStrokeFill(strokeFill);
-            game.setBgFill(bgFill);
-            game.setCanvasBgColor(canvasColor);
-            game.setStrokeEdge(strokeEdge);
-            game.setStrokeStyle(strokeStyle);
+        if (engine) {
+            engine.setTool(activeTool);
+            engine.setStrokeWidth(strokeWidth);
+            engine.setStrokeFill(strokeFill);
+            engine.setBgFill(bgFill);
+            engine.setCanvasBgColor(canvasColor);
+            engine.setStrokeEdge(strokeEdge);
+            engine.setStrokeStyle(strokeStyle);
         }
-    }, [canvasState]);
+    }, [canvasEngineState]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         const toolKeyMap: Record<string, ToolType> = {
@@ -93,78 +86,84 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
 
         const newTool = toolKeyMap[e.key];
         if (newTool) {
-            setCanvasState(prev => ({ ...prev, activeTool: newTool }));
+            setCanvasEngineState(prev => ({ ...prev, activeTool: newTool }));
         }
     }, []);
 
-    const initializeGame = useCallback(() => {
-        if (!canvasRef.current || !isConnected) return null;
-
-        const handleSendDrawing = (msgData: string) => {
-            if (isConnected) {
-                sendMessage(msgData);
+    // Use an effect with a check interval to detect when canvas is available
+    useEffect(() => {
+        // Create an interval that checks if canvas is ready
+        const checkCanvasInterval = setInterval(() => {
+            if (canvasRef.current) {
+                setIsCanvasReady(true);
+                clearInterval(checkCanvasInterval);
             }
-        };
+        }, 100); // Check every 100ms
 
-        const game = new Game(
+        // Cleanup
+        return () => clearInterval(checkCanvasInterval);
+    }, []); // Empty dependency array so it only runs once
+
+    const initializeCanvasEngine = useCallback(() => {
+        if (!canvasRef.current) return null;
+
+        const engine = new CanvasEngine(
             canvasRef.current,
             paramsRef.current.roomId,
             paramsRef.current.roomName,
             paramsRef.current.userId,
             paramsRef.current.userName,
-            canvasState.canvasColor,
-            handleSendDrawing,
-            (newScale) => setCanvasState(prev => ({ ...prev, scale: newScale })),
-            false
+            paramsRef.current.token,
+            canvasEngineState.canvasColor,
+            (newScale) => setCanvasEngineState(prev => ({ ...prev, scale: newScale })),
+            false,
+            (updatedParticipants) => {
+                setParticipants(updatedParticipants);
+            },
+            (connectionStatus) => setIsConnected(connectionStatus)
         );
-        return game;
-    }, [isConnected, canvasState.canvasColor, sendMessage]);
+        return engine;
+    }, [canvasEngineState.canvasColor]);
 
     useEffect(() => {
-        const game = initializeGame();
+        if (!isCanvasReady || initialized.current) return;
+        console.log('isCanvasReady = ', isCanvasReady)
+        console.log('canvasRef.current = ', canvasRef.current)
+        console.log('isConnected = ', isConnected)
+        const waitReaddy = setTimeout(() => {
+            if (!canvasRef.current) return;
+            initialized.current = true;
+            const engine = initializeCanvasEngine();
 
-        if (game) {
-            setCanvasState(prev => ({ ...prev, game }));
+            if (engine) {
+                setCanvasEngineState(prev => ({ ...prev, engine }));
 
-            const handleResize = () => {
-                if (canvasRef.current) {
-                    const canvas = canvasRef.current;
-                    canvas.width = window.innerWidth;
-                    canvas.height = window.innerHeight;
-                    game.handleResize(window.innerWidth, window.innerHeight);
-                }
-            };
+                const handleResize = () => {
+                    if (canvasRef.current) {
+                        const canvas = canvasRef.current;
+                        canvas.width = window.innerWidth;
+                        canvas.height = window.innerHeight;
+                        engine.handleResize(window.innerWidth, window.innerHeight);
+                    }
+                };
 
-            handleResize();
-            window.addEventListener('resize', handleResize);
+                handleResize();
+                window.addEventListener('resize', handleResize);
 
-            document.addEventListener("keydown", handleKeyDown);
+                document.addEventListener("keydown", handleKeyDown);
 
-            return () => {
-                window.removeEventListener('resize', handleResize);
-                document.removeEventListener("keydown", handleKeyDown);
-                game.destroy();
-            };
-        }
-    }, [initializeGame, handleKeyDown]);
-
-    useEffect(() => {
-        console.log('messages length = ', messages.length)
-        if (messages.length > 0 && canvasState.game) {
-            canvasState.game.updateShapes(messages);
-            console.log('messages = ', messages)
-        }
-    }, [messages, canvasState.game]);
-
-    useEffect(() => {
-        if (existingMsgs?.message && canvasState.game) {
-            canvasState.game.updateShapes(existingMsgs.message);
-        }
-    }, [existingMsgs, canvasState.game]);
-
+                return () => {
+                    window.removeEventListener('resize', handleResize);
+                    document.removeEventListener("keydown", handleKeyDown);
+                    engine.destroy();
+                };
+            }
+        }, 1000)
+        return () => clearTimeout(waitReaddy);
+    }, [handleKeyDown, initializeCanvasEngine, isCanvasReady, isConnected]);
 
     const toggleSidebar = useCallback(() => {
-        setCanvasState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }));
+        setCanvasEngineState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }));
     }, []);
 
     if (isLoading) {
@@ -173,96 +172,73 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
 
     return (
         <div className={cn("collabydraw h-screen overflow-hidden",
-            canvasState.activeTool === "eraser"
+            canvasEngineState.activeTool === "eraser"
                 ? "cursor-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAAXNSR0IArs4c6QAAAOBJREFUOE9jZKAyYKSyeQzDwMD////7MDAw6EGD5hIjI+MWfMGE08sggz5+/Dj71q1bHPv27eMFGeLk5PRZTU3tBz8/fyoug7EaCDLs58+fa0NDQ9k2b96M4iBfX1+G1atX/2JnZw/GZihWAz98+PA8NjZWAt0wmMkgQxcvXvxCQEBAEt37GAaCXHf69OnFZmZmAvjC6tSpUx9MTU1j0V2JzcCqzs7OpoqKCmZ8BnZ0dPwtLy+vY2RkbENWRxcDqetlkPOpGikgA6mebGCGUi1hI8ca1bIeucXaMCi+SPU6AHRTjhWg+vuGAAAAAElFTkSuQmCC')_10_10,auto]"
-                : canvasState.activeTool === "grab" && !canvasState.sidebarOpen
-                    ? canvasState.grabbing ? "cursor-grabbing" : "cursor-grab"
+                : canvasEngineState.activeTool === "grab" && !canvasEngineState.sidebarOpen
+                    ? canvasEngineState.grabbing ? "cursor-grabbing" : "cursor-grab"
                     : "cursor-crosshair")}>
-            <div className="App_Menu App_Menu_Top fixed z-[4] top-4 right-4 left-4 flex justify-center items-center md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8 md:items-start">
+            <div className="App_Menu App_Menu_Top fixed z-[4] top-4 right-4 left-4 flex justify-center items-center xs670:grid xs670:grid-cols-[1fr_auto_1fr] xs670:gap-4 md:gap-8 xs670:items-start">
                 {matches && (
-                    <div className="Main_Menu_Stack Sidebar_Trigger_Button md:grid md:gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
+                    <div className="Main_Menu_Stack Sidebar_Trigger_Button xs670:grid xs670:gap-[calc(.25rem*6)] grid-cols-[auto] grid-flow-row grid-rows auto-rows-min justify-self-start">
                         <div className="relative">
                             <SidebarTriggerButton onClick={toggleSidebar} />
 
-                            {canvasState.sidebarOpen && (
+                            {canvasEngineState.sidebarOpen && (
                                 <MainMenuStack
-                                    isOpen={canvasState.sidebarOpen}
-                                    onClose={() => setCanvasState(prev => ({ ...prev, sidebarOpen: false }))}
-                                    canvasColor={canvasState.canvasColor}
+                                    isOpen={canvasEngineState.sidebarOpen}
+                                    onClose={() => setCanvasEngineState(prev => ({ ...prev, sidebarOpen: false }))}
+                                    canvasColor={canvasEngineState.canvasColor}
                                     setCanvasColor={(newCanvasColor: SetStateAction<string>) =>
-                                        setCanvasState(prev => ({ ...prev, canvasColor: typeof newCanvasColor === 'function' ? newCanvasColor(prev.canvasColor) : newCanvasColor }))
+                                        setCanvasEngineState(prev => ({ ...prev, canvasColor: typeof newCanvasColor === 'function' ? newCanvasColor(prev.canvasColor) : newCanvasColor }))
                                     }
                                     roomName={roomName}
-                                    onCloseRoom={() => {
-                                        sendMessage(
-                                            JSON.stringify({
-                                                type: WsDataType.CLOSE_ROOM,
-                                                roomName: paramsRef.current.roomId,
-                                                userId: paramsRef.current.userId,
-                                                userName: paramsRef.current.userName,
-                                            })
-                                        );
-                                        router.push("/");
-                                    }}
                                 />
                             )}
                         </div>
 
                         <ToolMenuStack
-                            activeTool={canvasState.activeTool}
-                            strokeFill={canvasState.strokeFill}
+                            activeTool={canvasEngineState.activeTool}
+                            strokeFill={canvasEngineState.strokeFill}
                             setStrokeFill={(newStrokeFill: SetStateAction<StrokeFill>) =>
-                                setCanvasState(prev => ({ ...prev, strokeFill: typeof newStrokeFill === 'function' ? newStrokeFill(prev.strokeFill) : newStrokeFill }))
+                                setCanvasEngineState(prev => ({ ...prev, strokeFill: typeof newStrokeFill === 'function' ? newStrokeFill(prev.strokeFill) : newStrokeFill }))
                             }
-                            strokeWidth={canvasState.strokeWidth}
+                            strokeWidth={canvasEngineState.strokeWidth}
                             setStrokeWidth={(newStrokeWidth: SetStateAction<StrokeWidth>) =>
-                                setCanvasState(prev => ({ ...prev, strokeWidth: typeof newStrokeWidth === 'function' ? newStrokeWidth(prev.strokeWidth) : newStrokeWidth }))
+                                setCanvasEngineState(prev => ({ ...prev, strokeWidth: typeof newStrokeWidth === 'function' ? newStrokeWidth(prev.strokeWidth) : newStrokeWidth }))
                             }
-                            bgFill={canvasState.bgFill}
+                            bgFill={canvasEngineState.bgFill}
                             setBgFill={(newBgFill: SetStateAction<BgFill>) =>
-                                setCanvasState(prev => ({ ...prev, bgFill: typeof newBgFill === 'function' ? newBgFill(prev.bgFill) : newBgFill }))
+                                setCanvasEngineState(prev => ({ ...prev, bgFill: typeof newBgFill === 'function' ? newBgFill(prev.bgFill) : newBgFill }))
                             }
-                            strokeEdge={canvasState.strokeEdge}
+                            strokeEdge={canvasEngineState.strokeEdge}
                             setStrokeEdge={(newStrokeEdge: SetStateAction<StrokeEdge>) =>
-                                setCanvasState(prev => ({ ...prev, strokeEdge: typeof newStrokeEdge === 'function' ? newStrokeEdge(prev.strokeEdge) : newStrokeEdge }))
+                                setCanvasEngineState(prev => ({ ...prev, strokeEdge: typeof newStrokeEdge === 'function' ? newStrokeEdge(prev.strokeEdge) : newStrokeEdge }))
                             }
-                            strokeStyle={canvasState.strokeStyle}
+                            strokeStyle={canvasEngineState.strokeStyle}
                             setStrokeStyle={(newStrokeStyle: SetStateAction<StrokeStyle>) =>
-                                setCanvasState(prev => ({ ...prev, strokeStyle: typeof newStrokeStyle === 'function' ? newStrokeStyle(prev.strokeStyle) : newStrokeStyle }))
+                                setCanvasEngineState(prev => ({ ...prev, strokeStyle: typeof newStrokeStyle === 'function' ? newStrokeStyle(prev.strokeStyle) : newStrokeStyle }))
                             }
                         />
 
                     </div>
                 )}
                 <Toolsbar
-                    selectedTool={canvasState.activeTool}
+                    selectedTool={canvasEngineState.activeTool}
                     onToolSelect={(newTool: SetStateAction<ToolType>) =>
-                        setCanvasState(prev => ({ ...prev, activeTool: typeof newTool === 'function' ? newTool(prev.activeTool) : newTool }))
+                        setCanvasEngineState(prev => ({ ...prev, activeTool: typeof newTool === 'function' ? newTool(prev.activeTool) : newTool }))
                     }
                 />
 
                 {matches && (
-                    <CollaborationStart participants={participants} slug={roomName}
-                        onCloseRoom={() => {
-                            sendMessage(
-                                JSON.stringify({
-                                    type: WsDataType.CLOSE_ROOM,
-                                    roomName: paramsRef.current.roomId,
-                                    userId: paramsRef.current.userId,
-                                    userName: paramsRef.current.userName,
-                                })
-                            );
-                            router.push("/");
-                        }}
-                    />
+                    <CollaborationStart participants={participants} slug={roomName} />
                 )}
             </div>
 
             {matches && (
                 <Scale
-                    scale={canvasState.scale}
+                    scale={canvasEngineState.scale}
                     setScale={(newScale: SetStateAction<number>) =>
-                        setCanvasState(prev => ({
+                        setCanvasEngineState(prev => ({
                             ...prev,
                             scale: typeof newScale === 'function' ? newScale(prev.scale) : newScale
                         }))
@@ -273,49 +249,38 @@ export default function CanvasSheet({ roomName, roomId, userId, userName, token 
 
             {!matches && (
                 <MobileNavbar
-                    sidebarOpen={canvasState.sidebarOpen}
-                    setSidebarOpen={() => setCanvasState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }))}
-                    canvasColor={canvasState.canvasColor}
+                    sidebarOpen={canvasEngineState.sidebarOpen}
+                    setSidebarOpen={() => setCanvasEngineState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }))}
+                    canvasColor={canvasEngineState.canvasColor}
                     setCanvasColor={(newCanvasColor: SetStateAction<string>) =>
-                        setCanvasState(prev => ({ ...prev, canvasColor: typeof newCanvasColor === 'function' ? newCanvasColor(prev.canvasColor) : newCanvasColor }))
+                        setCanvasEngineState(prev => ({ ...prev, canvasColor: typeof newCanvasColor === 'function' ? newCanvasColor(prev.canvasColor) : newCanvasColor }))
                     }
-                    scale={canvasState.scale}
+                    scale={canvasEngineState.scale}
                     setScale={(newScale: SetStateAction<number>) =>
-                        setCanvasState(prev => ({ ...prev, scale: typeof newScale === 'function' ? newScale(prev.scale) : newScale }))
+                        setCanvasEngineState(prev => ({ ...prev, scale: typeof newScale === 'function' ? newScale(prev.scale) : newScale }))
                     }
-                    activeTool={canvasState.activeTool}
+                    activeTool={canvasEngineState.activeTool}
                     setStrokeFill={(newStrokeFill: SetStateAction<StrokeFill>) =>
-                        setCanvasState(prev => ({ ...prev, strokeFill: typeof newStrokeFill === 'function' ? newStrokeFill(prev.strokeFill) : newStrokeFill }))
+                        setCanvasEngineState(prev => ({ ...prev, strokeFill: typeof newStrokeFill === 'function' ? newStrokeFill(prev.strokeFill) : newStrokeFill }))
                     }
-                    strokeFill={canvasState.strokeFill}
-                    strokeWidth={canvasState.strokeWidth}
+                    strokeFill={canvasEngineState.strokeFill}
+                    strokeWidth={canvasEngineState.strokeWidth}
                     setStrokeWidth={(newStrokeWidth: SetStateAction<StrokeWidth>) =>
-                        setCanvasState(prev => ({ ...prev, strokeWidth: typeof newStrokeWidth === 'function' ? newStrokeWidth(prev.strokeWidth) : newStrokeWidth }))
+                        setCanvasEngineState(prev => ({ ...prev, strokeWidth: typeof newStrokeWidth === 'function' ? newStrokeWidth(prev.strokeWidth) : newStrokeWidth }))
                     }
-                    bgFill={canvasState.bgFill}
+                    bgFill={canvasEngineState.bgFill}
                     setBgFill={(newBgFill: SetStateAction<BgFill>) =>
-                        setCanvasState(prev => ({ ...prev, bgFill: typeof newBgFill === 'function' ? newBgFill(prev.bgFill) : newBgFill }))
+                        setCanvasEngineState(prev => ({ ...prev, bgFill: typeof newBgFill === 'function' ? newBgFill(prev.bgFill) : newBgFill }))
                     }
-                    strokeEdge={canvasState.strokeEdge}
+                    strokeEdge={canvasEngineState.strokeEdge}
                     setStrokeEdge={(newStrokeEdge: SetStateAction<StrokeEdge>) =>
-                        setCanvasState(prev => ({ ...prev, strokeEdge: typeof newStrokeEdge === 'function' ? newStrokeEdge(prev.strokeEdge) : newStrokeEdge }))
+                        setCanvasEngineState(prev => ({ ...prev, strokeEdge: typeof newStrokeEdge === 'function' ? newStrokeEdge(prev.strokeEdge) : newStrokeEdge }))
                     }
-                    strokeStyle={canvasState.strokeStyle}
+                    strokeStyle={canvasEngineState.strokeStyle}
                     setStrokeStyle={(newStrokeStyle: SetStateAction<StrokeStyle>) =>
-                        setCanvasState(prev => ({ ...prev, strokeStyle: typeof newStrokeStyle === 'function' ? newStrokeStyle(prev.strokeStyle) : newStrokeStyle }))
+                        setCanvasEngineState(prev => ({ ...prev, strokeStyle: typeof newStrokeStyle === 'function' ? newStrokeStyle(prev.strokeStyle) : newStrokeStyle }))
                     }
                     roomName={roomName}
-                    onCloseRoom={() => {
-                        sendMessage(
-                            JSON.stringify({
-                                type: WsDataType.CLOSE_ROOM,
-                                roomName: paramsRef.current.roomId,
-                                userId: paramsRef.current.userId,
-                                userName: paramsRef.current.userName,
-                            })
-                        );
-                        router.push("/");
-                    }}
                 />
 
             )}

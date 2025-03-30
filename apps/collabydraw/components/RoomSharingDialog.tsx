@@ -4,9 +4,11 @@ import { Button } from "./ui/button";
 import { Copy, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { toast } from "sonner";
+import { useRouter } from 'next/navigation';
 
-export function RoomSharingDialog({ open, onOpenChange, link, onCloseRoom }: { open: boolean, onOpenChange: (open: boolean) => void, link: string, onCloseRoom?: () => void; }) {
+export function RoomSharingDialog({ open, onOpenChange, link }: { open: boolean, onOpenChange: (open: boolean) => void, link: string }) {
     const roomLink = link;
+    const router = useRouter();
 
     const copyRoomLink = async () => {
         try {
@@ -24,8 +26,8 @@ export function RoomSharingDialog({ open, onOpenChange, link, onCloseRoom }: { o
         );
 
         if (confirmed) {
-            onCloseRoom?.();
             onOpenChange(false);
+            router.push("/");
         }
     };
 

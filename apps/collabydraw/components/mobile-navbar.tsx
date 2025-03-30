@@ -40,7 +40,6 @@ interface MobileNavbarProps {
     onClearCanvas?: () => void;
     onExportCanvas?: () => void;
     onImportCanvas?: () => void;
-    onCloseRoom?: () => void;
 }
 
 export function MobileNavbar({ canvasColor,
@@ -65,7 +64,6 @@ export function MobileNavbar({ canvasColor,
     onClearCanvas,
     onExportCanvas,
     onImportCanvas,
-    onCloseRoom
 }: MobileNavbarProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
     const [roomsListOpen, setRoomsListOpen] = useState(false);
@@ -133,7 +131,7 @@ export function MobileNavbar({ canvasColor,
             </Sheet>
 
             {roomName ? (
-                <RoomSharingDialog onCloseRoom={onCloseRoom} open={roomsListOpen} onOpenChange={setRoomsListOpen} link={`${BASE_URL}/${roomName}`} />
+                <RoomSharingDialog open={roomsListOpen} onOpenChange={setRoomsListOpen} link={`${BASE_URL}/${roomName}`} />
             ) : (
                 <Sheet open={roomsListOpen} onOpenChange={setRoomsListOpen}>
                     <SheetContent side="bottom" className="h-auto max-h-[80vh] min-h-[50vh] rounded-t-[20px] px-6 py-6 Island">

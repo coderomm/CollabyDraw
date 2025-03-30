@@ -1,6 +1,6 @@
 "use client"
 
-import { Game } from "@/draw/Game";
+import { CanvasEngine } from "@/canvas-engine/CanvasEngine";
 import { BgFill, canvasBgLight, LOCALSTORAGE_CANVAS_KEY, Shape, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Scale } from "../Scale";
@@ -21,7 +21,7 @@ import Toolsbar from "../Toolsbar";
 export function StandaloneCanvas() {
     const { theme } = useTheme()
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [game, setGame] = useState<Game>();
+    const [engine, setCanvasEngine] = useState<CanvasEngine>();
     const [scale, setScale] = useState<number>(1);
     const [activeTool, setActiveTool] = useState<ToolType>("grab");
     const [strokeFill, setStrokeFill] = useState<StrokeFill>("#f08c00");
@@ -62,17 +62,17 @@ export function StandaloneCanvas() {
 
     useEffect(() => {
         const handleResize = () => {
-            if (canvasRef.current && game) {
+            if (canvasRef.current && engine) {
                 const canvas = canvasRef.current;
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
-                game.handleResize(window.innerWidth, window.innerHeight);
+                engine.handleResize(window.innerWidth, window.innerHeight);
             }
         };
         handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, [game]);
+    }, [engine]);
 
     useEffect(() => {
         if (existingShapes.length > 0) {
@@ -81,73 +81,73 @@ export function StandaloneCanvas() {
     }, [existingShapes]);
 
     const clearCanvas = useCallback(() => {
-        game?.clearAllShapes();
+        engine?.clearAllShapes();
         setExistingShapes([]);
         localStorage.removeItem(LOCALSTORAGE_CANVAS_KEY);
-    }, [game]);
+    }, [engine]);
 
     useEffect(() => {
         setCanvasColor(canvasBgLight[0]);
     }, [theme])
 
     useEffect(() => {
-        game?.setTool(activeTool)
-        game?.setStrokeWidth(strokeWidth)
-        game?.setStrokeFill(strokeFill)
-        game?.setBgFill(bgFill)
-        game?.setCanvasBgColor(canvasColor)
-        game?.setStrokeEdge(strokeEdge)
-        game?.setStrokeStyle(strokeStyle)
+        engine?.setTool(activeTool)
+        engine?.setStrokeWidth(strokeWidth)
+        engine?.setStrokeFill(strokeFill)
+        engine?.setBgFill(bgFill)
+        engine?.setCanvasBgColor(canvasColor)
+        engine?.setStrokeEdge(strokeEdge)
+        engine?.setStrokeStyle(strokeStyle)
     });
 
     useEffect(() => {
         strokeEdgeRef.current = strokeEdge;
-        game?.setStrokeEdge(strokeEdge);
-    }, [strokeEdge, game]);
+        engine?.setStrokeEdge(strokeEdge);
+    }, [strokeEdge, engine]);
 
     useEffect(() => {
         strokeStyleRef.current = strokeStyle;
-        game?.setStrokeStyle(strokeStyle);
-    }, [strokeStyle, game]);
+        engine?.setStrokeStyle(strokeStyle);
+    }, [strokeStyle, engine]);
 
     useEffect(() => {
         activeToolRef.current = activeTool;
-        game?.setTool(activeTool);
-    }, [activeTool, game]);
+        engine?.setTool(activeTool);
+    }, [activeTool, engine]);
 
     useEffect(() => {
         strokeWidthRef.current = strokeWidth;
-        game?.setStrokeWidth(strokeWidth);
-    }, [strokeWidth, game]);
+        engine?.setStrokeWidth(strokeWidth);
+    }, [strokeWidth, engine]);
 
     useEffect(() => {
         strokeFillRef.current = strokeFill;
-        game?.setStrokeFill(strokeFill);
-    }, [strokeFill, game]);
+        engine?.setStrokeFill(strokeFill);
+    }, [strokeFill, engine]);
 
     useEffect(() => {
         bgFillRef.current = bgFill;
-        game?.setBgFill(bgFill);
-    }, [bgFill, game]);
+        engine?.setBgFill(bgFill);
+    }, [bgFill, engine]);
 
     useEffect(() => {
-        if (game && existingShapes.length >= 0) {
-            game.updateShapes(existingShapes);
+        if (engine && existingShapes.length >= 0) {
+            engine.updateShapes(existingShapes);
         }
-    }, [game, existingShapes]);
+    }, [engine, existingShapes]);
 
     useEffect(() => {
-        if (game && canvasColorRef.current !== canvasColor) {
+        if (engine && canvasColorRef.current !== canvasColor) {
             canvasColorRef.current = canvasColor;
-            game.setCanvasBgColor(canvasColor);
+            engine.setCanvasBgColor(canvasColor);
         }
-    }, [canvasColor, game]);
+    }, [canvasColor, engine]);
 
     useEffect(() => {
-        if (game) {
-            game.setScale(scale);
+        if (engine) {
+            engine.setScale(scale);
         }
-    }, [scale, game]);
+    }, [scale, engine]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -191,31 +191,31 @@ export function StandaloneCanvas() {
 
     useEffect(() => {
         if (canvasRef.current) {
-            const game = new Game(
+            const engine = new CanvasEngine(
                 canvasRef.current,
                 null,
                 null,
                 null,
                 null,
-                canvasColorRef.current,
                 null,
+                canvasColorRef.current,
                 (newScale) => setScale(newScale),
                 true,
             )
-            setGame(game);
+            setCanvasEngine(engine);
 
-            game.setTool(activeToolRef.current);
-            game.setStrokeWidth(strokeWidthRef.current);
-            game.setStrokeFill(strokeFillRef.current);
-            game.setBgFill(bgFillRef.current);
-            game.setStrokeEdge(strokeEdgeRef.current);
-            game.setStrokeStyle(strokeStyleRef.current);
+            engine.setTool(activeToolRef.current);
+            engine.setStrokeWidth(strokeWidthRef.current);
+            engine.setStrokeFill(strokeFillRef.current);
+            engine.setBgFill(bgFillRef.current);
+            engine.setStrokeEdge(strokeEdgeRef.current);
+            engine.setStrokeStyle(strokeStyleRef.current);
 
             canvasRef.current.width = window.innerWidth;
             canvasRef.current.height = window.innerHeight;
 
             return () => {
-                game.destroy();
+                engine.destroy();
             }
         }
     }, [canvasRef]);
@@ -237,10 +237,10 @@ export function StandaloneCanvas() {
     }, [activeTool]);
 
     useEffect(() => {
-        if (game?.outputScale) {
-            setScale(game.outputScale);
+        if (engine?.outputScale) {
+            setScale(engine.outputScale);
         }
-    }, [game?.outputScale]);
+    }, [engine?.outputScale]);
 
     const toggleSidebar = useCallback(() => {
         setSidebarOpen(prev => !prev);
@@ -275,8 +275,8 @@ export function StandaloneCanvas() {
 
                         localStorage.setItem(LOCALSTORAGE_CANVAS_KEY, JSON.stringify(shapes));
 
-                        if (game) {
-                            game.updateShapes(shapes);
+                        if (engine) {
+                            engine.updateShapes(shapes);
                         }
                     } catch (err) {
                         console.error('Failed to parse JSON file', err);
@@ -288,14 +288,14 @@ export function StandaloneCanvas() {
         };
 
         input.click();
-    }, [game]);
+    }, [engine]);
 
     const handleToolSelect = (tool: ToolType) => {
         setActiveTool(tool);
-        game?.setTool(tool);
+        engine?.setTool(tool);
         console.log('existingShapes = ', existingShapes)
         if (tool !== "selection") {
-            game?.updateShapes(existingShapes);
+            engine?.updateShapes(existingShapes);
         }
     };
 

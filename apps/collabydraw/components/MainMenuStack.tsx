@@ -45,10 +45,9 @@ interface SidebarProps {
     onClearCanvas?: () => void;
     onExportCanvas?: () => void;
     onImportCanvas?: () => void;
-    onCloseRoom?: () => void;
 }
 
-export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, isMobile, roomName, isStandalone, onClearCanvas, onExportCanvas, onImportCanvas, onCloseRoom }: SidebarProps) {
+export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, isMobile, roomName, isStandalone, onClearCanvas, onExportCanvas, onImportCanvas }: SidebarProps) {
     const [clearDialogOpen, setClearDialogOpen] = useState(false);
     const { theme, setTheme } = useTheme();
     const { data: session } = useSession();
@@ -121,7 +120,7 @@ export function MainMenuStack({ isOpen, onClose, canvasColor, setCanvasColor, is
                                         <CopyIcon className="h-4 w-4" />
                                         Room Name: <span>{roomName}</span>
                                     </Button>
-                                    <RoomSharingDialog onCloseRoom={onCloseRoom} open={isShareOpen} onOpenChange={setIsShareOpen} link={`${BASE_URL}/${decodedPathname}`} />
+                                    <RoomSharingDialog open={isShareOpen} onOpenChange={setIsShareOpen} link={`${BASE_URL}/${decodedPathname}`} />
                                     <SidebarItem icon={Share2} label="Share collaboration" onClick={() => setIsShareOpen(true)} />
                                     <SidebarItem icon={Trash} label="Reset the canvas" onClick={() => setClearDialogOpen(true)} />
                                 </>

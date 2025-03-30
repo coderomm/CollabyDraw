@@ -5,20 +5,24 @@ import { RoomParticipants, WsDataType, WebSocketMessage } from '@repo/common/typ
 import { ExistingWsMessages, Shape } from '@/types/canvas';
 import { getShapes } from '@/actions/shape';
 import { WS_URL } from '@/config/constants';
-import { MessageQueue } from '@/draw/MessageQueue';
+import { MessageQueue } from '@/canvas-engine/MessageQueue';
 
-export function useWebSocket(roomId: string, roomName: string, userId: string, userName: string, token: string) {
+export function useWebSocket(roomId: string, roomName: string, userId: string, userName: string, token: string, callbacks?: {
+    onShapeRemoved?: (shapeId: string) => void;
+}) {
     const [isConnected, setIsConnected] = useState(false);
     const [messages, setMessages] = useState<Shape[]>([]);
     const [existingMsgs, setExistingMsgs] = useState<ExistingWsMessages | null>(null);
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
     const socketRef = useRef<WebSocket | null>(null);
+    const callbacksRef = useRef(callbacks);
 
     const paramsRef = useRef({ roomId, roomName, userId, userName, token });
 
     useEffect(() => {
         paramsRef.current = { roomId, roomName, userId, userName, token };
-    }, [roomId, roomName, userId, userName, token]);
+        callbacksRef.current = callbacks;
+    }, [roomId, roomName, userId, userName, token, callbacks]);
 
     const connectWebSocket = useCallback(() => {
         if (socketRef.current) {
@@ -89,8 +93,6 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                         break;
 
                     case WsDataType.DRAW: {
-                        // const shape = JSON.parse(data.message!);
-                        // setMessages(prev => [...prev, shape]);
                         if (data.userId !== userId) {
                             const shape = JSON.parse(data.message!);
                             setMessages(prev => [...prev, shape]);
@@ -101,11 +103,16 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                     case WsDataType.UPDATE: {
                         if (data.userId !== userId) {
                             const updatedShape = JSON.parse(data.message!);
-                            setMessages(prev =>
-                                prev.map(shape =>
-                                    shape.id === data.id ? updatedShape : shape
-                                )
-                            );
+                            setMessages(prev => {
+                                const exists = prev.some(shape => shape.id === updatedShape.id);
+                                if (exists) {
+                                    return prev.map(shape =>
+                                        shape.id === updatedShape.id ? updatedShape : shape
+                                    );
+                                } else {
+                                    return [...prev, updatedShape];
+                                }
+                            });
                         }
                         break;
                     }
@@ -113,6 +120,10 @@ export function useWebSocket(roomId: string, roomName: string, userId: string, u
                     case WsDataType.ERASER: {
                         if (data.userId !== userId) {
                             setMessages(prev => prev.filter(shape => shape.id !== data.id));
+
+                            if (callbacksRef.current?.onShapeRemoved && data.id) {
+                                callbacksRef.current.onShapeRemoved(data.id);
+                            }
                         }
                         break;
                     }
