@@ -62,7 +62,7 @@ export default function CanvasRoot() {
                     userName: session?.user?.name ?? null,
                     token: session?.accessToken ?? null,
                 };
-            } else {
+            } else if (status === "unauthenticated" && currentRoomParams) {
                 window.alert(
                     "You need to be logged in to join this collaborative room.\n\n" +
                     "Please sign up or log in to your account to continue. " +
@@ -70,6 +70,8 @@ export default function CanvasRoot() {
                 );
                 setMode("standalone");
                 router.push(`/auth/signin?callbackUrl=${hash}`);
+            } else {
+                setMode("standalone");
             }
         };
 
@@ -176,7 +178,7 @@ export default function CanvasRoot() {
                 setParticipants(updatedParticipants);
             } : null,
             mode === 'room' ? (connectionStatus) => setIsConnected(connectionStatus) : null,
-            null
+            userRef.current.encryptionKey
         );
         return engine;
     }, [canvasEngineState.canvasColor, mode]);

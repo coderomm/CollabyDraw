@@ -7,7 +7,7 @@ import { useTransition } from "react";
 import { createRoom } from "@/actions/room";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { nanoid } from "nanoid";
+import { generateAESKey } from "@/utils/crypto";
 
 export default function CreateRoomDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
     const [isPending, startTransition] = useTransition();
@@ -18,7 +18,7 @@ export default function CreateRoomDialog({ open, onOpenChange }: { open: boolean
             try {
                 const result = await createRoom();
                 if (result.success && result.room?.id) {
-                    const encryptionKey = nanoid(20);
+                    const encryptionKey = await generateAESKey();
                     const redirectURL = `/#room=${result.room?.id},${encryptionKey}`;
                     router.push(redirectURL);
                     onOpenChange(false);

@@ -25,7 +25,6 @@ import {
   WS_URL,
 } from "@/config/constants";
 import { MessageQueue } from "./MessageQueue";
-// import { getShapes } from "@/actions/shape";
 import { decryptData, encryptData } from "@/utils/crypto";
 
 export class CanvasEngine {
