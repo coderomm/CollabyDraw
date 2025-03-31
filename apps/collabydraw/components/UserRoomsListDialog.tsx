@@ -11,8 +11,7 @@ import { Skeleton } from "./ui/skeleton";
 import CreateRoomDialog from "./CreateRoomDialog";
 
 type RoomType = {
-    id: number;
-    slug: string;
+    id: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -59,14 +58,14 @@ export function UserRoomsListDialog({
         });
     };
 
-    const handleJoinRoom = (roomName: string) => {
+    const handleJoinRoom = (id: string) => {
         startTransition(async () => {
             try {
-                const response = await joinRoom({ roomName });
+                const response = await joinRoom({ id });
                 if (response && response.success) {
-                    toast.success(`Joining room: ${roomName}`);
+                    toast.success(`Joining room: ${id}`);
                     onOpenChange(false);
-                    router.push(`/room/${roomName}`);
+                    router.push(`/room/${id}`);
                 } else {
                     toast.error(response?.error || "Failed to join room.");
                 }
@@ -77,14 +76,14 @@ export function UserRoomsListDialog({
         });
     };
 
-    const handleDeleteRoom = (roomName: string) => {
-        if (!confirm(`Are you sure you want to delete room: ${roomName}?`)) {
+    const handleDeleteRoom = (id: string) => {
+        if (!confirm(`Are you sure you want to delete room: ${id}?`)) {
             return;
         }
 
         startTransition(async () => {
             try {
-                const response = await deleteRoom({ roomName });
+                const response = await deleteRoom({ id });
                 if (response.success) {
                     toast.success("Room deleted successfully!");
                     fetchRooms();
@@ -110,10 +109,10 @@ export function UserRoomsListDialog({
                 ) : rooms.length > 0 ? (
                     rooms.map((room) => (
                         <div key={room.id} className="flex justify-between items-center transition-colors">
-                            <span className="flex-1 bg-collaby-textfield border border-collaby-textfield rounded-md px-3 py-2 text-text-primary-color overflow-hidden text-ellipsis mr-3 select-none">{room.slug}</span>
+                            <span className="flex-1 bg-collaby-textfield border border-collaby-textfield rounded-md px-3 py-2 text-text-primary-color overflow-hidden text-ellipsis mr-3 select-none">{room.id}</span>
                             <div className="flex gap-2 shrink-0">
                                 <Button
-                                    onClick={() => handleJoinRoom(room.slug)}
+                                    onClick={() => handleJoinRoom(room.id)}
                                     disabled={isPending}
                                     className="py-2 px-3 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]"
                                     title="Join Room"
@@ -121,7 +120,7 @@ export function UserRoomsListDialog({
                                     <LogIn className="w-4 h-4" />
                                 </Button>
                                 <Button
-                                    onClick={() => handleDeleteRoom(room.slug)}
+                                    onClick={() => handleDeleteRoom(room.id)}
                                     disabled={isPending}
                                     className="py-2 px-3 rounded-md text-[.875rem] font-semibold shadow-none bg-red-500 hover:bg-red-600 active:bg-red-700 active:scale-[.98] text-white"
                                     title="Delete Room"
@@ -164,10 +163,10 @@ export function UserRoomsListDialog({
                     ) : rooms.length > 0 ? (
                         rooms.map((room) => (
                             <div key={room.id} className="flex justify-between items-center transition-colors">
-                                <span className="flex-1 bg-collaby-textfield border border-collaby-textfield rounded-md px-3 py-2 text-text-primary-color overflow-hidden text-ellipsis mr-3 select-none">{room.slug}</span>
+                                <span className="flex-1 bg-collaby-textfield border border-collaby-textfield rounded-md px-3 py-2 text-text-primary-color overflow-hidden text-ellipsis mr-3 select-none">{room.id}</span>
                                 <div className="flex gap-2 shrink-0">
                                     <Button
-                                        onClick={() => handleJoinRoom(room.slug)}
+                                        onClick={() => handleJoinRoom(room.id)}
                                         disabled={isPending}
                                         className="py-2 px-3 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]"
                                         title="Join Room"
@@ -175,7 +174,7 @@ export function UserRoomsListDialog({
                                         <LogIn className="w-4 h-4" />
                                     </Button>
                                     <Button
-                                        onClick={() => handleDeleteRoom(room.slug)}
+                                        onClick={() => handleDeleteRoom(room.id)}
                                         disabled={isPending}
                                         className="py-2 px-3 rounded-md text-[.875rem] font-semibold shadow-none bg-red-500 hover:bg-red-600 active:bg-red-700 active:scale-[.98] text-white"
                                         title="Delete Room"

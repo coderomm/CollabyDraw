@@ -38,19 +38,19 @@ jobs:
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | head -n 15
           
-      - name: Deploy to VM
-        uses: appleboy/ssh-action@v1.1.0
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker pull coderomm/collabydraw-websocket:${{ github.sha }}
-            docker stop collabydraw-websocket || true
-            docker rm collabydraw-websocket || true
-            docker run -d \
-              --name collabydraw-websocket \
-              --restart always \
-              -p 8080:8080 \
-              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              coderomm/collabydraw-websocket:${{ github.sha }}
+      # - name: Deploy to VM
+      #   uses: appleboy/ssh-action@v1.1.0
+      #   with:
+      #     host: ${{ secrets.VM_HOST }}
+      #     username: ${{ secrets.VM_USERNAME }}
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     script: |
+      #       docker pull coderomm/collabydraw-websocket:${{ github.sha }}
+      #       docker stop collabydraw-websocket || true
+      #       docker rm collabydraw-websocket || true
+      #       docker run -d \
+      #         --name collabydraw-websocket \
+      #         --restart always \
+      #         -p 8080:8080 \
+      #         -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+      #         coderomm/collabydraw-websocket:${{ github.sha }}

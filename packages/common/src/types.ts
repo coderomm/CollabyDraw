@@ -68,7 +68,6 @@ export interface WebSocketMessage {
   id: string | null;
   type: WsDataType;
   roomId: string;
-  roomName: string | null;
   userId: string;
   userName: string | null;
   message: string | null;

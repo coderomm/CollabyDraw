@@ -201,6 +201,8 @@ export function StandaloneCanvas() {
                 canvasColorRef.current,
                 (newScale) => setScale(newScale),
                 true,
+                null,
+                null
             )
             setCanvasEngine(engine);
 

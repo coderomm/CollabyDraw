@@ -117,7 +117,7 @@ wss.on("connection", function connection(ws, req) {
       switch (parsedData.type) {
         case WsDataType.JOIN:
           const roomCheckResponse = await client.room.findUnique({
-            where: { id: Number(parsedData.roomId) },
+            where: { id: parsedData.roomId },
           });
 
           if (!roomCheckResponse) {
@@ -145,7 +145,6 @@ wss.on("connection", function connection(ws, req) {
             JSON.stringify({
               type: WsDataType.USER_JOINED,
               roomId: parsedData.roomId,
-              roomName: parsedData.roomName,
               userId: user.userId,
               userName: parsedData.userName,
               participants: currentParticipants,
@@ -158,7 +157,6 @@ wss.on("connection", function connection(ws, req) {
             {
               type: WsDataType.USER_JOINED,
               roomId: parsedData.roomId,
-              roomName: parsedData.roomName,
               userId: user.userId,
               userName: parsedData.userName,
               participants: currentParticipants,
@@ -180,7 +178,6 @@ wss.on("connection", function connection(ws, req) {
               userId: user.userId,
               userName: user.userName,
               roomId: parsedData.roomId,
-              roomName: null,
               id: null,
               message: null,
               participants: null,
@@ -202,13 +199,6 @@ wss.on("connection", function connection(ws, req) {
             usersInRoom[0].userId === userId
           ) {
             try {
-              // await client.shape.deleteMany({
-              //   where: { roomId: Number(parsedData.roomId) },
-              // });
-              // await client.room.delete({
-              //   where: { id: Number(parsedData.roomId) },
-              // });
-
               ws.send(
                 JSON.stringify({
                   type: "ROOM_CLOSED",
@@ -233,22 +223,6 @@ wss.on("connection", function connection(ws, req) {
             return;
           }
 
-          // try {
-          //   await client.shape.create({
-          //     data: {
-          //       id: parsedData.id,
-          //       message: parsedData.message,
-          //       roomId: Number(parsedData.roomId),
-          //       userId: userId,
-          //     },
-          //   });
-          // } catch (err) {
-          //   console.error(
-          //     `Error saving ${parsedData.type} data to database:`,
-          //     err
-          //   );
-          // }
-
           broadcastToRoom(
             parsedData.roomId,
             {
@@ -258,7 +232,6 @@ wss.on("connection", function connection(ws, req) {
               userId: userId,
               userName: user.userName,
               timestamp: new Date().toISOString(),
-              roomName: null,
               id: null,
               participants: null,
             },
@@ -275,23 +248,6 @@ wss.on("connection", function connection(ws, req) {
             return;
           }
 
-          // try {
-          //   await client.shape.update({
-          //     where: {
-          //       id: parsedData.id,
-          //       roomId: Number(parsedData.roomId),
-          //     },
-          //     data: {
-          //       message: parsedData.message,
-          //     },
-          //   });
-          // } catch (err) {
-          //   console.error(
-          //     `Error saving ${parsedData.type} data to database:`,
-          //     err
-          //   );
-          // }
-
           broadcastToRoom(
             parsedData.roomId,
             {
@@ -299,7 +255,6 @@ wss.on("connection", function connection(ws, req) {
               id: parsedData.id,
               message: parsedData.message,
               roomId: parsedData.roomId,
-              roomName: null,
               userId: userId,
               userName: user.userName,
               participants: null,
@@ -325,71 +280,12 @@ wss.on("connection", function connection(ws, req) {
               userId: userId,
               userName: user.userName,
               timestamp: new Date().toISOString(),
-              roomName: null,
               message: null,
               participants: null,
             },
             [],
             false
           );
-
-          // try {
-          //   const shapeExists = await client.shape.findUnique({
-          //     where: {
-          //       id: parsedData.id,
-          //       roomId: Number(parsedData.roomId),
-          //     },
-          //   });
-
-          //   if (!shapeExists) {
-          //     broadcastToRoom(
-          //       parsedData.roomId,
-          //       {
-          //         id: parsedData.id,
-          //         type: parsedData.type,
-          //         roomId: parsedData.roomId,
-          //         roomName: null,
-          //         userId: userId,
-          //         userName: user.userName,
-          //         participants: null,
-          //         message: null,
-          //         timestamp: new Date().toISOString(),
-          //       },
-          //       [userId],
-          //       false
-          //     );
-          //     return;
-          //   }
-
-          //   await client.shape.delete({
-          //     where: {
-          //       id: parsedData.id,
-          //       roomId: Number(parsedData.roomId),
-          //     },
-          //   });
-
-          //   broadcastToRoom(
-          //     parsedData.roomId,
-          //     {
-          //       id: parsedData.id,
-          //       type: parsedData.type,
-          //       roomId: parsedData.roomId,
-          //       userId: userId,
-          //       userName: user.userName,
-          //       timestamp: new Date().toISOString(),
-          //       roomName: null,
-          //       message: null,
-          //       participants: null,
-          //     },
-          //     [],
-          //     false
-          //   );
-          // } catch (err) {
-          //   console.error(
-          //     `Error erasing ${parsedData.type} data to database:`,
-          //     err
-          //   );
-          // }
           break;
 
         default:
@@ -415,7 +311,6 @@ wss.on("connection", function connection(ws, req) {
             userId: user.userId,
             userName: user.userName,
             roomId,
-            roomName: null,
             id: null,
             message: null,
             participants: null,

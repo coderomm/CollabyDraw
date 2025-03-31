@@ -3,35 +3,26 @@
 import { Button } from "./ui/button";
 import { Play } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { useTransition } from "react";
-import { Input } from "./ui/input";
 import { createRoom } from "@/actions/room";
 import { toast } from "sonner";
-import { CreateRoomSchema } from "@repo/common/types";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { nanoid } from "nanoid";
 
 export default function CreateRoomDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
-    const createForm = useForm({
-        resolver: zodResolver(CreateRoomSchema),
-        defaultValues: {
-            roomName: '',
-        },
-    });
-
-    const handleCreateRoom = createForm.handleSubmit((data) => {
+    const handleCreateRoom = async () => {
         startTransition(async () => {
             try {
-                const result = await createRoom(data);
-                if (result.success) {
-                    toast.success(`Created room: ${data.roomName} with code: ${result.room?.slug}`);
+                const result = await createRoom();
+                if (result.success && result.room?.id) {
+                    const encryptionKey = nanoid(20);
+                    const redirectURL = `/#room=${result.room?.id},${encryptionKey}`;
+                    router.push(redirectURL);
                     onOpenChange(false);
-                    router.push(`/room/${result.room?.slug}`);
+                    toast.success("Room created successfully!");
                 } else {
                     toast.error('Error: ' + result.error);
                 }
@@ -40,7 +31,7 @@ export default function CreateRoomDialog({ open, onOpenChange }: { open: boolean
                 toast.error(errorMessage);
             }
         });
-    });
+    }
 
     return (
         <>
@@ -53,38 +44,14 @@ export default function CreateRoomDialog({ open, onOpenChange }: { open: boolean
                             Do not worry, the session is end-to-end encrypted, and fully private. Not even our server can see what you draw.
                         </div>
                     </DialogHeader>
-                    <Form {...createForm}>
-                        <form onSubmit={handleCreateRoom} className="grid gap-4 py-4">
-                            <FormField
-                                control={createForm.control}
-                                name="roomName"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="font-assistant font-semibold text-[0.875rem] indent-[150%] text-collaby-textfield-label mb-1 select-none">Room Name</FormLabel>
-                                        <FormControl>
-                                            <div className="flex items-center h-12 bg-collaby-textfield border border-collaby-textfield hover:border-collaby-textfield-hover active:border-collaby-textfield-active focus-within:border-collaby-textfield-hover rounded-md px-3 transition-shadow duration-500 ease-in-out">
-                                                <Input
-                                                    placeholder="Enter room name"
-                                                    className="flex items-center h-6 mt-0 w-full font-assistant font-normal text-base text-ellipsis text-text-primary-color bg-transparent border-none p-0 !ring-0 !outline-0 shadow-none"
-                                                    {...field}
-                                                    disabled={isPending}
-                                                />
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <DialogFooter className="flex items-center justify-center sm:justify-center">
-                                <Button type="submit" size={"lg"} disabled={isPending} className="py-2 px-6 min-h-12 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]">
-                                    <div className="flex items-center justify-center gap-3 shrink-0 flex-nowrap">
-                                        <Play className="w-5 h-5" />
-                                    </div>
-                                    {isPending ? 'Starting Session...' : 'Start Session'}
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    </Form>
+                    <DialogFooter className="flex items-center justify-center sm:justify-center">
+                        <Button onClick={handleCreateRoom} type="button" size={"lg"} disabled={isPending} className="py-2 px-6 min-h-12 rounded-md text-[.875rem] font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]">
+                            <div className="flex items-center justify-center gap-3 shrink-0 flex-nowrap">
+                                <Play className="w-5 h-5" />
+                            </div>
+                            {isPending ? 'Starting Session...' : 'Start Session'}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog >
         </>

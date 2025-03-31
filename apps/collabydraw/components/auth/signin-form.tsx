@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,8 @@ type SignInFormValues = z.infer<typeof SigninSchema>;
 
 export function SignInForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const callbackUrl = searchParams.get("callbackUrl") || "/";
     const [isPending, startTransition] = useTransition();
 
     const form = useForm<SignInFormValues>({
@@ -48,7 +50,7 @@ export function SignInForm() {
                 }
 
                 toast.success("Signed in successfully");
-                router.push("/");
+                router.push(callbackUrl);
                 router.refresh();
             } catch (error) {
                 toast.error("Something went wrong. Please try again.");

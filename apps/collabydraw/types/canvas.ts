@@ -180,3 +180,10 @@ export interface Point {
   x: number;
   y: number;
 }
+
+export interface RoomParams {
+  roomId: string;
+  encryptionKey: string;
+}
+
+export type Mode = "standalone" | "room";

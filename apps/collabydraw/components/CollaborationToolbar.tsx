@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CreateRoomDialog from "./CreateRoomDialog";
 import { useSession } from "next-auth/react";
 import { RoomSharingDialog } from "./RoomSharingDialog";
@@ -11,17 +11,28 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { RoomParticipants } from "@repo/common/types";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { BASE_URL } from "@/config/constants";
 import { Share2 } from "lucide-react";
+import { getRoomSharingUrl, isInRoom } from "@/utils/roomParams";
+import { BASE_URL } from "@/config/constants";
 
-export default function CollaborationToolbar({ slug, participants }: { slug?: string, participants?: RoomParticipants[] }) {
+export default function CollaborationToolbar({ participants, hash }: { participants?: RoomParticipants[], hash?: string }) {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const { data: session } = useSession();
-    const roomSlug = slug;
+    const [inRoom, setInRoom] = useState(false);
     const decodedPathname = decodeURIComponent(pathname);
     const displayParticipants = participants?.slice(0, 3);
     const remainingParticipants = participants?.slice(3);
+
+    useEffect(() => {
+        if (hash) {
+            setInRoom(isInRoom(hash));
+        }
+    }, [hash]);
+
+    const getSharingUrl = () => {
+        return getRoomSharingUrl(BASE_URL, decodedPathname, hash ?? '');
+    };
 
     return (
         <div className="Start_Room_Session transition-transform duration-500 ease-in-out flex items-center justify-end gap-1 md:gap-2">
@@ -82,15 +93,15 @@ export default function CollaborationToolbar({ slug, participants }: { slug?: st
                 </div>
             </div>
             <Button type="button" onClick={() => setIsOpen(true)}
-                className={cn("excalidraw-button collab-button relative w-auto py-2 px-3 md:py-3 md:px-4 rounded-md text-[.875rem] font-semibold shadow-none active:scale-[.98]", roomSlug ? "bg-[#0fb884] dark:bg-[#0fb884] hover:bg-[#0fb884]" : "bg-color-primary hover:bg-brand-hover active:bg-brand-active")}
+                className={cn("excalidraw-button collab-button relative w-auto py-2 px-3 md:py-3 md:px-4 rounded-md text-[.875rem] font-semibold shadow-none active:scale-[.98]", inRoom ? "bg-[#0fb884] dark:bg-[#0fb884] hover:bg-[#0fb884]" : "bg-color-primary hover:bg-brand-hover active:bg-brand-active")}
                 title="Live collaboration..."><Share2 size={16} className="hidden xs670:inline md:hidden" />
-                <span className="inline-block xs670:hidden md:inline-block">Share</span> {roomSlug && participants && participants.length > 0 && (
+                <span className="inline-block xs670:hidden md:inline-block">Share</span> {inRoom && participants && participants.length > 0 && (
                     <div className="CollabButton-collaborators text-[.6rem] text-[#2b8a3e] bg-[#b2f2bb] font-bold font-assistant rounded-[50%] p-1 min-w-4 min-h-4 w-4 h-4 flex items-center justify-center absolute bottom-[-5px] right-[-5px]">{participants.length}</div>
                 )}</Button>
 
             {session?.user && session?.user.id ? (
-                roomSlug ? (
-                    <RoomSharingDialog open={isOpen} onOpenChange={setIsOpen} link={`${BASE_URL}/${decodedPathname}`} />
+                inRoom ? (
+                    <RoomSharingDialog open={isOpen} onOpenChange={setIsOpen} link={getSharingUrl()} />
                 ) : (
                     <CreateRoomDialog open={isOpen} onOpenChange={setIsOpen} />
                 )

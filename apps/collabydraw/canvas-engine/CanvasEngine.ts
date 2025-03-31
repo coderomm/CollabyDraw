@@ -25,21 +25,23 @@ import {
   WS_URL,
 } from "@/config/constants";
 import { MessageQueue } from "./MessageQueue";
-import { getShapes } from "@/actions/shape";
+// import { getShapes } from "@/actions/shape";
+import { decryptData, encryptData } from "@/utils/crypto";
 
 export class CanvasEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private roomId: string | null;
-  private roomName: string | null;
   private userId: string | null;
   private userName: string | null;
   private token: string | null;
   private canvasBgColor: string;
   private isStandalone: boolean = false;
   private onScaleChangeCallback: (scale: number) => void;
-  private onParticipantsUpdate?: (participants: RoomParticipants[]) => void;
-  private onConnectionChange?: (isConnected: boolean) => void;
+  private onParticipantsUpdate:
+    | ((participants: RoomParticipants[]) => void)
+    | null;
+  private onConnectionChange: ((isConnected: boolean) => void) | null;
 
   private clicked: boolean;
   public outputScale: number = 1;
@@ -64,25 +66,25 @@ export class CanvasEngine {
   private participants: RoomParticipants[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private flushInterval: any;
+  private encryptionKey: string | null;
 
   constructor(
     canvas: HTMLCanvasElement,
     roomId: string | null,
-    roomName: string | null,
     userId: string | null,
     userName: string | null,
     token: string | null,
     canvasBgColor: string,
     onScaleChangeCallback: (scale: number) => void,
     isStandalone: boolean = false,
-    onParticipantsUpdate?: (participants: RoomParticipants[]) => void,
-    onConnectionChange?: (isConnected: boolean) => void
+    onParticipantsUpdate: ((participants: RoomParticipants[]) => void) | null,
+    onConnectionChange: ((isConnected: boolean) => void) | null,
+    encryptionKey: string | null
   ) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d")!;
     this.canvasBgColor = canvasBgColor;
     this.roomId = roomId;
-    this.roomName = roomName;
     this.userId = userId;
     this.userName = userName;
     this.token = token;
@@ -91,6 +93,8 @@ export class CanvasEngine {
     this.onParticipantsUpdate = onParticipantsUpdate;
     this.onConnectionChange = onConnectionChange;
     this.SelectionController = new SelectionController(this.ctx, canvas);
+
+    this.encryptionKey = encryptionKey;
 
     this.clicked = false;
     this.existingShapes = [];
@@ -109,7 +113,7 @@ export class CanvasEngine {
         );
       }
     });
-    if (!this.isStandalone && this.token && this.roomId && this.roomName) {
+    if (!this.isStandalone && this.token && this.roomId) {
       console.log("✅Connecting to WebSocket…");
       this.connectWebSocket();
     }
@@ -126,7 +130,6 @@ export class CanvasEngine {
         JSON.stringify({
           type: WsDataType.JOIN,
           roomId: this.roomId,
-          roomName: this.roomName,
           userId: this.userId,
           userName: this.userName,
         })
@@ -144,12 +147,6 @@ export class CanvasEngine {
               this.onParticipantsUpdate?.(this.participants);
             }
 
-            if (data.userId === this.userId && this.roomName) {
-              const res = await getShapes({ roomName: this.roomName });
-              if (res.success && res.shapes?.length) {
-                this.updateShapes(res.shapes);
-              }
-            }
             break;
 
           case WsDataType.USER_LEFT:
@@ -164,7 +161,11 @@ export class CanvasEngine {
           case WsDataType.DRAW:
           case WsDataType.UPDATE:
             if (data.userId !== this.userId && data.message) {
-              const shape = JSON.parse(data.message);
+              const decrypted = await decryptData(
+                data.message,
+                this.encryptionKey!
+              );
+              const shape = JSON.parse(decrypted);
               this.updateShapes([shape]);
             }
             break;
@@ -206,23 +207,27 @@ export class CanvasEngine {
     }, 5000);
   }
 
-  public sendMessage(content: string) {
+  public async sendMessage(content: string) {
     if (!content?.trim()) return;
     const parsed = JSON.parse(content);
 
     if (this.socket?.readyState === WebSocket.OPEN) {
       const base = {
         roomId: parsed.roomId,
-        roomName: this.roomName,
         userId: this.userId,
         userName: this.userName,
       };
+
+      const encryptedMessage = await encryptData(
+        JSON.stringify(parsed.message),
+        this.encryptionKey!
+      );
 
       const msg = {
         ...base,
         type: parsed.type,
         id: parsed.id,
-        message: parsed.message ? JSON.stringify(parsed.message) : null,
+        message: encryptedMessage,
       };
       this.socket.send(JSON.stringify(msg));
     } else {
@@ -231,7 +236,6 @@ export class CanvasEngine {
         id: parsed.id,
         message: parsed.message ? JSON.stringify(parsed.message) : null,
         roomId: this.roomId!,
-        roomName: this.roomName!,
         userId: this.userId!,
         userName: this.userName!,
         timestamp: new Date().toISOString(),
@@ -443,7 +447,6 @@ export class CanvasEngine {
                     id: selectedShape.id,
                     message: JSON.stringify(selectedShape),
                     roomId: this.roomId,
-                    roomName: this.roomName,
                     userId: this.userId!,
                     userName: this.userName!,
                     timestamp: new Date().toISOString(),
@@ -605,7 +608,6 @@ export class CanvasEngine {
           id: shape.id,
           message: JSON.stringify(shape),
           roomId: this.roomId,
-          roomName: this.roomName,
           userId: this.userId!,
           userName: this.userName!,
           timestamp: new Date().toISOString(),
@@ -1238,7 +1240,6 @@ export class CanvasEngine {
             id: erasedShape.id,
             message: null,
             roomId: this.roomId,
-            roomName: this.roomName,
             userId: this.userId!,
             userName: this.userName!,
             timestamp: new Date().toISOString(),

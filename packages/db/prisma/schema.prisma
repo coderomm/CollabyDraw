@@ -28,8 +28,7 @@ model User {
 }
 
 model Room {
-  id        Int      @id @default(autoincrement())
-  slug      String   @unique
+  id        String   @id @default(cuid())
   adminId   String
   admin     User     @relation(fields: [adminId], references: [id])
   createdAt DateTime @default(now())
@@ -42,8 +41,8 @@ model Shape {
   message   String
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  roomId    Int
-  room      Room     @relation(fields: [roomId], references: [id])
+  roomId    String
+  Room      Room     @relation(fields: [roomId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

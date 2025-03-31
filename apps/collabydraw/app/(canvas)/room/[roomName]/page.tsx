@@ -10,7 +10,7 @@ export default async function CanvasPage({ params }: { params: Promise<{ roomNam
     const decodedParam = decodeURIComponent(paramsRoomName)
 
     const room = await client.room.findFirst({
-        where: { slug: decodedParam },
+        where: { id: decodedParam },
     });
     if (!room) {
         notFound();
@@ -26,7 +26,7 @@ export default async function CanvasPage({ params }: { params: Promise<{ roomNam
     return (
         <CanvasSheet
             roomId={room.id.toString()}
-            roomName={room.slug}
+            roomName={room.id}
             userId={user.id}
             userName={user.name || 'User-' + user.id}
             token={session.accessToken}

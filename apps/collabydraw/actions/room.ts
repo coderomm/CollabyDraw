@@ -2,17 +2,14 @@
 
 import { z } from "zod";
 import client from "@repo/db/client";
-import { CreateRoomSchema, JoinRoomSchema } from "@repo/common/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/auth";
 import { cookies } from "next/headers";
 
-export async function joinRoom(data: { roomName: string }) {
+export async function joinRoom(data: { id: string }) {
   try {
-    const validatedRoomName = JoinRoomSchema.parse(data);
-
     const room = await client.room.findUnique({
-      where: { slug: validatedRoomName.roomName },
+      where: { id: data.id },
     });
 
     if (!room) {
@@ -37,7 +34,7 @@ export async function joinRoom(data: { roomName: string }) {
 
     return {
       success: true,
-      roomName: room.slug,
+      room: room,
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -48,7 +45,7 @@ export async function joinRoom(data: { roomName: string }) {
   }
 }
 
-export async function createRoom(data: { roomName: string }) {
+export async function createRoom() {
   try {
     const session = await getServerSession(authOptions);
     const user = session?.user;
@@ -57,11 +54,8 @@ export async function createRoom(data: { roomName: string }) {
       return { success: false, error: "User not found" };
     }
 
-    const validatedRoomName = CreateRoomSchema.parse(data);
-
     const room = await client.room.create({
       data: {
-        slug: validatedRoomName.roomName,
         adminId: user.id,
       },
     });
@@ -83,12 +77,10 @@ export async function createRoom(data: { roomName: string }) {
   }
 }
 
-export async function getRoom(data: { roomName: string }) {
+export async function getRoom(data: { id: string }) {
   try {
-    const validatedRoomName = JoinRoomSchema.parse(data);
-
     const room = await client.room.findUnique({
-      where: { slug: validatedRoomName.roomName },
+      where: { id: data.id },
       include: { Shape: true },
     });
 
@@ -125,7 +117,7 @@ export async function getRoom(data: { roomName: string }) {
   }
 }
 
-export async function deleteRoom(data: { roomName: string }) {
+export async function deleteRoom(data: { id: string }) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -133,10 +125,8 @@ export async function deleteRoom(data: { roomName: string }) {
       return { success: false, error: "Authentication required" };
     }
 
-    const validatedRoomName = JoinRoomSchema.parse(data);
-
     const room = await client.room.findUnique({
-      where: { slug: validatedRoomName.roomName },
+      where: { id: data.id },
       include: { admin: true },
     });
 
@@ -182,7 +172,6 @@ export async function getUserRooms() {
       where: { adminId: user.id },
       select: {
         id: true,
-        slug: true,
         createdAt: true,
         updatedAt: true,
       },

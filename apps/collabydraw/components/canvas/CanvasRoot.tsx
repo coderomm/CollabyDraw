@@ -1,7 +1,7 @@
 "use client"
 
 import { CanvasEngine } from "@/canvas-engine/CanvasEngine";
-import { BgFill, canvasBgLight, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgLight, Mode, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import React, { SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { MobileCommandBar } from "../MobileCommandBar";
 import { useTheme } from "next-themes";
@@ -16,43 +16,79 @@ import { StyleConfigurator } from "../StyleConfigurator";
 import ToolSelector from "../ToolSelector";
 import CollaborationToolbar from "../CollaborationToolbar";
 import ZoomControl from "../ZoomControl";
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { getRoomParamsFromHash } from "@/utils/roomParams";
 
-/** Modes */
-type Mode = "standalone" | "room";
-
-/** Room Params parsed from #room=roomId,key */
-// function getRoomParamsFromHash() {
-//     if (typeof window === "undefined") return null;
-//     const hash = window.location.hash;
-//     if (!hash.startsWith("#room=")) return null;
-//     const [, roomIdAndKey] = hash.split("#room=");
-//     const [roomId, encryptionKey] = roomIdAndKey.split(",");
-//     return { roomId, encryptionKey };
-// }
-
-export default function CanvasRoot({ roomName, roomId, userId, userName, token }: {
-    roomName: string; roomId: string; userId: string; userName: string; token: string;
-}) {
+export default function CanvasRoot() {
     const { theme } = useTheme()
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const paramsRef = useRef({ roomId, roomName, userId, userName, token });
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
     const [isConnected, setIsConnected] = useState(false);
     const [isCanvasReady, setIsCanvasReady] = useState(false);
-    const initialized = useRef(false);
+    const initializedWithMode = useRef<Mode | null>(null);
     const [mode, setMode] = useState<Mode>("standalone");
     const { data: session, status } = useSession();
-    const userRef = useRef({ roomId, roomName, userId, userName, token });
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const currentHashRef = useRef<string>('');
+    const router = useRouter();
 
-    if (status === 'unauthenticated') {
-        setMode('standalone')
-    }
-    if (status === 'authenticated') {
-        setMode('room')
-        userRef.current.userId = session.user.id;
-        userRef.current.userName = session.user.name!;
-        userRef.current.token = session.accessToken;
-    }
+    const userRef = useRef({
+        roomId: null as string | null,
+        userId: null as string | null,
+        userName: null as string | null,
+        token: null as string | null,
+        encryptionKey: null as string | null,
+    });
+
+    useEffect(() => {
+        const getHash = () => {
+            if (typeof window === 'undefined') return '';
+            return window.location.hash;
+        };
+
+        const updateRoomParams = () => {
+            if (status === 'loading') return;
+            const hash = getHash();
+            currentHashRef.current = hash;
+            const currentRoomParams = getRoomParamsFromHash(hash);
+
+            if (status === "authenticated" && currentRoomParams) {
+                setMode("room");
+                userRef.current = {
+                    roomId: currentRoomParams.roomId,
+                    encryptionKey: currentRoomParams.encryptionKey,
+                    userId: session?.user?.id ?? null,
+                    userName: session?.user?.name ?? null,
+                    token: session?.accessToken ?? null,
+                };
+            } else {
+                window.alert(
+                    "You need to be logged in to join this collaborative room.\n\n" +
+                    "Please sign up or log in to your account to continue. " +
+                    "Collaborative features require authentication to ensure secure access and proper identification of participants."
+                );
+                setMode("standalone");
+                router.push(`/auth/signin?callbackUrl=${hash}`);
+            }
+        };
+
+        updateRoomParams();
+
+        const handleHashChange = () => {
+            updateRoomParams();
+        };
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('hashchange', handleHashChange);
+        }
+
+        return () => {
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('hashchange', handleHashChange);
+            }
+        };
+    }, [pathname, searchParams, status, session]);
 
     const [canvasEngineState, setCanvasEngineState] = useState({
         engine: null as CanvasEngine | null,
@@ -69,10 +105,6 @@ export default function CanvasRoot({ roomName, roomId, userId, userName, token }
     });
 
     const { matches, isLoading } = useMediaQuery(670);
-
-    useEffect(() => {
-        paramsRef.current = { roomId, roomName, userId, userName, token };
-    }, [roomId, roomName, userId, userName, token]);
 
     useEffect(() => {
         setCanvasEngineState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
@@ -133,55 +165,60 @@ export default function CanvasRoot({ roomName, roomId, userId, userName, token }
 
         const engine = new CanvasEngine(
             canvasRef.current,
-            paramsRef.current.roomId,
-            paramsRef.current.roomName,
-            paramsRef.current.userId,
-            paramsRef.current.userName,
-            paramsRef.current.token,
+            mode === 'room' ? userRef.current.roomId : null,
+            mode === 'room' ? userRef.current.userId : null,
+            mode === 'room' ? userRef.current.userName : null,
+            mode === 'room' ? userRef.current.token : null,
             canvasEngineState.canvasColor,
             (newScale) => setCanvasEngineState(prev => ({ ...prev, scale: newScale })),
             mode === 'room' ? false : true,
-            (updatedParticipants) => {
+            mode === 'room' ? (updatedParticipants) => {
                 setParticipants(updatedParticipants);
-            },
-            (connectionStatus) => setIsConnected(connectionStatus)
+            } : null,
+            mode === 'room' ? (connectionStatus) => setIsConnected(connectionStatus) : null,
+            null
         );
         return engine;
     }, [canvasEngineState.canvasColor, mode]);
 
     useEffect(() => {
-        if (!isCanvasReady || initialized.current) return;
-        const waitReaddy = setTimeout(() => {
-            if (!canvasRef.current) return;
-            initialized.current = true;
-            const engine = initializeCanvasEngine();
-
-            if (engine) {
-                setCanvasEngineState(prev => ({ ...prev, engine }));
-
-                const handleResize = () => {
-                    if (canvasRef.current) {
-                        const canvas = canvasRef.current;
-                        canvas.width = window.innerWidth;
-                        canvas.height = window.innerHeight;
-                        engine.handleResize(window.innerWidth, window.innerHeight);
-                    }
-                };
-
-                handleResize();
-                window.addEventListener('resize', handleResize);
-
-                document.addEventListener("keydown", handleKeyDown);
-
-                return () => {
-                    window.removeEventListener('resize', handleResize);
-                    document.removeEventListener("keydown", handleKeyDown);
-                    engine.destroy();
-                };
+        if (!isCanvasReady) return;
+        if (initializedWithMode.current !== mode) {
+            if (canvasEngineState.engine) {
+                canvasEngineState.engine.destroy();
             }
-        }, 1000)
-        return () => clearTimeout(waitReaddy);
-    }, [handleKeyDown, initializeCanvasEngine, isCanvasReady, isConnected]);
+            const waitReaddy = setTimeout(() => {
+                if (!canvasRef.current) return;
+                const engine = initializeCanvasEngine();
+
+                if (engine) {
+                    initializedWithMode.current = mode;
+                    setCanvasEngineState(prev => ({ ...prev, engine }));
+
+                    const handleResize = () => {
+                        if (canvasRef.current) {
+                            const canvas = canvasRef.current;
+                            canvas.width = window.innerWidth;
+                            canvas.height = window.innerHeight;
+                            engine.handleResize(window.innerWidth, window.innerHeight);
+                        }
+                    };
+
+                    handleResize();
+                    window.addEventListener('resize', handleResize);
+
+                    document.addEventListener("keydown", handleKeyDown);
+
+                    return () => {
+                        window.removeEventListener('resize', handleResize);
+                        document.removeEventListener("keydown", handleKeyDown);
+                        engine.destroy();
+                    };
+                }
+            }, 1000)
+            return () => clearTimeout(waitReaddy);
+        }
+    }, [handleKeyDown, initializeCanvasEngine, isCanvasReady, isConnected, mode, canvasEngineState.engine]);
 
     const toggleSidebar = useCallback(() => {
         setCanvasEngineState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }));
@@ -251,7 +288,7 @@ export default function CanvasRoot({ roomName, roomId, userId, userName, token }
                 />
 
                 {matches && (
-                    <CollaborationToolbar participants={participants} slug={roomName} />
+                    <CollaborationToolbar participants={participants} hash={currentHashRef.current} />
                 )}
             </div>
 
