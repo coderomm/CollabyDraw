@@ -25,6 +25,17 @@ export type StrokeWidth = 1 | 2 | 4;
 
 export type StrokeStyle = "solid" | "dashed" | "dotted";
 
+export type RoughStyle = 0 | 1 | 2 | 3 | 4;
+
+export type FillStyle =
+  | "hachure"
+  | "solid"
+  | "cross-hatch"
+  | "zigzag"
+  | "dots"
+  | "dashed"
+  | "zigzag-line";
+
 export type StrokeFill =
   | "#1e1e1e"
   | "#e03131"
@@ -88,6 +99,8 @@ export type Shape =
       bgFill: string;
       rounded: StrokeEdge;
       strokeStyle: StrokeStyle;
+      roughStyle: RoughStyle;
+      fillStyle: FillStyle;
     }
   | {
       id: string | null;
@@ -100,6 +113,8 @@ export type Shape =
       strokeFill: string;
       bgFill: string;
       strokeStyle: StrokeStyle;
+      roughStyle: RoughStyle;
+      fillStyle: FillStyle;
     }
   | {
       id: string | null;
@@ -113,6 +128,8 @@ export type Shape =
       bgFill: string;
       rounded: StrokeEdge;
       strokeStyle: StrokeStyle;
+      roughStyle: RoughStyle;
+      fillStyle: FillStyle;
     }
   | {
       id: string | null;
@@ -124,6 +141,7 @@ export type Shape =
       strokeWidth: number;
       strokeFill: string;
       strokeStyle: StrokeStyle;
+      roughStyle: RoughStyle;
     }
   | {
       id: string | null;
@@ -135,6 +153,7 @@ export type Shape =
       strokeWidth: number;
       strokeFill: string;
       strokeStyle: StrokeStyle;
+      roughStyle: RoughStyle;
     }
   | {
       id: string | null;
@@ -143,6 +162,7 @@ export type Shape =
       strokeWidth: number;
       strokeFill: string;
       strokeStyle: StrokeStyle;
+      roughStyle: RoughStyle;
     }
   | {
       id: string | null;
@@ -156,6 +176,7 @@ export type Shape =
       bgFill: string;
       rounded: StrokeEdge;
       strokeStyle: StrokeStyle;
+      roughStyle: RoughStyle;
     };
 
 export interface WsMessage {

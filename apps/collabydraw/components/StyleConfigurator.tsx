@@ -1,11 +1,12 @@
 "use client"
 
 import type React from "react"
-import { BgFill, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas"
+import { BgFill, FillStyle, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas"
 import { ColorBoard } from "./color-board"
 import ItemLabel from "./ItemLabel";
 import { Input } from "./ui/input";
 import { cn } from "@/lib/utils";
+import { fillStyleIcons, fillStyleLabels, roughStyleIcons, roughStyleLabels, strokeEdgeIcons, strokeEdgeLabels, strokeStyleIcons, strokeStyleLabels } from "@/config/canvasTypeMappings";
 
 interface StyleConfiguratorProps {
     activeTool: ToolType;
@@ -19,6 +20,10 @@ interface StyleConfiguratorProps {
     setStrokeEdge: React.Dispatch<React.SetStateAction<StrokeEdge>>;
     strokeStyle: StrokeStyle;
     setStrokeStyle: React.Dispatch<React.SetStateAction<StrokeStyle>>;
+    roughStyle: RoughStyle;
+    setRoughStyle: React.Dispatch<React.SetStateAction<RoughStyle>>;
+    fillStyle: FillStyle;
+    setFillStyle: React.Dispatch<React.SetStateAction<FillStyle>>;
     isMobile?: boolean
 }
 
@@ -34,12 +39,18 @@ export function StyleConfigurator({
     setStrokeEdge,
     strokeStyle,
     setStrokeStyle,
+    roughStyle,
+    setRoughStyle,
+    fillStyle,
+    setFillStyle,
     isMobile
 }: StyleConfiguratorProps) {
 
     const lineThicknessOptions: StrokeWidth[] = [1, 2, 4]
     const edgeRoundnessOptions: StrokeEdge[] = ["sharp", "round"]
     const edgeStyleOptions: StrokeStyle[] = ["solid", "dashed", "dotted"]
+    const roughStyleOptions: RoughStyle[] = [0, 1, 2]
+    const fillStyleOptions: FillStyle[] = ['hachure', 'cross-hatch', 'dashed', 'dots', 'zigzag', 'zigzag-line', 'solid']
 
     if (activeTool === "eraser" || activeTool === "grab" || activeTool === "selection") {
         return;
@@ -73,6 +84,23 @@ export function StyleConfigurator({
                             ))}
                         </div>
                     </div>
+
+                    {(activeTool === "rectangle" || activeTool === "diamond" || activeTool === 'ellipse') && (
+                        <div className="">
+                            <ItemLabel label="Fill" />
+                            <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
+                                {fillStyleOptions.map((fs, index) => (
+                                    <FillStyleSelector
+                                        key={index}
+                                        fillStyle={fillStyle}
+                                        fillStyleProp={fs}
+                                        onClick={() => setFillStyle(fs)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {(activeTool === "rectangle" || activeTool === "diamond") && (
                         <div className="">
                             <ItemLabel label="Edges" />
@@ -88,6 +116,21 @@ export function StyleConfigurator({
                             </div>
                         </div>
                     )}
+
+                    <div className="">
+                        <ItemLabel label="Sloppiness" />
+                        <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
+                            {roughStyleOptions.map((rs, index) => (
+                                <RoughStyleSelector
+                                    key={index}
+                                    roughStyle={roughStyle}
+                                    roughStyleProp={rs}
+                                    onClick={() => setRoughStyle(rs)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="">
                         <ItemLabel label="Stroke Style" />
                         <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
@@ -124,16 +167,44 @@ const StrokeWidthSelector = ({ strokeWidth, strokeWidthProp, onClick }: { stroke
     )
 }
 
+const FillStyleSelector = ({ fillStyle, fillStyleProp, onClick }: { fillStyle: FillStyle, fillStyleProp: FillStyle, onClick?: () => void }) => {
+    return (
+        <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
+            fillStyle === fillStyleProp ? 'bg-selected-tool-bg-light dark:bg-selected-tool-bg-dark dark:border-selected-tool-bg-dark' : ''
+        )}
+            title={fillStyleLabels[fillStyleProp] || "Unknown"}
+            onClick={onClick}
+        >
+            <Input type="radio" checked={fillStyle === fillStyleProp} onChange={() => onClick?.()} name="strokeWidth" className="opacity-0 absolute pointer-events-none" />
+            {fillStyleIcons[fillStyleProp]}
+        </label>
+    )
+}
+
 const EdgeStyleSelector = ({ strokeEdge, strokeEdgeProp, onClick }: { strokeEdge: StrokeEdge, strokeEdgeProp: StrokeEdge, onClick?: () => void }) => {
     return (
         <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
             strokeEdge === strokeEdgeProp ? 'bg-selected-tool-bg-light dark:bg-selected-tool-bg-dark dark:border-selected-tool-bg-dark' : ''
         )}
-            title={strokeEdgeProp === 'round' ? 'Round' : 'Sharp'}
+            title={strokeEdgeLabels[strokeEdgeProp]}
             onClick={onClick}
         >
             <Input type="radio" checked={strokeEdge === strokeEdgeProp} onChange={() => onClick?.()} name="strokeWidth" className="opacity-0 absolute pointer-events-none" />
-            {strokeEdgeProp === 'round' ? <RoundEdgeSvg /> : <SharpEdgeSvg />}
+            {strokeEdgeIcons[strokeEdgeProp]}
+        </label>
+    )
+}
+
+const RoughStyleSelector = ({ roughStyle, roughStyleProp, onClick }: { roughStyle: RoughStyle, roughStyleProp: RoughStyle, onClick?: () => void }) => {
+    return (
+        <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
+            roughStyle === roughStyleProp ? 'bg-selected-tool-bg-light dark:bg-selected-tool-bg-dark dark:border-selected-tool-bg-dark' : ''
+        )}
+            title={roughStyleLabels[roughStyleProp]}
+            onClick={onClick}
+        >
+            <Input type="radio" checked={roughStyle === roughStyleProp} onChange={() => onClick?.()} name="roughStyle" className="opacity-0 absolute pointer-events-none" />
+            {roughStyleIcons[roughStyleProp]}
         </label>
     )
 }
@@ -143,92 +214,11 @@ const StrokeStyleSelector = ({ strokeStyle, strokeStyleProp, onClick }: { stroke
         <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
             strokeStyle === strokeStyleProp ? 'bg-selected-tool-bg-light dark:bg-selected-tool-bg-dark dark:border-selected-tool-bg-dark' : ''
         )}
-            title={strokeStyleProp === 'solid' ? 'Solid' : strokeStyle === 'dashed' ? 'Dashed' : 'Dotted'}
+            title={strokeStyleLabels[strokeStyleProp]}
             onClick={onClick}
         >
             <Input type="radio" checked={strokeStyle === strokeStyleProp} onChange={() => onClick?.()} name="strokeWidth" className="opacity-0 absolute pointer-events-none" />
-            {strokeStyleProp === 'solid' ? <SolidStrokeStyleIcon /> : strokeStyleProp === 'dashed' ? <DashedStrokeStyleIcon /> : <DottedStrokeStyleIcon />}
+            {strokeStyleIcons[strokeStyleProp]}
         </label>
-    )
-}
-
-function SharpEdgeSvg() {
-    return (
-        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 20 20" className="w-4 h-4 text-color-on-primary-container dark:text-icon-fill-color-d" fill="none" stroke="currentColor" strokeLinecap="round"
-            strokeLinejoin="round">
-            <svg strokeWidth="1.5">
-                <path d="M3.33334 9.99998V6.66665C3.33334 6.04326 3.33403 4.9332 3.33539 3.33646C4.95233 3.33436 6.06276 3.33331 6.66668 3.33331H10"></path>
-                <path d="M13.3333 3.33331V3.34331"></path>
-                <path d="M16.6667 3.33331V3.34331"></path>
-                <path d="M16.6667 6.66669V6.67669"></path>
-                <path d="M16.6667 10V10.01"></path>
-                <path d="M3.33334 13.3333V13.3433"></path>
-                <path d="M16.6667 13.3333V13.3433"></path>
-                <path d="M3.33334 16.6667V16.6767"></path>
-                <path d="M6.66666 16.6667V16.6767"></path>
-                <path d="M10 16.6667V16.6767"></path>
-                <path d="M13.3333 16.6667V16.6767"></path>
-                <path d="M16.6667 16.6667V16.6767"></path>
-            </svg>
-        </svg>
-    )
-}
-
-function RoundEdgeSvg() {
-    return (
-        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 24 24" className="w-4 h-4 text-color-on-primary-container dark:text-icon-fill-color-d" fill="none" strokeWidth="2"
-            stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <g strokeWidth="1.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M4 12v-4a4 4 0 0 1 4 -4h4"></path>
-                <line x1="16" y1="4" x2="16" y2="4.01"></line>
-                <line x1="20" y1="4" x2="20" y2="4.01"></line>
-                <line x1="20" y1="8" x2="20" y2="8.01"></line>
-                <line x1="20" y1="12" x2="20" y2="12.01"></line>
-                <line x1="4" y1="16" x2="4" y2="16.01"></line>
-                <line x1="20" y1="16" x2="20" y2="16.01"></line>
-                <line x1="4" y1="20" x2="4" y2="20.01"></line>
-                <line x1="8" y1="20" x2="8" y2="20.01"></line>
-                <line x1="12" y1="20" x2="12" y2="20.01"></line>
-                <line x1="16" y1="20" x2="16" y2="20.01"></line>
-                <line x1="20" y1="20" x2="20" y2="20.01"></line>
-            </g>
-        </svg>
-    )
-}
-
-function SolidStrokeStyleIcon() {
-    return (
-        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4.167 10h11.666" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"></path>
-        </svg>
-    )
-}
-
-function DashedStrokeStyleIcon() {
-    return (
-        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 24 24" className="w-4 h-4" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <g strokeWidth="2">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M5 12h2"></path>
-                <path d="M17 12h2"></path>
-                <path d="M11 12h2"></path>
-            </g>
-        </svg>
-    )
-}
-
-function DottedStrokeStyleIcon() {
-    return (
-        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 24 24" className="w-4 h-4" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <g strokeWidth="2">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M4 12v.01"></path>
-                <path d="M8 12v.01"></path>
-                <path d="M12 12v.01"></path>
-                <path d="M16 12v.01"></path>
-                <path d="M20 12v.01"></path>
-            </g>
-        </svg>
     )
 }

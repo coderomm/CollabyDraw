@@ -1,5 +1,7 @@
 import {
+  FillStyle,
   LOCALSTORAGE_CANVAS_KEY,
+  RoughStyle,
   Shape,
   StrokeEdge,
   StrokeStyle,
@@ -26,10 +28,18 @@ import {
 } from "@/config/constants";
 import { MessageQueue } from "./MessageQueue";
 import { decryptData, encryptData } from "@/utils/crypto";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import { RoughCanvas } from "roughjs/canvas";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import { Options } from "roughjs/core";
+import rough from "roughjs/bin/rough";
 
 export class CanvasEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  private roughCanvas: RoughCanvas;
   private roomId: string | null;
   private userId: string | null;
   private userName: string | null;
@@ -55,6 +65,8 @@ export class CanvasEngine {
   private bgFill: string = "rgba(18, 18, 18)";
   private strokeEdge: StrokeEdge = "round";
   private strokeStyle: StrokeStyle = "solid";
+  private roughStyle: RoughStyle = 1;
+  private fillStyle: FillStyle = "solid";
 
   private selectedShape: Shape | null = null;
   private existingShapes: Shape[];
@@ -66,6 +78,8 @@ export class CanvasEngine {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private flushInterval: any;
   private encryptionKey: string | null;
+
+  private roughSeed: number = 1;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -82,6 +96,7 @@ export class CanvasEngine {
   ) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d")!;
+    this.roughCanvas = rough.canvas(canvas);
     this.canvasBgColor = canvasBgColor;
     this.roomId = roomId;
     this.userId = userId;
@@ -310,6 +325,74 @@ export class CanvasEngine {
     this.clearCanvas();
   }
 
+  setRoughStyle(rough: RoughStyle) {
+    this.roughStyle = rough;
+    this.clearCanvas();
+  }
+
+  setFillStyle(fill: FillStyle) {
+    this.fillStyle = fill;
+    this.clearCanvas();
+  }
+
+  private getRoughness(roughStyle: RoughStyle): number {
+    switch (roughStyle) {
+      case 0:
+        return 0;
+      case 1:
+        return 0.5;
+      case 2:
+        return 1;
+      case 3:
+        return 1.5;
+      case 4:
+        return 2;
+      default:
+        return 1;
+    }
+  }
+
+  private getRoughOptions(
+    strokeWidth: number,
+    strokeFill: string,
+    roughStyle: RoughStyle = 1,
+    bgFill?: string,
+    strokeStyle?: StrokeStyle,
+    fillStyle?: FillStyle,
+    hachureAngle: number = 60,
+  ): Options {
+    const options: Options = {
+      stroke: strokeFill,
+      strokeWidth: strokeStyle !== "solid" ? strokeWidth + 0.5 : strokeWidth,
+      roughness: this.getRoughness(roughStyle),
+      bowing: roughStyle === 0 ? 0 : 0.5 * roughStyle,
+      fill: bgFill ?? "#008000",
+      fillStyle: fillStyle,
+      hachureAngle: hachureAngle,
+      hachureGap: strokeWidth * 4,
+      seed: this.roughSeed,
+      disableMultiStroke: strokeStyle !== "solid",
+      disableMultiStrokeFill: true,
+      fillWeight: strokeWidth / 2,
+      strokeLineDash:
+        strokeStyle === "dashed"
+          ? getDashArrayDashed(strokeWidth)
+          : strokeStyle === "dotted"
+            ? getDashArrayDotted(strokeWidth)
+            : undefined,
+    };
+
+    if (strokeStyle === "dashed") {
+      options.dashOffset = 5;
+      options.dashArray = getDashArrayDashed(strokeWidth);
+    } else if (strokeStyle === "dotted") {
+      options.dashOffset = 2;
+      options.dashArray = getDashArrayDotted(strokeWidth);
+    }
+
+    return options;
+  }
+
   clearCanvas() {
     this.ctx.setTransform(this.scale, 0, 0, this.scale, this.panX, this.panY);
     this.ctx.clearRect(
@@ -337,7 +420,9 @@ export class CanvasEngine {
           shape.strokeFill || DEFAULT_STROKE_FILL,
           shape.bgFill || DEFAULT_BG_FILL,
           shape.rounded,
-          shape.strokeStyle
+          shape.strokeStyle,
+          shape.roughStyle || 1,
+          shape.fillStyle
         );
       } else if (shape.type === "ellipse") {
         this.drawEllipse(
@@ -348,7 +433,9 @@ export class CanvasEngine {
           shape.strokeWidth || DEFAULT_STROKE_WIDTH,
           shape.strokeFill || DEFAULT_STROKE_FILL,
           shape.bgFill || DEFAULT_BG_FILL,
-          shape.strokeStyle
+          shape.strokeStyle,
+          shape.roughStyle || 1,
+          shape.fillStyle
         );
       } else if (shape.type === "diamond") {
         this.drawDiamond(
@@ -360,7 +447,9 @@ export class CanvasEngine {
           shape.strokeFill || DEFAULT_STROKE_FILL,
           shape.bgFill || DEFAULT_BG_FILL,
           shape.rounded,
-          shape.strokeStyle
+          shape.strokeStyle,
+          shape.roughStyle || 1,
+          shape.fillStyle
         );
       } else if (shape.type === "line") {
         this.drawLine(
@@ -371,6 +460,7 @@ export class CanvasEngine {
           shape.strokeWidth || DEFAULT_STROKE_WIDTH,
           shape.strokeFill || DEFAULT_STROKE_FILL,
           shape.strokeStyle,
+          shape.roughStyle || 1,
           false
         );
       } else if (shape.type === "arrow") {
@@ -382,6 +472,7 @@ export class CanvasEngine {
           shape.strokeWidth || DEFAULT_STROKE_WIDTH,
           shape.strokeFill || DEFAULT_STROKE_FILL,
           shape.strokeStyle,
+          shape.roughStyle || 1,
           true
         );
       } else if (shape.type === "pen") {
@@ -389,7 +480,8 @@ export class CanvasEngine {
           shape.points,
           shape.strokeWidth,
           shape.strokeFill,
-          shape.strokeStyle
+          shape.strokeStyle,
+          shape.roughStyle || 1
         );
       }
     });
@@ -492,6 +584,8 @@ export class CanvasEngine {
           bgFill: this.bgFill,
           rounded: this.strokeEdge,
           strokeStyle: this.strokeStyle,
+          roughStyle: this.roughStyle,
+          fillStyle: this.fillStyle,
         };
         break;
 
@@ -507,6 +601,8 @@ export class CanvasEngine {
           strokeFill: this.strokeFill,
           bgFill: this.bgFill,
           strokeStyle: this.strokeStyle,
+          roughStyle: this.roughStyle,
+          fillStyle: this.fillStyle,
         };
         break;
 
@@ -523,6 +619,8 @@ export class CanvasEngine {
           bgFill: this.bgFill,
           rounded: this.strokeEdge,
           strokeStyle: this.strokeStyle,
+          roughStyle: this.roughStyle,
+          fillStyle: this.fillStyle,
         };
         break;
 
@@ -537,6 +635,7 @@ export class CanvasEngine {
           strokeWidth: this.strokeWidth,
           strokeFill: this.strokeFill,
           strokeStyle: this.strokeStyle,
+          roughStyle: this.roughStyle,
         };
         break;
 
@@ -551,6 +650,7 @@ export class CanvasEngine {
           strokeWidth: this.strokeWidth,
           strokeFill: this.strokeFill,
           strokeStyle: this.strokeStyle,
+          roughStyle: this.roughStyle,
         };
         break;
 
@@ -565,6 +665,7 @@ export class CanvasEngine {
             strokeWidth: this.strokeWidth,
             strokeFill: this.strokeFill,
             strokeStyle: this.strokeStyle,
+            roughStyle: this.roughStyle,
           };
         }
         break;
@@ -693,6 +794,7 @@ export class CanvasEngine {
         strokeWidth: this.strokeWidth,
         strokeFill: this.strokeFill,
         strokeStyle: this.strokeStyle,
+        roughStyle: this.roughStyle,
       });
     } else if (this.activeTool === "eraser") {
       this.eraser(x, y);
@@ -734,7 +836,9 @@ export class CanvasEngine {
             this.strokeFill,
             this.bgFill,
             this.strokeEdge,
-            this.strokeStyle
+            this.strokeStyle,
+            this.roughStyle,
+            this.fillStyle
           );
           break;
 
@@ -747,7 +851,9 @@ export class CanvasEngine {
             this.strokeWidth,
             this.strokeFill,
             this.bgFill,
-            this.strokeStyle
+            this.strokeStyle,
+            this.roughStyle,
+            this.fillStyle
           );
           break;
 
@@ -761,7 +867,9 @@ export class CanvasEngine {
             this.strokeFill,
             this.bgFill,
             this.strokeEdge,
-            this.strokeStyle
+            this.strokeStyle,
+            this.roughStyle,
+            this.fillStyle
           );
           break;
 
@@ -774,6 +882,7 @@ export class CanvasEngine {
             this.strokeWidth,
             this.strokeFill,
             this.strokeStyle,
+            this.roughStyle,
             false
           );
           break;
@@ -787,19 +896,7 @@ export class CanvasEngine {
             this.strokeWidth,
             this.strokeFill,
             this.strokeStyle,
-            true
-          );
-          break;
-
-        case "arrow":
-          this.drawLine(
-            this.startX,
-            this.startY,
-            x,
-            y,
-            this.strokeWidth,
-            this.strokeFill,
-            this.strokeStyle,
+            this.roughStyle,
             true
           );
           break;
@@ -813,7 +910,8 @@ export class CanvasEngine {
               currentShape.points,
               this.strokeWidth,
               this.strokeFill,
-              this.strokeStyle
+              this.strokeStyle,
+              this.roughStyle
             );
           }
           break;
@@ -942,45 +1040,93 @@ export class CanvasEngine {
     strokeFill: string,
     bgFill: string,
     rounded: StrokeEdge,
-    strokeStyle: StrokeStyle
+    strokeStyle: StrokeStyle,
+    roughStyle: RoughStyle = 1,
+    fillStyle: FillStyle
   ) {
     const posX = width < 0 ? x + width : x;
     const posY = height < 0 ? y + height : y;
     const normalizedWidth = Math.abs(width);
     const normalizedHeight = Math.abs(height);
+    if (roughStyle === 0) {
+      const radius = Math.min(
+        Math.abs(
+          Math.max(normalizedWidth, normalizedHeight) /
+            RECT_CORNER_RADIUS_FACTOR
+        ),
+        normalizedWidth / 2,
+        normalizedHeight / 2
+      );
 
-    const radius = Math.min(
-      Math.abs(
-        Math.max(normalizedWidth, normalizedHeight) / RECT_CORNER_RADIUS_FACTOR
-      ),
-      normalizedWidth / 2,
-      normalizedHeight / 2
-    );
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = strokeFill;
+      this.ctx.lineWidth = strokeWidth;
+      this.ctx.fillStyle = bgFill;
 
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = strokeFill;
-    this.ctx.lineWidth = strokeWidth;
-    this.ctx.fillStyle = bgFill;
+      this.ctx.setLineDash(
+        strokeStyle === "dashed"
+          ? getDashArrayDashed(strokeWidth)
+          : strokeStyle === "dotted"
+            ? getDashArrayDotted(strokeWidth)
+            : []
+      );
 
-    this.ctx.setLineDash(
-      strokeStyle === "dashed"
-        ? getDashArrayDashed(strokeWidth)
-        : strokeStyle === "dotted"
-          ? getDashArrayDotted(strokeWidth)
-          : []
-    );
+      this.ctx.roundRect(
+        posX,
+        posY,
+        normalizedWidth,
+        normalizedHeight,
+        rounded === "round" ? [radius] : [0]
+      );
 
-    this.ctx.roundRect(
-      posX,
-      posY,
-      normalizedWidth,
-      normalizedHeight,
-      rounded === "round" ? [radius] : [0]
-    );
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+    } else {
+      const options = this.getRoughOptions(
+        strokeWidth,
+        strokeFill,
+        roughStyle,
+        bgFill,
+        strokeStyle,
+        fillStyle
+      );
 
-    this.ctx.closePath();
-    this.ctx.fill();
-    this.ctx.stroke();
+      if (rounded === "round") {
+        const radius = Math.min(
+          Math.abs(
+            Math.max(normalizedWidth, normalizedHeight) /
+              RECT_CORNER_RADIUS_FACTOR
+          ),
+          normalizedWidth / 2,
+          normalizedHeight / 2
+        );
+        options.curveFitting = 1;
+        options.curveTightness = 1;
+
+        this.roughCanvas.path(
+          `M ${posX + radius} ${posY} 
+         L ${posX + normalizedWidth - radius} ${posY} 
+         Q ${posX + normalizedWidth} ${posY} ${posX + normalizedWidth} ${posY + radius} 
+         L ${posX + normalizedWidth} ${posY + normalizedHeight - radius} 
+         Q ${posX + normalizedWidth} ${posY + normalizedHeight} ${posX + normalizedWidth - radius} ${posY + normalizedHeight} 
+         L ${posX + radius} ${posY + normalizedHeight} 
+         Q ${posX} ${posY + normalizedHeight} ${posX} ${posY + normalizedHeight - radius} 
+         L ${posX} ${posY + radius} 
+         Q ${posX} ${posY} ${posX + radius} ${posY} 
+         Z`,
+          options
+        );
+      } else {
+        this.roughCanvas.rectangle(
+          posX,
+          posY,
+          normalizedWidth,
+          normalizedHeight,
+          options
+        );
+      }
+    }
   }
 
   drawEllipse(
@@ -991,30 +1137,50 @@ export class CanvasEngine {
     strokeWidth: number,
     strokeFill: string,
     bgFill: string,
-    strokeStyle: StrokeStyle
+    strokeStyle: StrokeStyle,
+    roughStyle: RoughStyle = 1,
+    fillStyle: FillStyle
   ) {
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = strokeFill;
-    this.ctx.lineWidth = strokeWidth;
-    this.ctx.setLineDash(
-      strokeStyle === "dashed"
-        ? getDashArrayDashed(strokeWidth)
-        : strokeStyle === "dotted"
-          ? getDashArrayDotted(strokeWidth)
-          : []
-    );
-    this.ctx.fillStyle = bgFill;
-    this.ctx.ellipse(
-      x,
-      y,
-      width < 0 ? 1 : width,
-      height < 0 ? 1 : height,
-      0,
-      0,
-      2 * Math.PI
-    );
-    this.ctx.fill();
-    this.ctx.stroke();
+    if (roughStyle === 0) {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = strokeFill;
+      this.ctx.lineWidth = strokeWidth;
+      this.ctx.setLineDash(
+        strokeStyle === "dashed"
+          ? getDashArrayDashed(strokeWidth)
+          : strokeStyle === "dotted"
+            ? getDashArrayDotted(strokeWidth)
+            : []
+      );
+      this.ctx.fillStyle = bgFill;
+      this.ctx.ellipse(
+        x,
+        y,
+        width < 0 ? 1 : width,
+        height < 0 ? 1 : height,
+        0,
+        0,
+        2 * Math.PI
+      );
+      this.ctx.fill();
+      this.ctx.stroke();
+    } else {
+      const options = this.getRoughOptions(
+        strokeWidth,
+        strokeFill,
+        roughStyle,
+        bgFill,
+        strokeStyle,
+        fillStyle
+      );
+      this.roughCanvas.ellipse(
+        x,
+        y,
+        width < 0 ? 2 : width * 2,
+        height < 0 ? 2 : height * 2,
+        options
+      );
+    }
   }
 
   drawDiamond(
@@ -1026,7 +1192,9 @@ export class CanvasEngine {
     strokeFill: string,
     bgFill: string,
     rounded: StrokeEdge,
-    strokeStyle: StrokeStyle
+    strokeStyle: StrokeStyle,
+    roughStyle: RoughStyle = 1,
+    fillStyle: FillStyle
   ) {
     const halfWidth = width / 2;
     const halfHeight = height / 2;
@@ -1034,97 +1202,125 @@ export class CanvasEngine {
     const normalizedWidth = Math.abs(halfWidth);
     const normalizedHeight = Math.abs(halfHeight);
 
-    this.ctx.setLineDash(
-      strokeStyle === "dashed"
-        ? getDashArrayDashed(strokeWidth)
-        : strokeStyle === "dotted"
-          ? getDashArrayDotted(strokeWidth)
-          : []
-    );
-
-    if (rounded === "round") {
-      const cornerRadiusPercentage: number = DIAMOND_CORNER_RADIUS_PERCENTAGE;
-
-      const sideLength = Math.min(
-        Math.sqrt(Math.pow(normalizedWidth, 2) + Math.pow(normalizedHeight, 2)),
-        2 * normalizedWidth,
-        2 * normalizedHeight
+    if (roughStyle === 0) {
+      this.ctx.setLineDash(
+        strokeStyle === "dashed"
+          ? getDashArrayDashed(strokeWidth)
+          : strokeStyle === "dotted"
+            ? getDashArrayDotted(strokeWidth)
+            : []
       );
 
-      let radius = (sideLength * cornerRadiusPercentage) / 100;
+      if (rounded === "round") {
+        const cornerRadiusPercentage: number = DIAMOND_CORNER_RADIUS_PERCENTAGE;
 
-      const maxRadius = Math.min(normalizedWidth, normalizedHeight) * 0.4;
-      radius = Math.min(radius, maxRadius);
+        const sideLength = Math.min(
+          Math.sqrt(
+            Math.pow(normalizedWidth, 2) + Math.pow(normalizedHeight, 2)
+          ),
+          2 * normalizedWidth,
+          2 * normalizedHeight
+        );
 
-      const topPoint = { x: centerX, y: centerY - halfHeight };
-      const rightPoint = { x: centerX + halfWidth, y: centerY };
-      const bottomPoint = { x: centerX, y: centerY + halfHeight };
-      const leftPoint = { x: centerX - halfWidth, y: centerY };
+        let radius = (sideLength * cornerRadiusPercentage) / 100;
 
-      this.ctx.save();
+        const maxRadius = Math.min(normalizedWidth, normalizedHeight) * 0.4;
+        radius = Math.min(radius, maxRadius);
 
-      this.ctx.beginPath();
+        const topPoint = { x: centerX, y: centerY - halfHeight };
+        const rightPoint = { x: centerX + halfWidth, y: centerY };
+        const bottomPoint = { x: centerX, y: centerY + halfHeight };
+        const leftPoint = { x: centerX - halfWidth, y: centerY };
 
-      const distTopLeft = Math.sqrt(
-        Math.pow(topPoint.x - leftPoint.x, 2) +
-          Math.pow(topPoint.y - leftPoint.y, 2)
-      );
+        this.ctx.save();
 
-      const startX =
-        leftPoint.x + ((topPoint.x - leftPoint.x) * radius) / distTopLeft;
-      const startY =
-        leftPoint.y + ((topPoint.y - leftPoint.y) * radius) / distTopLeft;
+        this.ctx.beginPath();
 
-      this.ctx.moveTo(startX, startY);
+        const distTopLeft = Math.sqrt(
+          Math.pow(topPoint.x - leftPoint.x, 2) +
+            Math.pow(topPoint.y - leftPoint.y, 2)
+        );
 
-      this.ctx.arcTo(
-        topPoint.x,
-        topPoint.y,
-        rightPoint.x,
-        rightPoint.y,
-        radius
-      );
+        const startX =
+          leftPoint.x + ((topPoint.x - leftPoint.x) * radius) / distTopLeft;
+        const startY =
+          leftPoint.y + ((topPoint.y - leftPoint.y) * radius) / distTopLeft;
 
-      this.ctx.arcTo(
-        rightPoint.x,
-        rightPoint.y,
-        bottomPoint.x,
-        bottomPoint.y,
-        radius
-      );
+        this.ctx.moveTo(startX, startY);
 
-      this.ctx.arcTo(
-        bottomPoint.x,
-        bottomPoint.y,
-        leftPoint.x,
-        leftPoint.y,
-        radius
-      );
+        this.ctx.arcTo(
+          topPoint.x,
+          topPoint.y,
+          rightPoint.x,
+          rightPoint.y,
+          radius
+        );
 
-      this.ctx.arcTo(leftPoint.x, leftPoint.y, topPoint.x, topPoint.y, radius);
+        this.ctx.arcTo(
+          rightPoint.x,
+          rightPoint.y,
+          bottomPoint.x,
+          bottomPoint.y,
+          radius
+        );
 
-      this.ctx.lineTo(startX, startY);
-      this.ctx.closePath();
+        this.ctx.arcTo(
+          bottomPoint.x,
+          bottomPoint.y,
+          leftPoint.x,
+          leftPoint.y,
+          radius
+        );
 
-      this.ctx.fillStyle = bgFill;
-      this.ctx.strokeStyle = strokeFill;
-      this.ctx.lineWidth = strokeWidth;
+        this.ctx.arcTo(
+          leftPoint.x,
+          leftPoint.y,
+          topPoint.x,
+          topPoint.y,
+          radius
+        );
 
-      this.ctx.fill();
-      this.ctx.stroke();
+        this.ctx.lineTo(startX, startY);
+        this.ctx.closePath();
+
+        this.ctx.fillStyle = bgFill;
+        this.ctx.strokeStyle = strokeFill;
+        this.ctx.lineWidth = strokeWidth;
+
+        this.ctx.fill();
+        this.ctx.stroke();
+      } else {
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = strokeFill;
+        this.ctx.lineWidth = strokeWidth;
+        this.ctx.fillStyle = bgFill;
+
+        this.ctx.moveTo(centerX, centerY - halfHeight);
+        this.ctx.lineTo(centerX + halfWidth, centerY);
+        this.ctx.lineTo(centerX, centerY + halfHeight);
+        this.ctx.lineTo(centerX - halfWidth, centerY);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+      }
     } else {
-      this.ctx.beginPath();
-      this.ctx.strokeStyle = strokeFill;
-      this.ctx.lineWidth = strokeWidth;
-      this.ctx.fillStyle = bgFill;
+      const options = this.getRoughOptions(
+        strokeWidth,
+        strokeFill,
+        roughStyle,
+        bgFill,
+        strokeStyle,
+        fillStyle
+      );
 
-      this.ctx.moveTo(centerX, centerY - halfHeight);
-      this.ctx.lineTo(centerX + halfWidth, centerY);
-      this.ctx.lineTo(centerX, centerY + halfHeight);
-      this.ctx.lineTo(centerX - halfWidth, centerY);
-      this.ctx.closePath();
-      this.ctx.fill();
-      this.ctx.stroke();
+      const diamondPoints = [
+        [centerX, centerY - halfHeight],
+        [centerX + halfWidth, centerY],
+        [centerX, centerY + halfHeight],
+        [centerX - halfWidth, centerY],
+      ];
+
+      this.roughCanvas.polygon(diamondPoints, options);
     }
   }
 
@@ -1136,73 +1332,98 @@ export class CanvasEngine {
     strokeWidth: number,
     strokeFill: string,
     strokeStyle: StrokeStyle,
+    roughStyle: RoughStyle = 1,
     arrowHead: boolean
   ) {
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = strokeFill;
-    this.ctx.lineWidth = strokeWidth;
-    this.ctx.setLineDash(
-      strokeStyle === "dashed"
-        ? getDashArrayDashed(strokeWidth)
-        : strokeStyle === "dotted"
-          ? getDashArrayDotted(strokeWidth)
-          : []
-    );
-    this.ctx.moveTo(fromX, fromY);
-    this.ctx.lineTo(toX, toY);
-    this.ctx.stroke();
-
-    if (arrowHead === false) {
-      return;
+    if (roughStyle === 0) {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = strokeFill;
+      this.ctx.lineWidth = strokeWidth;
+      this.ctx.setLineDash(
+        strokeStyle === "dashed"
+          ? getDashArrayDashed(strokeWidth)
+          : strokeStyle === "dotted"
+            ? getDashArrayDotted(strokeWidth)
+            : []
+      );
+      this.ctx.moveTo(fromX, fromY);
+      this.ctx.lineTo(toX, toY);
+      this.ctx.stroke();
+    } else {
+      const options = this.getRoughOptions(
+        strokeWidth,
+        strokeFill,
+        roughStyle,
+        undefined,
+        strokeStyle
+      );
+      this.roughCanvas.line(fromX, fromY, toX, toY, options);
     }
 
-    const angleHeadAngle = Math.atan2(toY - fromY, toX - fromX);
-    this.ctx.beginPath();
-    this.ctx.moveTo(toX, toY);
-    this.ctx.lineTo(
-      toX -
-        ARROW_HEAD_LENGTH *
-          (strokeStyle !== "solid" ? 2 : 1) *
-          Math.cos(angleHeadAngle - Math.PI / 6),
-      toY -
-        ARROW_HEAD_LENGTH *
-          (strokeStyle !== "solid" ? 2 : 1) *
-          Math.sin(angleHeadAngle - Math.PI / 6)
-    );
-    this.ctx.moveTo(toX, toY);
-    this.ctx.lineTo(
-      toX -
-        ARROW_HEAD_LENGTH *
-          (strokeStyle !== "solid" ? 2 : 1) *
-          Math.cos(angleHeadAngle + Math.PI / 6),
-      toY -
-        ARROW_HEAD_LENGTH *
-          (strokeStyle !== "solid" ? 2 : 1) *
-          Math.sin(angleHeadAngle + Math.PI / 6)
-    );
-    this.ctx.stroke();
+    if (arrowHead) {
+      const angleHeadAngle = Math.atan2(toY - fromY, toX - fromX);
+      const length = ARROW_HEAD_LENGTH * (strokeStyle !== "solid" ? 2 : 1);
+
+      const arrowX1 = toX - length * Math.cos(angleHeadAngle - Math.PI / 6);
+      const arrowY1 = toY - length * Math.sin(angleHeadAngle - Math.PI / 6);
+      const arrowX2 = toX - length * Math.cos(angleHeadAngle + Math.PI / 6);
+      const arrowY2 = toY - length * Math.sin(angleHeadAngle + Math.PI / 6);
+
+      if (roughStyle === 0) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(toX, toY);
+        this.ctx.lineTo(arrowX1, arrowY1);
+        this.ctx.moveTo(toX, toY);
+        this.ctx.lineTo(arrowX2, arrowY2);
+        this.ctx.stroke();
+      } else {
+        const options = this.getRoughOptions(
+          strokeWidth,
+          strokeFill,
+          roughStyle
+        );
+        this.roughCanvas.line(toX, toY, arrowX1, arrowY1, options);
+        this.roughCanvas.line(toX, toY, arrowX2, arrowY2, options);
+      }
+    }
   }
 
   drawPencil(
     points: { x: number; y: number }[],
     strokeWidth: number,
     strokeFill: string,
-    strokeStyle: StrokeStyle
+    strokeStyle: StrokeStyle,
+    roughStyle: RoughStyle
   ) {
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = strokeFill;
-    this.ctx.lineWidth = strokeWidth;
-    this.ctx.setLineDash(
-      strokeStyle === "dashed"
-        ? getDashArrayDashed(strokeWidth)
-        : strokeStyle === "dotted"
-          ? getDashArrayDotted(strokeWidth)
-          : []
-    );
-    if (points[0] === undefined) return null;
-    this.ctx.moveTo(points[0].x, points[0].y);
-    points.forEach((point) => this.ctx.lineTo(point.x, point.y));
-    this.ctx.stroke();
+    if (!points.length) return;
+
+    if (roughStyle === 0) {
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = strokeFill;
+      this.ctx.lineWidth = strokeWidth;
+      this.ctx.setLineDash(
+        strokeStyle === "dashed"
+          ? getDashArrayDashed(strokeWidth)
+          : strokeStyle === "dotted"
+            ? getDashArrayDotted(strokeWidth)
+            : []
+      );
+      if (points[0] === undefined) return null;
+      this.ctx.moveTo(points[0].x, points[0].y);
+      points.forEach((point) => this.ctx.lineTo(point.x, point.y));
+      this.ctx.stroke();
+    } else {
+      const pathStr = points.reduce(
+        (path, point, index) =>
+          path +
+          (index === 0
+            ? `M ${point.x} ${point.y}`
+            : ` L ${point.x} ${point.y}`),
+        ""
+      );
+      const options = this.getRoughOptions(strokeWidth, strokeFill, roughStyle);
+      this.roughCanvas.path(pathStr, options);
+    }
   }
 
   eraser(x: number, y: number) {

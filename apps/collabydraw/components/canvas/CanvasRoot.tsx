@@ -1,7 +1,7 @@
 "use client"
 
 import { CanvasEngine } from "@/canvas-engine/CanvasEngine";
-import { BgFill, canvasBgLight, Mode, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgLight, FillStyle, Mode, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import React, { SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { MobileCommandBar } from "../MobileCommandBar";
 import { useTheme } from "next-themes";
@@ -101,6 +101,8 @@ export default function CanvasRoot() {
         bgFill: "#00000000" as BgFill,
         strokeEdge: "round" as StrokeEdge,
         strokeStyle: "solid" as StrokeStyle,
+        roughStyle: 1 as RoughStyle,
+        fillStyle: 'solid' as FillStyle,
         grabbing: false,
         sidebarOpen: false,
         canvasColor: canvasBgLight[0]
@@ -121,7 +123,7 @@ export default function CanvasRoot() {
     }, [canvasEngineState.engine, canvasEngineState.scale]);
 
     useEffect(() => {
-        const { engine, activeTool, strokeWidth, strokeFill, bgFill, canvasColor, strokeEdge, strokeStyle } = canvasEngineState;
+        const { engine, activeTool, strokeWidth, strokeFill, bgFill, canvasColor, strokeEdge, strokeStyle, roughStyle, fillStyle } = canvasEngineState;
 
         if (engine) {
             engine.setTool(activeTool);
@@ -131,6 +133,8 @@ export default function CanvasRoot() {
             engine.setCanvasBgColor(canvasColor);
             engine.setStrokeEdge(strokeEdge);
             engine.setStrokeStyle(strokeStyle);
+            engine.setRoughStyle(roughStyle);
+            engine.setFillStyle(fillStyle);
         }
     }, [canvasEngineState]);
 
@@ -277,6 +281,16 @@ export default function CanvasRoot() {
                             strokeStyle={canvasEngineState.strokeStyle}
                             setStrokeStyle={(newStrokeStyle: SetStateAction<StrokeStyle>) =>
                                 setCanvasEngineState(prev => ({ ...prev, strokeStyle: typeof newStrokeStyle === 'function' ? newStrokeStyle(prev.strokeStyle) : newStrokeStyle }))
+                            }
+
+                            roughStyle={canvasEngineState.roughStyle}
+                            setRoughStyle={(newRoughStyle: SetStateAction<RoughStyle>) =>
+                                setCanvasEngineState(prev => ({ ...prev, roughStyle: typeof newRoughStyle === 'function' ? newRoughStyle(prev.roughStyle) : newRoughStyle }))
+                            }
+
+                            fillStyle={canvasEngineState.fillStyle}
+                            setFillStyle={(newFillStyle: SetStateAction<FillStyle>) =>
+                                setCanvasEngineState(prev => ({ ...prev, fillStyle: typeof newFillStyle === 'function' ? newFillStyle(prev.fillStyle) : newFillStyle }))
                             }
                         />
 
