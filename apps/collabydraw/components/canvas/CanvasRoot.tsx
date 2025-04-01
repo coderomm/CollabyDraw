@@ -226,6 +226,10 @@ export default function CanvasRoot() {
         }
     }, [handleKeyDown, initializeCanvasEngine, isCanvasReady, isConnected, mode, canvasEngineState.engine]);
 
+    const clearCanvas = useCallback(() => {
+        canvasEngineState.engine?.clearAllShapes();
+    }, [canvasEngineState.engine]);
+
     const toggleSidebar = useCallback(() => {
         setCanvasEngineState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }));
     }, []);
@@ -256,6 +260,7 @@ export default function CanvasRoot() {
                                         setCanvasEngineState(prev => ({ ...prev, canvasColor: typeof newCanvasColor === 'function' ? newCanvasColor(prev.canvasColor) : newCanvasColor }))
                                     }
                                     isStandalone={mode === 'room' ? false : true}
+                                    onClearCanvas={clearCanvas}
                                 />
                             )}
                         </div>

@@ -23,7 +23,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { ColorPicker } from "@/components/color-picker"
-import { ConfirmDialog } from "./confirm-dialog"
+import { ClearCanvasDialog } from "./clear-canvas-dialog"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
 import { signOut, useSession } from "next-auth/react"
@@ -84,16 +84,16 @@ export function AppSidebar({ isOpen, onClose, canvasColor, setCanvasColor, isMob
 
     return (
         <>
-            <ConfirmDialog
+            <ClearCanvasDialog
                 open={clearDialogOpen}
                 onOpenChange={setClearDialogOpen}
                 title="Clear canvas"
                 description="This will clear the whole canvas. Are you sure?"
-                onClearCanvas={isStandalone ? onClearCanvas : undefined}
+                onClearCanvas={onClearCanvas ? onClearCanvas : () => { }}
                 variant="destructive"
             />
             <section data-sidebar className={cn("transition-transform duration-300 ease-in-out z-20", isMobile ? "" : "absolute top-full mt-2")}>
-                <div className={cn("flex flex-col", isMobile ? "" : "h-[calc(100vh-150px)] Island rounded-lg")}>
+                <div className={cn("flex flex-col", isMobile ? "" : "h-[calc(100vh-135px)] Island rounded-lg")}>
                     <div className={cn("py-1", isMobile ? "" : "flex-1 overflow-auto py-1 custom-scrollbar")}>
                         <nav className={cn("grid gap-1", isMobile ? "px-0" : "px-2")}>
                             <SidebarItem icon={Command} label="Command palette" shortcut="Ctrl+/" />

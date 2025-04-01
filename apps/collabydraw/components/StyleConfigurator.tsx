@@ -57,7 +57,7 @@ export function StyleConfigurator({
     }
     return (
         <>
-            <section className={cn("StyleConfigurator p-3 overflow-auto custom-scrollbar transition-transform duration-300 ease-in-out z-10 mt-2",
+            <section className={cn("StyleConfigurator p-3 overflow-y-auto overflow-x-hidden custom-scrollbar transition-transform duration-300 ease-in-out z-10 mt-2",
                 isMobile ? "" : "absolute top-full w-56 h-[calc(100vh-150px)] bg-background dark:bg-w-bg rounded-lg Island"
             )}>
                 <h2 className="sr-only">Selected shape actions</h2>
