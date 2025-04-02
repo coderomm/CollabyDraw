@@ -164,3 +164,54 @@ export const ZigzagLineIcon = () => {
         </svg>
     );
 }
+
+export const A_LetterIcon = () => {
+    return (
+        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <g stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5.833 16.667v-10a3.333 3.333 0 0 1 3.334-3.334h1.666a3.333 3.333 0 0 1 3.334 3.334v10M5.833 10.833h8.334"></path>
+            </g>
+        </svg>
+    )
+}
+
+export const S_LetterIcon = () => {
+    return (
+        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <g clipPath="url(#a)">
+                <path d="M14.167 6.667a3.333 3.333 0 0 0-3.334-3.334H9.167a3.333 3.333 0 0 0 0 6.667h1.666a3.333 3.333 0 0 1 0 6.667H9.167a3.333 3.333 0 0 1-3.334-3.334" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"></path>
+            </g>
+            <defs>
+                <clipPath id="a">
+                    <path fill="#fff" d="M0 0h20v20H0z"></path>
+                </clipPath>
+            </defs>
+        </svg>
+    )
+}
+
+export const M_LetterIcon = () => {
+    return (
+        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <g clipPath="url(#a)">
+                <path d="M5 16.667V3.333L10 15l5-11.667v13.334" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"></path>
+            </g>
+            <defs>
+                <clipPath id="a">
+                    <path fill="#fff" d="M0 0h20v20H0z"></path>
+                </clipPath>
+            </defs>
+        </svg>
+    )
+}
+
+export const L_LetterIcon = () => {
+    return (
+        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 20 20" className="w-4 h-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <g clipPath="url(#a)">
+                <path d="M5.833 3.333v13.334h8.334" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"></path>
+            </g>
+            <defs><clipPath id="a"><path fill="#fff" d="M0 0h20v20H0z"></path></clipPath></defs>
+        </svg>
+    )
+}

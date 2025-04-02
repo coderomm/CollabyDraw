@@ -1,10 +1,15 @@
 import {
   FillStyle,
+  FontFamily,
+  FontSize,
+  FontStyle,
   LOCALSTORAGE_CANVAS_KEY,
   RoughStyle,
   Shape,
   StrokeEdge,
   StrokeStyle,
+  StrokeWidth,
+  TextAlign,
   ToolType,
 } from "@/types/canvas";
 import { SelectionController } from "./SelectionController";
@@ -35,6 +40,7 @@ import { RoughCanvas } from "roughjs/canvas";
 // @ts-expect-error
 import { Options } from "roughjs/core";
 import rough from "roughjs/bin/rough";
+import { getFontSize, getLineHeight } from "@/utils/textUtils";
 
 export class CanvasEngine {
   private canvas: HTMLCanvasElement;
@@ -60,13 +66,16 @@ export class CanvasEngine {
   private panX: number = 0;
   private panY: number = 0;
   private scale: number = 1;
-  private strokeWidth: number = 1;
+  private strokeWidth: StrokeWidth = 1;
   private strokeFill: string = "rgba(255, 255, 255)";
   private bgFill: string = "rgba(18, 18, 18)";
   private strokeEdge: StrokeEdge = "round";
   private strokeStyle: StrokeStyle = "solid";
   private roughStyle: RoughStyle = 1;
   private fillStyle: FillStyle = "solid";
+  private fontFamily: FontFamily = "hand-drawn";
+  private fontSize: FontSize = "Medium";
+  private textAlign: TextAlign = "left";
 
   private selectedShape: Shape | null = null;
   private existingShapes: Shape[];
@@ -291,7 +300,7 @@ export class CanvasEngine {
     }
   }
 
-  setStrokeWidth(width: number) {
+  setStrokeWidth(width: StrokeWidth) {
     this.strokeWidth = width;
     this.clearCanvas();
   }
@@ -335,45 +344,43 @@ export class CanvasEngine {
     this.clearCanvas();
   }
 
-  private getRoughness(roughStyle: RoughStyle): number {
-    switch (roughStyle) {
-      case 0:
-        return 0;
-      case 1:
-        return 0.5;
-      case 2:
-        return 1;
-      case 3:
-        return 1.5;
-      case 4:
-        return 2;
-      default:
-        return 1;
-    }
+  setFontFamily(fontFamily: FontFamily) {
+    this.fontFamily = fontFamily;
+    this.clearCanvas();
+  }
+
+  setFontSize(size: FontSize) {
+    this.fontSize = size;
+    this.clearCanvas();
+  }
+
+  setTextAlign(align: TextAlign) {
+    this.textAlign = align;
+    this.clearCanvas();
   }
 
   private getRoughOptions(
     strokeWidth: number,
     strokeFill: string,
-    roughStyle: RoughStyle = 1,
+    roughStyle: RoughStyle,
     bgFill?: string,
     strokeStyle?: StrokeStyle,
     fillStyle?: FillStyle,
-    hachureAngle: number = 60,
+    hachureAngle: number = 60
   ): Options {
     const options: Options = {
       stroke: strokeFill,
       strokeWidth: strokeStyle !== "solid" ? strokeWidth + 0.5 : strokeWidth,
-      roughness: this.getRoughness(roughStyle),
+      roughness: roughStyle,
       bowing: roughStyle === 0 ? 0 : 0.5 * roughStyle,
-      fill: bgFill ?? "#008000",
+      fill: bgFill ?? "",
       fillStyle: fillStyle,
       hachureAngle: hachureAngle,
       hachureGap: strokeWidth * 4,
       seed: this.roughSeed,
-      disableMultiStroke: strokeStyle !== "solid",
+      disableMultiStroke: true,
       disableMultiStrokeFill: true,
-      fillWeight: strokeWidth / 2,
+      fillWeight: strokeWidth,
       strokeLineDash:
         strokeStyle === "dashed"
           ? getDashArrayDashed(strokeWidth)
@@ -421,7 +428,7 @@ export class CanvasEngine {
           shape.bgFill || DEFAULT_BG_FILL,
           shape.rounded,
           shape.strokeStyle,
-          shape.roughStyle || 1,
+          shape.roughStyle,
           shape.fillStyle
         );
       } else if (shape.type === "ellipse") {
@@ -434,7 +441,7 @@ export class CanvasEngine {
           shape.strokeFill || DEFAULT_STROKE_FILL,
           shape.bgFill || DEFAULT_BG_FILL,
           shape.strokeStyle,
-          shape.roughStyle || 1,
+          shape.roughStyle,
           shape.fillStyle
         );
       } else if (shape.type === "diamond") {
@@ -448,7 +455,7 @@ export class CanvasEngine {
           shape.bgFill || DEFAULT_BG_FILL,
           shape.rounded,
           shape.strokeStyle,
-          shape.roughStyle || 1,
+          shape.roughStyle,
           shape.fillStyle
         );
       } else if (shape.type === "line") {
@@ -460,7 +467,7 @@ export class CanvasEngine {
           shape.strokeWidth || DEFAULT_STROKE_WIDTH,
           shape.strokeFill || DEFAULT_STROKE_FILL,
           shape.strokeStyle,
-          shape.roughStyle || 1,
+          shape.roughStyle,
           false
         );
       } else if (shape.type === "arrow") {
@@ -472,16 +479,28 @@ export class CanvasEngine {
           shape.strokeWidth || DEFAULT_STROKE_WIDTH,
           shape.strokeFill || DEFAULT_STROKE_FILL,
           shape.strokeStyle,
-          shape.roughStyle || 1,
+          shape.roughStyle,
           true
         );
       } else if (shape.type === "pen") {
         this.drawPencil(
           shape.points,
-          shape.strokeWidth,
           shape.strokeFill,
+          shape.bgFill,
           shape.strokeStyle,
-          shape.roughStyle || 1
+          shape.fillStyle,
+          shape.strokeWidth
+        );
+      } else if (shape.type === "text") {
+        this.drawText(
+          shape.x,
+          shape.y,
+          shape.text,
+          shape.strokeFill,
+          shape.fontStyle,
+          shape.fontFamily,
+          shape.fontSize,
+          shape.textAlign
         );
       }
     });
@@ -664,8 +683,9 @@ export class CanvasEngine {
             points: currentShape.points,
             strokeWidth: this.strokeWidth,
             strokeFill: this.strokeFill,
+            bgFill: this.bgFill,
             strokeStyle: this.strokeStyle,
-            roughStyle: this.roughStyle,
+            fillStyle: this.fillStyle,
           };
         }
         break;
@@ -793,9 +813,13 @@ export class CanvasEngine {
         points: [{ x, y }],
         strokeWidth: this.strokeWidth,
         strokeFill: this.strokeFill,
+        bgFill: this.bgFill,
         strokeStyle: this.strokeStyle,
-        roughStyle: this.roughStyle,
+        fillStyle: this.fillStyle,
       });
+    } else if (this.activeTool == "text") {
+      this.clicked = false;
+      this.handleTexty(e);
     } else if (this.activeTool === "eraser") {
       this.eraser(x, y);
     } else if (this.activeTool === "grab") {
@@ -908,10 +932,11 @@ export class CanvasEngine {
             currentShape.points.push({ x, y });
             this.drawPencil(
               currentShape.points,
-              this.strokeWidth,
               this.strokeFill,
+              this.bgFill,
               this.strokeStyle,
-              this.roughStyle
+              this.fillStyle,
+              this.strokeWidth
             );
           }
           break;
@@ -939,6 +964,162 @@ export class CanvasEngine {
       }
     }
   };
+
+  private handleTexty(e: MouseEvent) {
+    const { x, y } = this.transformPanScale(e.clientX, e.clientY);
+
+    const textarea = document.createElement("textarea");
+    Object.assign(textarea.style, {
+      position: "absolute",
+      display: "inline-block",
+      minHeight: "1em",
+      backfaceVisibility: "hidden",
+      margin: "0",
+      padding: "0",
+      border: "0",
+      outline: "0",
+      resize: "none",
+      background: "transparent",
+      overflow: "hidden",
+      overflowWrap: "break-word",
+      boxSizing: "content-box",
+      wordBreak: "normal",
+      whiteSpace: "pre",
+      transform: `translate(${x * this.scale + this.panX}px, ${y * this.scale + this.panY}px)`,
+      verticalAlign: "top",
+      opacity: "1",
+      filter: "var(--theme-filter)",
+    });
+    // console.log(
+    //   `this.fontSize= ${this.fontSize}, this.fontFamily= ${this.fontFamily}, this.textAlign=${this.textAlign}, this.scale=${this.scale}`
+    // );
+    const calFont = getFontSize(this.fontSize, this.scale);
+    textarea.classList.add("collabydraw-texty");
+    textarea.dir = "auto";
+    textarea.tabIndex = 0;
+    textarea.wrap = "off";
+    textarea.style.color = this.strokeFill;
+    const fontString = `${calFont}px/1.2 ${this.fontFamily === "normal" ? "Arial" : this.fontFamily === "hand-drawn" ? "Excalifont, Xiaolai" : "Assistant"}`;
+    textarea.style.font = fontString;
+    textarea.style.zIndex = "1000";
+
+    const collabydrawContainer = document.querySelector(
+      ".collabydraw-textEditorContainer"
+    );
+
+    if (collabydrawContainer) {
+      collabydrawContainer.appendChild(textarea);
+      setTimeout(() => textarea.focus(), 0);
+    } else {
+      console.error("Text editor container not found");
+      return;
+    }
+
+    // Track if there are pending changes
+    let hasUnsavedChanges = false;
+    let idleTimer: number | null = null;
+
+    // Functions to handle saving
+    const save = () => {
+      const text = textarea.value.trim();
+      if (!text) {
+        textarea.remove();
+        return;
+      }
+
+      const rect = textarea.getBoundingClientRect();
+      const width = rect.width / this.scale;
+      const height = rect.height / this.scale;
+
+      const newShape: Shape = {
+        id: uuidv4(),
+        type: "text",
+        x: x,
+        y: y,
+        width,
+        height,
+        text,
+        fontSize: this.fontSize,
+        fontFamily: this.fontFamily,
+        fontStyle: "normal",
+        textAlign: this.textAlign,
+        strokeFill: this.strokeFill,
+      };
+
+      this.existingShapes.push(newShape);
+
+      if (this.isStandalone) {
+        localStorage.setItem(
+          LOCALSTORAGE_CANVAS_KEY,
+          JSON.stringify(this.existingShapes)
+        );
+      } else if (this.sendMessage && this.roomId) {
+        this.sendMessage(
+          JSON.stringify({
+            type: WsDataType.DRAW,
+            id: newShape.id,
+            message: newShape,
+            roomId: this.roomId,
+          })
+        );
+      }
+
+      if (collabydrawContainer?.contains(textarea)) {
+        collabydrawContainer.removeChild(textarea);
+      }
+
+      this.clearCanvas(); // Make sure text appears on canvas immediately
+      hasUnsavedChanges = false;
+    };
+
+    // Auto-save after user stops typing for 1.5 seconds
+    const resetIdleTimer = () => {
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+      }
+
+      if (hasUnsavedChanges) {
+        idleTimer = window.setTimeout(() => {
+          save();
+        }, 1500);
+      }
+    };
+
+    // Track input changes
+    textarea.addEventListener("input", () => {
+      hasUnsavedChanges = true;
+      resetIdleTimer();
+    });
+
+    // Save when user presses Enter+Ctrl/Cmd
+    textarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        save();
+      }
+      resetIdleTimer();
+    });
+
+    // Save when user clicks outside
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!textarea.contains(e.target as Node)) {
+        save();
+      }
+    };
+
+    // Delay adding the click listener to prevent immediate trigger
+    setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+    }, 100);
+
+    // Clean up event listener when textarea loses focus
+    textarea.addEventListener("blur", () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (hasUnsavedChanges) {
+        save();
+      }
+    });
+  }
 
   isPointInShape(x: number, y: number, shape: Shape): boolean {
     const tolerance = ERASER_TOLERANCE;
@@ -1041,7 +1222,7 @@ export class CanvasEngine {
     bgFill: string,
     rounded: StrokeEdge,
     strokeStyle: StrokeStyle,
-    roughStyle: RoughStyle = 1,
+    roughStyle: RoughStyle,
     fillStyle: FillStyle
   ) {
     const posX = width < 0 ? x + width : x;
@@ -1138,7 +1319,7 @@ export class CanvasEngine {
     strokeFill: string,
     bgFill: string,
     strokeStyle: StrokeStyle,
-    roughStyle: RoughStyle = 1,
+    roughStyle: RoughStyle,
     fillStyle: FillStyle
   ) {
     if (roughStyle === 0) {
@@ -1193,7 +1374,7 @@ export class CanvasEngine {
     bgFill: string,
     rounded: StrokeEdge,
     strokeStyle: StrokeStyle,
-    roughStyle: RoughStyle = 1,
+    roughStyle: RoughStyle,
     fillStyle: FillStyle
   ) {
     const halfWidth = width / 2;
@@ -1332,7 +1513,7 @@ export class CanvasEngine {
     strokeWidth: number,
     strokeFill: string,
     strokeStyle: StrokeStyle,
-    roughStyle: RoughStyle = 1,
+    roughStyle: RoughStyle,
     arrowHead: boolean
   ) {
     if (roughStyle === 0) {
@@ -1390,14 +1571,14 @@ export class CanvasEngine {
 
   drawPencil(
     points: { x: number; y: number }[],
-    strokeWidth: number,
     strokeFill: string,
+    bgFill: string,
     strokeStyle: StrokeStyle,
-    roughStyle: RoughStyle
+    fillStyle: FillStyle,
+    strokeWidth: StrokeWidth
   ) {
     if (!points.length) return;
-
-    if (roughStyle === 0) {
+    if (fillStyle === "solid") {
       this.ctx.beginPath();
       this.ctx.strokeStyle = strokeFill;
       this.ctx.lineWidth = strokeWidth;
@@ -1421,9 +1602,49 @@ export class CanvasEngine {
             : ` L ${point.x} ${point.y}`),
         ""
       );
-      const options = this.getRoughOptions(strokeWidth, strokeFill, roughStyle);
+      const options = this.getRoughOptions(
+        strokeWidth,
+        strokeFill,
+        0,
+        bgFill,
+        "solid",
+        fillStyle
+      );
       this.roughCanvas.path(pathStr, options);
     }
+  }
+
+  drawText(
+    x: number,
+    y: number,
+    text: string,
+    fillStyle: string,
+    fontStyle: FontStyle,
+    fontFamily: FontFamily,
+    fontSize: FontSize,
+    textAlign: TextAlign
+  ) {
+    const width = 200;
+    const calFontSize = getFontSize(fontSize, this.scale);
+    const lineHeight = getLineHeight(calFontSize);
+
+    const fontString = `${fontStyle} ${calFontSize}px/1.2 ${fontFamily === "normal" ? "Arial" : fontFamily === "hand-drawn" ? "Excalifont, Xiaolai" : "Assistant"}`;
+    this.ctx.font = fontString;
+    this.ctx.fillStyle = fillStyle;
+    this.ctx.textAlign = textAlign;
+
+    const lines = text.split("\n");
+
+    lines.forEach((line, index) => {
+      let tx = x;
+      if (textAlign === "center") {
+        tx = x + width / 2;
+      } else if (textAlign === "right") {
+        tx = x + width;
+      }
+      const ty = y + (index + 1) * lineHeight;
+      this.ctx.fillText(line, tx, ty);
+    });
   }
 
   eraser(x: number, y: number) {

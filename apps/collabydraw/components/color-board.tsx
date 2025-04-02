@@ -35,7 +35,7 @@ export function ColorBoard({
         <div className="flex flex-col gap-y-3">
             {mode === 'Shape' && (
                 <>
-                    <div className="">
+                    <div className="Stroke-Color-Picker">
                         <ItemLabel label="Stroke" />
                         <div className="">
                             <div className="color-picker-container grid grid-cols-[1fr_1.5rem_2.5rem] md:grid-cols-[1fr_20px_1.625rem] max-w-[17rem] md:max-w-80 py-1 px-0 items-center">
@@ -54,8 +54,8 @@ export function ColorBoard({
                             </div>
                         </div>
                     </div>
-                    {!(activeTool === 'arrow' || activeTool === 'line' || activeTool === 'pen') && (
-                        <div className="">
+                    {!(activeTool === 'arrow' || activeTool === 'line' || activeTool === 'text') && (
+                        <div className="Background-Color-Picker">
                             <ItemLabel label="Background" />
                             <div className="relative">
                                 <div className="color-picker-container grid grid-cols-[1fr_1.5rem_2.5rem] md:grid-cols-[1fr_20px_1.625rem] max-w-[17rem] md:max-w-80 py-1 px-0 items-center">

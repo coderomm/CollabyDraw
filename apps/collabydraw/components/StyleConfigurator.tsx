@@ -1,12 +1,12 @@
 "use client"
 
 import type React from "react"
-import { BgFill, FillStyle, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas"
+import { cn } from "@/lib/utils";
+import { BgFill, FillStyle, FontFamily, FontSize, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, TextAlign, ToolType } from "@/types/canvas"
+import { fillStyleIcons, fillStyleLabels, fontFamilyIcons, fontFamilyLabels, fontSizeIcons, fontSizeLabels, roughStyleIcons, roughStyleLabels, strokeEdgeIcons, strokeEdgeLabels, strokeStyleIcons, strokeStyleLabels, textAlignIcons, textAlignLabels } from "@/config/canvasTypeMappings";
+import { Input } from "./ui/input";
 import { ColorBoard } from "./color-board"
 import ItemLabel from "./ItemLabel";
-import { Input } from "./ui/input";
-import { cn } from "@/lib/utils";
-import { fillStyleIcons, fillStyleLabels, roughStyleIcons, roughStyleLabels, strokeEdgeIcons, strokeEdgeLabels, strokeStyleIcons, strokeStyleLabels } from "@/config/canvasTypeMappings";
 
 interface StyleConfiguratorProps {
     activeTool: ToolType;
@@ -24,6 +24,12 @@ interface StyleConfiguratorProps {
     setRoughStyle: React.Dispatch<React.SetStateAction<RoughStyle>>;
     fillStyle: FillStyle;
     setFillStyle: React.Dispatch<React.SetStateAction<FillStyle>>;
+    fontFamily: FontFamily;
+    setFontFamily: React.Dispatch<React.SetStateAction<FontFamily>>;
+    fontSize: FontSize;
+    setFontSize: React.Dispatch<React.SetStateAction<FontSize>>;
+    textAlign: TextAlign;
+    setTextAlign: React.Dispatch<React.SetStateAction<TextAlign>>;
     isMobile?: boolean
 }
 
@@ -43,6 +49,12 @@ export function StyleConfigurator({
     setRoughStyle,
     fillStyle,
     setFillStyle,
+    fontFamily,
+    setFontFamily,
+    fontSize,
+    setFontSize,
+    textAlign,
+    setTextAlign,
     isMobile
 }: StyleConfiguratorProps) {
 
@@ -51,6 +63,9 @@ export function StyleConfigurator({
     const edgeStyleOptions: StrokeStyle[] = ["solid", "dashed", "dotted"]
     const roughStyleOptions: RoughStyle[] = [0, 1, 2]
     const fillStyleOptions: FillStyle[] = ['hachure', 'cross-hatch', 'dashed', 'dots', 'zigzag', 'zigzag-line', 'solid']
+    const fontFamilyOptions: FontFamily[] = ['hand-drawn', 'normal', 'code']
+    const fontSizeOptions: FontSize[] = ['Small', 'Medium', 'Large']
+    const textAlignOptions: TextAlign[] = ['left', 'center', 'right']
 
     if (activeTool === "eraser" || activeTool === "grab" || activeTool === "selection") {
         return;
@@ -61,7 +76,7 @@ export function StyleConfigurator({
                 isMobile ? "" : "absolute top-full w-56 h-[calc(100vh-150px)] bg-background dark:bg-w-bg rounded-lg Island"
             )}>
                 <h2 className="sr-only">Selected shape actions</h2>
-                <div className="flex flex-col gap-y-3">
+                <div className="ColorBoard flex flex-col gap-y-3">
                     <ColorBoard
                         mode="Shape"
                         bgFill={bgFill}
@@ -71,22 +86,8 @@ export function StyleConfigurator({
                         activeTool={activeTool}
                     />
 
-                    <div className="">
-                        <ItemLabel label="Stroke width" />
-                        <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
-                            {lineThicknessOptions.map((sw, index) => (
-                                <StrokeWidthSelector
-                                    key={index}
-                                    strokeWidth={strokeWidth}
-                                    strokeWidthProp={sw}
-                                    onClick={() => setStrokeWidth(sw)}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    {(activeTool === "rectangle" || activeTool === "diamond" || activeTool === 'ellipse') && (
-                        <div className="">
+                    {(activeTool === "rectangle" || activeTool === 'ellipse' || activeTool === "diamond" || activeTool === 'line' || activeTool === 'pen') && (
+                        <div className="Fill-Style-Selector">
                             <ItemLabel label="Fill" />
                             <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
                                 {fillStyleOptions.map((fs, index) => (
@@ -101,8 +102,24 @@ export function StyleConfigurator({
                         </div>
                     )}
 
+                    {(activeTool !== "text") && (
+                        <div className="Stroke-Width-Selector">
+                            <ItemLabel label="Stroke width" />
+                            <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
+                                {lineThicknessOptions.map((sw, index) => (
+                                    <StrokeWidthSelector
+                                        key={index}
+                                        strokeWidth={strokeWidth}
+                                        strokeWidthProp={sw}
+                                        onClick={() => setStrokeWidth(sw)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {(activeTool === "rectangle" || activeTool === "diamond") && (
-                        <div className="">
+                        <div className="Edge-Style-Selector">
                             <ItemLabel label="Edges" />
                             <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
                                 {edgeRoundnessOptions.map((sw, index) => (
@@ -117,36 +134,128 @@ export function StyleConfigurator({
                         </div>
                     )}
 
-                    <div className="">
-                        <ItemLabel label="Sloppiness" />
-                        <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
-                            {roughStyleOptions.map((rs, index) => (
-                                <RoughStyleSelector
-                                    key={index}
-                                    roughStyle={roughStyle}
-                                    roughStyleProp={rs}
-                                    onClick={() => setRoughStyle(rs)}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                    {(activeTool !== "pen" && activeTool !== 'text') && (
+                        <>
+                            <div className="Rough-Style-Selector">
+                                <ItemLabel label="Sloppiness" />
+                                <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
+                                    {roughStyleOptions.map((rs, index) => (
+                                        <RoughStyleSelector
+                                            key={index}
+                                            roughStyle={roughStyle}
+                                            roughStyleProp={rs}
+                                            onClick={() => setRoughStyle(rs)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
 
-                    <div className="">
-                        <ItemLabel label="Stroke Style" />
-                        <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
-                            {edgeStyleOptions.map((sw, index) => (
-                                <StrokeStyleSelector
-                                    key={index}
-                                    strokeStyle={strokeStyle}
-                                    strokeStyleProp={sw}
-                                    onClick={() => setStrokeStyle(sw)}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                            <div className="Stroke-Style-Selector">
+                                <ItemLabel label="Stroke Style" />
+                                <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
+                                    {edgeStyleOptions.map((sw, index) => (
+                                        <StrokeStyleSelector
+                                            key={index}
+                                            strokeStyle={strokeStyle}
+                                            strokeStyleProp={sw}
+                                            onClick={() => setStrokeStyle(sw)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {(activeTool === "text") && (
+                        <>
+                            <div className="Font-Family-Selector">
+                                <ItemLabel label="Font family" />
+                                <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
+                                    {fontFamilyOptions.map((ff, index) => (
+                                        <FontFamilySelector
+                                            key={index}
+                                            fontFamily={fontFamily}
+                                            fontFamilyProp={ff}
+                                            onClick={() => setFontFamily(ff)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="Font-Size-Selector">
+                                <ItemLabel label="Font size" />
+                                <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
+                                    {fontSizeOptions.map((fs, index) => (
+                                        <FontSizeSelector
+                                            key={index}
+                                            fontSize={fontSize}
+                                            fontSizeProp={fs}
+                                            onClick={() => setFontSize(fs)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="Text-Align-Selector">
+                                <ItemLabel label="Text align" />
+                                <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
+                                    {textAlignOptions.map((a, index) => (
+                                        <TextAlignSelector
+                                            key={index}
+                                            textAlign={textAlign}
+                                            textAlignProp={a}
+                                            onClick={() => setTextAlign(a)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </section>
         </>
+    )
+}
+
+const TextAlignSelector = ({ textAlign, textAlignProp, onClick }: { textAlign: TextAlign, textAlignProp: TextAlign, onClick?: () => void }) => {
+    return (
+        <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
+            textAlign === textAlignProp ? 'bg-selected-tool-bg-light dark:bg-selected-tool-bg-dark dark:border-selected-tool-bg-dark' : ''
+        )}
+            title={textAlignLabels[textAlignProp]}
+            onClick={onClick}
+        >
+            <Input type="radio" checked={textAlign === textAlignProp} onChange={() => onClick?.()} name="textAlign" className="opacity-0 absolute pointer-events-none" />
+            {textAlignIcons[textAlignProp]}
+        </label>
+    )
+}
+
+const FontSizeSelector = ({ fontSize, fontSizeProp, onClick }: { fontSize: FontSize, fontSizeProp: FontSize, onClick?: () => void }) => {
+    return (
+        <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
+            fontSize === fontSizeProp ? 'bg-selected-tool-bg-light dark:bg-selected-tool-bg-dark dark:border-selected-tool-bg-dark' : ''
+        )}
+            title={fontSizeLabels[fontSizeProp]}
+            onClick={onClick}
+        >
+            <Input type="radio" checked={fontSize === fontSizeProp} onChange={() => onClick?.()} name="fontSize" className="opacity-0 absolute pointer-events-none" />
+            {fontSizeIcons[fontSizeProp]}
+        </label>
+    )
+}
+
+const FontFamilySelector = ({ fontFamily, fontFamilyProp, onClick }: { fontFamily: FontFamily, fontFamilyProp: FontFamily, onClick?: () => void }) => {
+    return (
+        <label className={cn("active flex justify-center items-center w-8 h-8 p-0 box-border border border-default-border-color rounded-lg cursor-pointer bg-light-btn-bg2 text-text-primary-color dark:bg-w-button-hover-bg dark:hover:bg-tool-btn-bg-hover-dark dark:text-text-primary-color dark:border-w-button-hover-bg focus-within:shadow-shadow-tool-focus",
+            fontFamily === fontFamilyProp ? 'bg-selected-tool-bg-light dark:bg-selected-tool-bg-dark dark:border-selected-tool-bg-dark' : ''
+        )}
+            title={fontFamilyLabels[fontFamilyProp]}
+            onClick={onClick}
+        >
+            <Input type="radio" checked={fontFamily === fontFamilyProp} onChange={() => onClick?.()} name="fontFamily" className="opacity-0 absolute pointer-events-none" />
+            {fontFamilyIcons[fontFamilyProp]}
+        </label>
     )
 }
 

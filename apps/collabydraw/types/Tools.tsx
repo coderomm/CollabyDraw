@@ -7,9 +7,10 @@ import {
     Diamond,
     Hand,
     MousePointer,
-    MoveRight,
+    MoveRight
 } from "lucide-react"
 import { Tool } from "./canvas";
+import { TextIcon } from "@/components/SvgIcons";
 
 export const tools: Tool[] = [
     {
@@ -61,9 +62,15 @@ export const tools: Tool[] = [
         label: 'Arrow'
     },
     {
+        type: "text",
+        icon: <TextIcon className="" />,
+        shortcut: 9,
+        label: 'Text'
+    },
+    {
         type: "eraser",
         icon: <Eraser />,
-        shortcut: 9,
+        shortcut: 10,
         label: 'Eraser'
     }
 ]

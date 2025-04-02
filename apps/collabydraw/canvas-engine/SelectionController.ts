@@ -1,4 +1,5 @@
 import { Shape } from "@/types/canvas";
+import { getFontSize } from "@/utils/textUtils";
 
 type Tool = Shape;
 
@@ -121,6 +122,16 @@ export class SelectionController {
           bounds.y = minY - shape.strokeWidth - 20;
           bounds.width = maxX - minX + shape.strokeWidth * 2 + 40;
           bounds.height = maxY - minY + shape.strokeWidth * 2 + 40;
+          break;
+
+        case "text":
+          const calFontSize = getFontSize(shape.fontSize, 100);
+          this.ctx.font = `${calFontSize}px/1.2 ${shape.fontFamily === "normal" ? "Arial" : shape.fontFamily === "hand-drawn" ? "Excalifont, Xiaolai" : "Assistant"}`;
+          const metrics = this.ctx.measureText(shape.text || "");
+          bounds.x = shape.x - 10;
+          bounds.y = shape.y - 10;
+          bounds.width = metrics.width + 20;
+          bounds.height = 48;
           break;
       }
 

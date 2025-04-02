@@ -1,38 +1,56 @@
 "use client"
 
-import { CanvasEngine } from "@/canvas-engine/CanvasEngine";
-import { BgFill, canvasBgLight, FillStyle, Mode, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas";
 import React, { SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { MobileCommandBar } from "../MobileCommandBar";
-import { useTheme } from "next-themes";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-import ScreenLoading from "../ScreenLoading";
-import { RoomParticipants } from "@repo/common/types";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useTheme } from "next-themes";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { CanvasEngine } from "@/canvas-engine/CanvasEngine";
+import { RoomParticipants } from "@repo/common/types";
+import { getRoomParamsFromHash } from "@/utils/roomParams";
+import { BgFill, canvasBgLight, FillStyle, FontFamily, FontSize, Mode, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, TextAlign, ToolType } from "@/types/canvas";
+import { MobileCommandBar } from "../MobileCommandBar";
+import ScreenLoading from "../ScreenLoading";
 import AppMenuButton from "../AppMenuButton";
 import { AppSidebar } from "../AppSidebar";
 import { StyleConfigurator } from "../StyleConfigurator";
 import ToolSelector from "../ToolSelector";
 import CollaborationToolbar from "../CollaborationToolbar";
 import ZoomControl from "../ZoomControl";
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { getRoomParamsFromHash } from "@/utils/roomParams";
 
 export default function CanvasRoot() {
+    const { data: session, status } = useSession();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const router = useRouter();
     const { theme } = useTheme()
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { matches, isLoading } = useMediaQuery(670);
+    const [mode, setMode] = useState<Mode>("standalone");
     const [participants, setParticipants] = useState<RoomParticipants[]>([]);
     const [isConnected, setIsConnected] = useState(false);
     const [isCanvasReady, setIsCanvasReady] = useState(false);
     const initializedWithMode = useRef<Mode | null>(null);
-    const [mode, setMode] = useState<Mode>("standalone");
-    const { data: session, status } = useSession();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const currentHashRef = useRef<string>('');
-    const router = useRouter();
-
+    const [canvasEngineState, setCanvasEngineState] = useState({
+        engine: null as CanvasEngine | null,
+        scale: 1,
+        activeTool: "grab" as ToolType,
+        strokeFill: "#f08c00" as StrokeFill,
+        strokeWidth: 1 as StrokeWidth,
+        bgFill: "#00000000" as BgFill,
+        strokeEdge: "round" as StrokeEdge,
+        strokeStyle: "solid" as StrokeStyle,
+        roughStyle: 1 as RoughStyle,
+        fillStyle: 'solid' as FillStyle,
+        fontFamily: 'hand-drawn' as FontFamily,
+        fontSize: 'Medium' as FontSize,
+        textAlign: 'left' as TextAlign,
+        grabbing: false,
+        sidebarOpen: false,
+        canvasColor: canvasBgLight[0]
+    });
     const userRef = useRef({
         roomId: null as string | null,
         userId: null as string | null,
@@ -92,24 +110,6 @@ export default function CanvasRoot() {
         };
     }, [pathname, searchParams, status, session]);
 
-    const [canvasEngineState, setCanvasEngineState] = useState({
-        engine: null as CanvasEngine | null,
-        scale: 1,
-        activeTool: "grab" as ToolType,
-        strokeFill: "#f08c00" as StrokeFill,
-        strokeWidth: 1 as StrokeWidth,
-        bgFill: "#00000000" as BgFill,
-        strokeEdge: "round" as StrokeEdge,
-        strokeStyle: "solid" as StrokeStyle,
-        roughStyle: 1 as RoughStyle,
-        fillStyle: 'solid' as FillStyle,
-        grabbing: false,
-        sidebarOpen: false,
-        canvasColor: canvasBgLight[0]
-    });
-
-    const { matches, isLoading } = useMediaQuery(670);
-
     useEffect(() => {
         setCanvasEngineState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
     }, [theme])
@@ -123,7 +123,7 @@ export default function CanvasRoot() {
     }, [canvasEngineState.engine, canvasEngineState.scale]);
 
     useEffect(() => {
-        const { engine, activeTool, strokeWidth, strokeFill, bgFill, canvasColor, strokeEdge, strokeStyle, roughStyle, fillStyle } = canvasEngineState;
+        const { engine, activeTool, strokeWidth, strokeFill, bgFill, canvasColor, strokeEdge, strokeStyle, roughStyle, fillStyle, fontFamily, fontSize, textAlign } = canvasEngineState;
 
         if (engine) {
             engine.setTool(activeTool);
@@ -135,18 +135,24 @@ export default function CanvasRoot() {
             engine.setStrokeStyle(strokeStyle);
             engine.setRoughStyle(roughStyle);
             engine.setFillStyle(fillStyle);
+            engine.setFontFamily(fontFamily);
+            engine.setFontSize(fontSize);
+            engine.setTextAlign(textAlign);
         }
     }, [canvasEngineState]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         const toolKeyMap: Record<string, ToolType> = {
-            "1": "grab",
-            "2": "rectangle",
-            "3": "ellipse",
-            "4": "diamond",
-            "5": "line",
-            "6": "pen",
-            "7": "eraser"
+            "1": "selection",
+            "2": "grab",
+            "3": "rectangle",
+            "4": "ellipse",
+            "5": "diamond",
+            "6": "line",
+            "7": "pen",
+            "8": "arrow",
+            "9": "text",
+            "0": "eraser"
         };
 
         const newTool = toolKeyMap[e.key];
@@ -297,6 +303,21 @@ export default function CanvasRoot() {
                             setFillStyle={(newFillStyle: SetStateAction<FillStyle>) =>
                                 setCanvasEngineState(prev => ({ ...prev, fillStyle: typeof newFillStyle === 'function' ? newFillStyle(prev.fillStyle) : newFillStyle }))
                             }
+
+                            fontFamily={canvasEngineState.fontFamily}
+                            setFontFamily={(newFontFamily: SetStateAction<FontFamily>) =>
+                                setCanvasEngineState(prev => ({ ...prev, fontFamily: typeof newFontFamily === 'function' ? newFontFamily(prev.fontFamily) : newFontFamily }))
+                            }
+
+                            fontSize={canvasEngineState.fontSize}
+                            setFontSize={(newFontSize: SetStateAction<FontSize>) =>
+                                setCanvasEngineState(prev => ({ ...prev, fontSize: typeof newFontSize === 'function' ? newFontSize(prev.fontSize) : newFontSize }))
+                            }
+
+                            textAlign={canvasEngineState.textAlign}
+                            setTextAlign={(newTextAlign: SetStateAction<TextAlign>) =>
+                                setCanvasEngineState(prev => ({ ...prev, textAlign: typeof newTextAlign === 'function' ? newTextAlign(prev.textAlign) : newTextAlign }))
+                            }
                         />
 
                     </div>
@@ -325,6 +346,8 @@ export default function CanvasRoot() {
                 />
 
             )}
+
+            <div className="collabydraw-textEditorContainer"></div>
 
             {!matches && (
                 <MobileCommandBar

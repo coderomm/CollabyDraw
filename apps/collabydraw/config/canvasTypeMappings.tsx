@@ -1,5 +1,6 @@
-import { FillStyle, RoughStyle, StrokeEdge, StrokeStyle } from '@/types/canvas';
-import { HachureIcon, CrossHatchIcon, SolidIcon, ZigzagIcon, DotsIcon, DashedIcon, ZigzagLineIcon, RoundEdgeIcon, SharpEdgeIcon, ArchitectSlopeIcon, ArtistSlopeIcon, CartoonistSlopeIcon, SolidStrokeStyleIcon, DashedStrokeStyleIcon, DottedStrokeStyleIcon } from '../utils/svgIcons';
+import { FillStyle, FontFamily, FontSize, RoughStyle, StrokeEdge, StrokeStyle, TextAlign } from '@/types/canvas';
+import { HachureIcon, CrossHatchIcon, SolidIcon, ZigzagIcon, DotsIcon, DashedIcon, ZigzagLineIcon, RoundEdgeIcon, SharpEdgeIcon, ArchitectSlopeIcon, ArtistSlopeIcon, CartoonistSlopeIcon, SolidStrokeStyleIcon, DashedStrokeStyleIcon, DottedStrokeStyleIcon, A_LetterIcon, S_LetterIcon, M_LetterIcon, L_LetterIcon } from '../utils/svgIcons';
+import { AlignCenter, AlignLeft, AlignRight, CodeXml, Pencil } from 'lucide-react';
 
 export const fillStyleLabels: Record<FillStyle, string> = {
     "hachure": "Hachure",
@@ -35,16 +36,12 @@ export const roughStyleLabels: Record<RoughStyle, string> = {
     0: "Architect",
     1: "Artist",
     2: "Cartoonist",
-    3: "Cartoonist Pro",
-    4: "Cartoonist Pro Max",
 };
 
 export const roughStyleIcons: Record<RoughStyle, JSX.Element> = {
     0: <ArchitectSlopeIcon />,
     1: <ArtistSlopeIcon />,
     2: <CartoonistSlopeIcon />,
-    3: <CartoonistSlopeIcon />,
-    4: <CartoonistSlopeIcon />,
 };
 
 export const strokeStyleLabels: Record<StrokeStyle, string> = {
@@ -57,4 +54,40 @@ export const strokeStyleIcons: Record<StrokeStyle, JSX.Element> = {
     solid: <SolidStrokeStyleIcon />,
     dashed: <DashedStrokeStyleIcon />,
     dotted: <DottedStrokeStyleIcon />,
+};
+
+export const fontFamilyLabels: Record<FontFamily, string> = {
+    code: "Code",
+    normal: "Normal",
+    "hand-drawn": "Hand-drawn"
+};
+
+export const fontFamilyIcons: Record<FontFamily, JSX.Element> = {
+    code: <CodeXml className="w-4 h-4" />,
+    normal: <A_LetterIcon />,
+    "hand-drawn": <Pencil className="w-4 h-4" />
+};
+
+export const fontSizeLabels: Record<FontSize, string> = {
+    Small: "Small",
+    Medium: "Medium",
+    Large: "Large"
+};
+
+export const fontSizeIcons: Record<FontSize, JSX.Element> = {
+    Small: <S_LetterIcon />,
+    Medium: <M_LetterIcon />,
+    Large: <L_LetterIcon />
+};
+
+export const textAlignLabels: Record<TextAlign, string> = {
+    left: "Left",
+    center: "Center",
+    right: "Right"
+};
+
+export const textAlignIcons: Record<TextAlign, JSX.Element> = {
+    left: <AlignLeft className="w-4 h-4" />,
+    center: <AlignCenter className="w-4 h-4" />,
+    right: <AlignRight className="w-4 h-4" />
 };
