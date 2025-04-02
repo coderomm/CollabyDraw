@@ -1,5 +1,6 @@
 import {
   FillStyle,
+  FONT_SIZE_MAP,
   FontFamily,
   FontSize,
   FontStyle,
@@ -495,6 +496,7 @@ export class CanvasEngine {
         this.drawText(
           shape.x,
           shape.y,
+          shape.width,
           shape.text,
           shape.strokeFill,
           shape.fontStyle,
@@ -972,7 +974,6 @@ export class CanvasEngine {
     Object.assign(textarea.style, {
       position: "absolute",
       display: "inline-block",
-      minHeight: "1em",
       backfaceVisibility: "hidden",
       margin: "0",
       padding: "0",
@@ -984,11 +985,13 @@ export class CanvasEngine {
       overflowWrap: "break-word",
       boxSizing: "content-box",
       wordBreak: "normal",
-      whiteSpace: "pre",
+      whiteSpace: "pre-wrap",
       transform: `translate(${x * this.scale + this.panX}px, ${y * this.scale + this.panY}px)`,
       verticalAlign: "top",
       opacity: "1",
       filter: "var(--theme-filter)",
+      width: "auto",
+      minHeight: "2rem",
     });
     // console.log(
     //   `this.fontSize= ${this.fontSize}, this.fontFamily= ${this.fontFamily}, this.textAlign=${this.textAlign}, this.scale=${this.scale}`
@@ -1001,7 +1004,7 @@ export class CanvasEngine {
     textarea.style.color = this.strokeFill;
     const fontString = `${calFont}px/1.2 ${this.fontFamily === "normal" ? "Arial" : this.fontFamily === "hand-drawn" ? "Excalifont, Xiaolai" : "Assistant"}`;
     textarea.style.font = fontString;
-    textarea.style.zIndex = "1000";
+    textarea.style.zIndex = "1";
 
     const collabydrawContainer = document.querySelector(
       ".collabydraw-textEditorContainer"
@@ -1015,29 +1018,64 @@ export class CanvasEngine {
       return;
     }
 
-    // Track if there are pending changes
     let hasUnsavedChanges = false;
-    let idleTimer: number | null = null;
 
-    // Functions to handle saving
+    let span: HTMLSpanElement | null = null;
+
+    const resizeTextarea = () => {
+      if (span) {
+        document.body.removeChild(span);
+      }
+
+      span = document.createElement("span");
+
+      Object.assign(span.style, {
+        visibility: "hidden",
+        position: "absolute",
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+        font: textarea.style.font,
+        width: "auto",
+        height: "auto",
+      });
+
+      span.textContent = textarea.value || " ";
+      document.body.appendChild(span);
+
+      requestAnimationFrame(() => {
+        textarea.style.width = `${Math.max(span!.offsetWidth + 10, 50)}px`;
+        textarea.style.height = `${Math.max(span!.offsetHeight, 20)}px`;
+      });
+
+      console.log("span.offsetWidth= ", span.offsetWidth);
+      console.log("textarea.style.width= ", textarea.style.width);
+    };
+
+    textarea.addEventListener("input", () => {
+      hasUnsavedChanges = true;
+      resizeTextarea();
+    });
+    textarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        hasUnsavedChanges = true;
+        resizeTextarea();
+      }
+    });
+
     const save = () => {
       const text = textarea.value.trim();
       if (!text) {
         textarea.remove();
+        document.body.removeChild(span!);
         return;
       }
-
-      const rect = textarea.getBoundingClientRect();
-      const width = rect.width / this.scale;
-      const height = rect.height / this.scale;
 
       const newShape: Shape = {
         id: uuidv4(),
         type: "text",
         x: x,
         y: y,
-        width,
-        height,
+        width: span!.offsetWidth,
         text,
         fontSize: this.fontSize,
         fontFamily: this.fontFamily,
@@ -1066,53 +1104,34 @@ export class CanvasEngine {
 
       if (collabydrawContainer?.contains(textarea)) {
         collabydrawContainer.removeChild(textarea);
+        document.body.removeChild(span!);
       }
 
-      this.clearCanvas(); // Make sure text appears on canvas immediately
+      this.clearCanvas();
       hasUnsavedChanges = false;
     };
 
-    // Auto-save after user stops typing for 1.5 seconds
-    const resetIdleTimer = () => {
-      if (idleTimer) {
-        clearTimeout(idleTimer);
-      }
-
-      if (hasUnsavedChanges) {
-        idleTimer = window.setTimeout(() => {
-          save();
-        }, 1500);
-      }
-    };
-
-    // Track input changes
     textarea.addEventListener("input", () => {
       hasUnsavedChanges = true;
-      resetIdleTimer();
     });
 
-    // Save when user presses Enter+Ctrl/Cmd
     textarea.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         save();
       }
-      resetIdleTimer();
     });
 
-    // Save when user clicks outside
     const handleClickOutside = (e: MouseEvent) => {
       if (!textarea.contains(e.target as Node)) {
         save();
       }
     };
 
-    // Delay adding the click listener to prevent immediate trigger
     setTimeout(() => {
       document.addEventListener("mousedown", handleClickOutside);
     }, 100);
 
-    // Clean up event listener when textarea loses focus
     textarea.addEventListener("blur", () => {
       document.removeEventListener("mousedown", handleClickOutside);
       if (hasUnsavedChanges) {
@@ -1197,6 +1216,22 @@ export class CanvasEngine {
           (point) => Math.hypot(point.x - x, point.y - y) <= tolerance
         );
       }
+
+      case "text": {
+        const startX = shape.x;
+        const endX = shape.x + shape.width;
+        const startY = shape.y;
+        const textHeight = FONT_SIZE_MAP[shape.fontSize];
+        const endY = shape.y + textHeight;
+
+        return (
+          x >= startX - tolerance &&
+          x <= endX + tolerance &&
+          y >= startY - tolerance &&
+          y <= endY + tolerance
+        );
+      }
+
       default:
         return false;
     }
@@ -1617,6 +1652,7 @@ export class CanvasEngine {
   drawText(
     x: number,
     y: number,
+    width: number,
     text: string,
     fillStyle: string,
     fontStyle: FontStyle,
@@ -1624,7 +1660,6 @@ export class CanvasEngine {
     fontSize: FontSize,
     textAlign: TextAlign
   ) {
-    const width = 200;
     const calFontSize = getFontSize(fontSize, this.scale);
     const lineHeight = getLineHeight(calFontSize);
 

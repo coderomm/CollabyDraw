@@ -209,7 +209,6 @@ export type Shape =
       x: number;
       y: number;
       width: number;
-      height: number;
       text: string;
       fontSize: FontSize;
       fontFamily: FontFamily;

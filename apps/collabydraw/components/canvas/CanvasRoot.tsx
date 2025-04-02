@@ -18,6 +18,7 @@ import { StyleConfigurator } from "../StyleConfigurator";
 import ToolSelector from "../ToolSelector";
 import CollaborationToolbar from "../CollaborationToolbar";
 import ZoomControl from "../ZoomControl";
+import CollabydrawTextEditorContainer from "../Collabydraw-TextEditorContainer";
 
 export default function CanvasRoot() {
     const { data: session, status } = useSession();
@@ -347,7 +348,7 @@ export default function CanvasRoot() {
 
             )}
 
-            <div className="collabydraw-textEditorContainer"></div>
+            <CollabydrawTextEditorContainer />
 
             {!matches && (
                 <MobileCommandBar
