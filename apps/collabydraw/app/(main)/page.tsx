@@ -1,7 +1,7 @@
-import CanvasRoot from "@/components/canvas/CanvasRoot";
+import CanvasBoard from "@/components/canvas/CanvasBoard";
 
 export default async function Home() {
   return (
-    <CanvasRoot />
+    <CanvasBoard />
   )
 }

@@ -9,7 +9,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { CanvasEngine } from "@/canvas-engine/CanvasEngine";
 import { RoomParticipants } from "@repo/common/types";
 import { getRoomParamsFromHash } from "@/utils/roomParams";
-import { BgFill, canvasBgLight, FillStyle, FontFamily, FontSize, Mode, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, TextAlign, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgLight, FillStyle, FontFamily, FontSize, LOCALSTORAGE_CANVAS_KEY, Mode, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, TextAlign, ToolType } from "@/types/canvas";
 import { MobileCommandBar } from "../MobileCommandBar";
 import ScreenLoading from "../ScreenLoading";
 import AppMenuButton from "../AppMenuButton";
@@ -19,8 +19,9 @@ import ToolSelector from "../ToolSelector";
 import CollaborationToolbar from "../CollaborationToolbar";
 import ZoomControl from "../ZoomControl";
 import CollabydrawTextEditorContainer from "../Collabydraw-TextEditorContainer";
+import { HomeWelcome, MainMenuWelcome, ToolMenuWelcome } from "../welcome-screen";
 
-export default function CanvasRoot() {
+export default function CanvasBoard() {
     const { data: session, status } = useSession();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -50,7 +51,8 @@ export default function CanvasRoot() {
         textAlign: 'left' as TextAlign,
         grabbing: false,
         sidebarOpen: false,
-        canvasColor: canvasBgLight[0]
+        canvasColor: canvasBgLight[0],
+        isCanvasEmpty: true
     });
     const userRef = useRef({
         roomId: null as string | null,
@@ -114,6 +116,16 @@ export default function CanvasRoot() {
     useEffect(() => {
         setCanvasEngineState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
     }, [theme])
+
+    useEffect(() => {
+        const storedShapes = localStorage.getItem(LOCALSTORAGE_CANVAS_KEY);
+        const isEmpty = !storedShapes || JSON.parse(storedShapes).length === 0;
+
+        setCanvasEngineState(prev => ({
+            ...prev,
+            isCanvasEmpty: isEmpty
+        }));
+    }, []);
 
     useEffect(() => {
         const { engine, scale } = canvasEngineState;
@@ -270,6 +282,11 @@ export default function CanvasRoot() {
                                     onClearCanvas={clearCanvas}
                                 />
                             )}
+
+                            {canvasEngineState.activeTool === "grab" && canvasEngineState.isCanvasEmpty && (
+                                <MainMenuWelcome />
+                            )}
+
                         </div>
 
                         <StyleConfigurator
@@ -335,6 +352,12 @@ export default function CanvasRoot() {
                 )}
             </div>
 
+            {canvasEngineState.activeTool === "grab" && canvasEngineState.isCanvasEmpty && !isLoading && (
+                <div className="relative">
+                    <ToolMenuWelcome />
+                </div>
+            )}
+
             {matches && (
                 <ZoomControl
                     scale={canvasEngineState.scale}
@@ -387,6 +410,15 @@ export default function CanvasRoot() {
                 />
 
             )}
+
+            {!isLoading && canvasEngineState.activeTool === "grab" && canvasEngineState.isCanvasEmpty && (
+                <HomeWelcome />
+            )}
+
+            {isLoading && (
+                <ScreenLoading />
+            )}
+
             <canvas className={cn("collabydraw collabydraw-canvas", theme === 'dark' ? 'collabydraw-canvas-dark' : '')} ref={canvasRef} />
         </div >
     )
