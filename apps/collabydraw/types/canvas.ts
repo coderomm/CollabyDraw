@@ -34,7 +34,7 @@ export type ToolType =
   | "ellipse"
   | "line"
   | "arrow"
-  | "pen"
+  | "free-draw"
   | "eraser"
   | "text";
 export type Tool = {
@@ -181,7 +181,7 @@ export type Shape =
     }
   | {
       id: string | null;
-      type: "pen";
+      type: "free-draw";
       points: { x: number; y: number }[];
       strokeFill: string;
       bgFill: string;

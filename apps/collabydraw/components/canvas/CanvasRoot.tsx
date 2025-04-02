@@ -150,7 +150,7 @@ export default function CanvasRoot() {
             "4": "ellipse",
             "5": "diamond",
             "6": "line",
-            "7": "pen",
+            "7": "free-draw",
             "8": "arrow",
             "9": "text",
             "0": "eraser"

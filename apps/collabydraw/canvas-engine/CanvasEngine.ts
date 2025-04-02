@@ -42,6 +42,7 @@ import { RoughCanvas } from "roughjs/canvas";
 import { Options } from "roughjs/core";
 import rough from "roughjs/bin/rough";
 import { getFontSize, getLineHeight } from "@/utils/textUtils";
+import { generateFreeDrawPath } from "./RenderElements";
 
 export class CanvasEngine {
   private canvas: HTMLCanvasElement;
@@ -483,8 +484,8 @@ export class CanvasEngine {
           shape.roughStyle,
           true
         );
-      } else if (shape.type === "pen") {
-        this.drawPencil(
+      } else if (shape.type === "free-draw") {
+        this.drawFreeDraw(
           shape.points,
           shape.strokeFill,
           shape.bgFill,
@@ -521,7 +522,7 @@ export class CanvasEngine {
 
   mouseUpHandler = (e: MouseEvent) => {
     if (
-      this.activeTool !== "pen" &&
+      this.activeTool !== "free-draw" &&
       this.activeTool !== "eraser" &&
       this.activeTool !== "line" &&
       this.activeTool !== "arrow"
@@ -675,13 +676,13 @@ export class CanvasEngine {
         };
         break;
 
-      case "pen":
+      case "free-draw":
         const currentShape =
           this.existingShapes[this.existingShapes.length - 1];
-        if (currentShape?.type === "pen") {
+        if (currentShape?.type === "free-draw") {
           shape = {
             id: uuidv4(),
-            type: "pen",
+            type: "free-draw",
             points: currentShape.points,
             strokeWidth: this.strokeWidth,
             strokeFill: this.strokeFill,
@@ -808,10 +809,10 @@ export class CanvasEngine {
     this.startX = x;
     this.startY = y;
 
-    if (this.activeTool === "pen") {
+    if (this.activeTool === "free-draw") {
       this.existingShapes.push({
         id: uuidv4(),
-        type: "pen",
+        type: "free-draw",
         points: [{ x, y }],
         strokeWidth: this.strokeWidth,
         strokeFill: this.strokeFill,
@@ -927,12 +928,12 @@ export class CanvasEngine {
           );
           break;
 
-        case "pen":
+        case "free-draw":
           const currentShape =
             this.existingShapes[this.existingShapes.length - 1];
-          if (currentShape?.type === "pen") {
+          if (currentShape?.type === "free-draw") {
             currentShape.points.push({ x, y });
-            this.drawPencil(
+            this.drawFreeDraw(
               currentShape.points,
               this.strokeFill,
               this.bgFill,
@@ -1211,7 +1212,7 @@ export class CanvasEngine {
 
         return distance <= tolerance && withinLineBounds;
       }
-      case "pen": {
+      case "free-draw": {
         return shape.points.some(
           (point) => Math.hypot(point.x - x, point.y - y) <= tolerance
         );
@@ -1604,7 +1605,7 @@ export class CanvasEngine {
     }
   }
 
-  drawPencil(
+  drawFreeDraw(
     points: { x: number; y: number }[],
     strokeFill: string,
     bgFill: string,
@@ -1613,22 +1614,31 @@ export class CanvasEngine {
     strokeWidth: StrokeWidth
   ) {
     if (!points.length) return;
+
+    // const svgPathData = generateFreeDrawPath(points, strokeWidth);
+
     if (fillStyle === "solid") {
-      this.ctx.beginPath();
-      this.ctx.strokeStyle = strokeFill;
-      this.ctx.lineWidth = strokeWidth;
-      this.ctx.setLineDash(
-        strokeStyle === "dashed"
-          ? getDashArrayDashed(strokeWidth)
-          : strokeStyle === "dotted"
-            ? getDashArrayDotted(strokeWidth)
-            : []
-      );
-      if (points[0] === undefined) return null;
-      this.ctx.moveTo(points[0].x, points[0].y);
-      points.forEach((point) => this.ctx.lineTo(point.x, point.y));
-      this.ctx.stroke();
+      const path = new Path2D(generateFreeDrawPath(points, strokeWidth));
+
+      this.ctx.save();
+      this.ctx.fillStyle = strokeFill;
+      this.ctx.fill(path);
+
+      if (strokeStyle === "dashed" || strokeStyle === "dotted") {
+        this.ctx.strokeStyle = strokeFill;
+        this.ctx.lineWidth = 1;
+        this.ctx.setLineDash(
+          strokeStyle === "dashed"
+            ? getDashArrayDashed(1)
+            : getDashArrayDotted(1)
+        );
+        this.ctx.stroke(path);
+        this.ctx.setLineDash([]);
+      }
+
+      this.ctx.restore();
     } else {
+      // // For rough/sketchy style, use the existing implementation
       const pathStr = points.reduce(
         (path, point, index) =>
           path +
@@ -1637,6 +1647,7 @@ export class CanvasEngine {
             : ` L ${point.x} ${point.y}`),
         ""
       );
+
       const options = this.getRoughOptions(
         strokeWidth,
         strokeFill,
@@ -1646,6 +1657,19 @@ export class CanvasEngine {
         fillStyle
       );
       this.roughCanvas.path(pathStr, options);
+
+      // For rough/sketchy style, use the improved path with rough.js
+      // const options = this.getRoughOptions(
+      //   strokeWidth,
+      //   strokeFill,
+      //   0,
+      //   bgFill,
+      //   "solid",
+      //   fillStyle
+      // );
+
+      // // Use the SVG path data from perfect-freehand with rough.js
+      // this.roughCanvas.path(svgPathData, options);
     }
   }
 

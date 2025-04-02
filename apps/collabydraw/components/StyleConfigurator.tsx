@@ -86,7 +86,7 @@ export function StyleConfigurator({
                         activeTool={activeTool}
                     />
 
-                    {(activeTool === "rectangle" || activeTool === 'ellipse' || activeTool === "diamond" || activeTool === 'line' || activeTool === 'pen') && (
+                    {(activeTool === "rectangle" || activeTool === 'ellipse' || activeTool === "diamond" || activeTool === 'line' || activeTool === 'free-draw') && (
                         <div className="Fill-Style-Selector">
                             <ItemLabel label="Fill" />
                             <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
@@ -134,7 +134,7 @@ export function StyleConfigurator({
                         </div>
                     )}
 
-                    {(activeTool !== "pen" && activeTool !== 'text') && (
+                    {(activeTool !== "free-draw" && activeTool !== 'text') && (
                         <>
                             <div className="Rough-Style-Selector">
                                 <ItemLabel label="Sloppiness" />
@@ -149,7 +149,10 @@ export function StyleConfigurator({
                                     ))}
                                 </div>
                             </div>
-
+                        </>
+                    )}
+                    {(activeTool !== 'text') && (
+                        <>
                             <div className="Stroke-Style-Selector">
                                 <ItemLabel label="Stroke Style" />
                                 <div className="flex flex-wrap gap-x-2 gap-y-2 items-center py-1">
@@ -212,7 +215,7 @@ export function StyleConfigurator({
                         </>
                     )}
                 </div>
-            </section>
+            </section >
         </>
     )
 }

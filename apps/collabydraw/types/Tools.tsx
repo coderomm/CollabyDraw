@@ -50,10 +50,10 @@ export const tools: Tool[] = [
         label: 'Line'
     },
     {
-        type: "pen",
+        type: "free-draw",
         icon: <Pencil />,
         shortcut: 7,
-        label: 'Pencil'
+        label: 'Free Draw'
     },
     {
         type: "arrow",

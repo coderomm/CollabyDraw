@@ -71,7 +71,7 @@ export class SelectionController {
     width: number;
     height: number;
   } {
-    if (shape.type !== "pen") {
+    if (shape.type !== "free-draw") {
       const bounds = {
         x: shape.x,
         y: shape.y,
@@ -266,7 +266,7 @@ export class SelectionController {
           x: x - this.selectedShape.x,
           y: y - this.selectedShape.y,
         };
-      } else if (this.selectedShape.type !== "pen") {
+      } else if (this.selectedShape.type !== "free-draw") {
         this.dragOffset = {
           x: x - this.selectedShape.x,
           y: y - this.selectedShape.y,
@@ -310,7 +310,7 @@ export class SelectionController {
           this.selectedShape.y = dy;
           break;
 
-        case "pen":
+        case "free-draw":
           this.selectedShape.points[0].x = dx;
           this.selectedShape.points[0].y = dy;
           break;
