@@ -39,3 +39,4 @@ yarn-error.log*
 
 # docker
 docker
+.vercel

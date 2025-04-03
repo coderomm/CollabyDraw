@@ -4,10 +4,10 @@
   "tasks": {
     "build": {
       "env": [
-        "WS_URL",
+        "DATABASE_URL",
         "JWT_SECRET",
-        "NEXTAUTH_URL",
-        "DATABASE_URL"
+        "NEXT_PUBLIC_BASE_URL",
+        "NEXT_PUBLIC_WS_URL"
       ],
       "dependsOn": [
         "^build"
@@ -34,9 +34,6 @@
       "dependsOn": [
         "^check-types"
       ]
-    },
-    "copy:prisma": {
-      "cache": false
     },
     "dev": {
       "cache": false,
