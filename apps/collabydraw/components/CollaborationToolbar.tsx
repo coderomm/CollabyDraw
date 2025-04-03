@@ -31,7 +31,11 @@ export default function CollaborationToolbar({ participants, hash }: { participa
     }, [hash]);
 
     const getSharingUrl = () => {
-        return getRoomSharingUrl(BASE_URL, decodedPathname, hash ?? '');
+        if (!BASE_URL) {
+            throw new Error("BASE_URL not found")
+        } else {
+            return getRoomSharingUrl(BASE_URL, decodedPathname, hash ?? '');
+        }
     };
 
     return (

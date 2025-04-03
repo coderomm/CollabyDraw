@@ -736,6 +736,10 @@ button {
   z-index: 2;
 }
 
+.dark .collabydraw-textEditorContainer textarea{
+  filter: var(--theme-filter);
+}
+
 .canvas-bg-color-item {
   filter: var(--theme-filter);
 }

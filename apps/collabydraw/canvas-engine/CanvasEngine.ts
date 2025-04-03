@@ -1030,7 +1030,7 @@ export class CanvasEngine {
     let span: HTMLSpanElement | null = null;
 
     const resizeTextarea = () => {
-      if (span) {
+      if (span && document.body.contains(span)) {
         document.body.removeChild(span);
       }
 
@@ -1070,16 +1070,20 @@ export class CanvasEngine {
       const text = textarea.value.trim();
       if (!text) {
         textarea.remove();
-        document.body.removeChild(span!);
+        if (span && document.body.contains(span)) {
+          document.body.removeChild(span);
+        }
         return;
       }
-
+      if (!span) {
+        throw new Error("Span is null");
+      }
       const newShape: Shape = {
         id: uuidv4(),
         type: "text",
         x: x,
         y: y,
-        width: span!.offsetWidth,
+        width: span.offsetWidth,
         text,
         fontSize: this.fontSize,
         fontFamily: this.fontFamily,
@@ -1109,7 +1113,9 @@ export class CanvasEngine {
 
       if (collabydrawContainer?.contains(textarea)) {
         collabydrawContainer.removeChild(textarea);
-        document.body.removeChild(span!);
+        if (span && document.body.contains(span)) {
+          document.body.removeChild(span);
+        }
       }
 
       this.clearCanvas();

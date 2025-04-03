@@ -30,7 +30,7 @@ export function ToolMenuWelcome() {
 export function HomeWelcome() {
     return (
         <>
-            <div className="welcome-screen-center z-[4]">
+            <div className="welcome-screen-center z-[3]">
                 <div className="welcome-screen-center__logo excalifont welcome-screen-decor">
                     <div className="ExcalidrawLogo is-small">
                         <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="ExcalidrawLogo-icon">

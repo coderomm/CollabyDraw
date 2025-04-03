@@ -18,7 +18,6 @@ import { StyleConfigurator } from "../StyleConfigurator";
 import ToolSelector from "../ToolSelector";
 import CollaborationToolbar from "../CollaborationToolbar";
 import ZoomControl from "../ZoomControl";
-import CollabydrawTextEditorContainer from "../Collabydraw-TextEditorContainer";
 import { HomeWelcome, MainMenuWelcome, ToolMenuWelcome } from "../welcome-screen";
 import EncryptedWidget from "../EncryptedWidget";
 
@@ -381,7 +380,7 @@ export default function CanvasBoard() {
                 <EncryptedWidget />
             )}
 
-            <CollabydrawTextEditorContainer />
+            <div className="collabydraw-textEditorContainer"></div>
 
             {!matches && (
                 <MobileCommandBar
