@@ -20,7 +20,6 @@
   },
   "scripts": {
     "generate": "prisma generate",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "prisma generate"
   }
 }

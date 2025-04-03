@@ -35,6 +35,9 @@
         "^check-types"
       ]
     },
+    "copy:prisma": {
+      "cache": false
+    },
     "dev": {
       "cache": false,
       "persistent": true
