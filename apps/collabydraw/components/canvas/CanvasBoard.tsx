@@ -204,6 +204,12 @@ export default function CanvasBoard() {
             mode === 'room' ? (connectionStatus) => setIsConnected(connectionStatus) : null,
             userRef.current.encryptionKey
         );
+        engine.setOnShapeCountChange((count: number) => {
+            setCanvasEngineState(prev => ({
+                ...prev,
+                isCanvasEmpty: count === 0
+            }));
+        });
         return engine;
     }, [canvasEngineState.canvasColor, mode]);
 

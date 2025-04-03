@@ -59,6 +59,10 @@ export class CanvasEngine {
     | ((participants: RoomParticipants[]) => void)
     | null;
   private onConnectionChange: ((isConnected: boolean) => void) | null;
+  private onShapeCountChange: ((count: number) => void) | null = null;
+  public setOnShapeCountChange(callback: (count: number) => void) {
+    this.onShapeCountChange = callback;
+  }
 
   private clicked: boolean;
   public outputScale: number = 1;
@@ -704,6 +708,7 @@ export class CanvasEngine {
     }
 
     this.existingShapes.push(shape);
+    this.notifyShapeCountChange();
 
     if (this.isStandalone) {
       try {
@@ -1084,6 +1089,7 @@ export class CanvasEngine {
       };
 
       this.existingShapes.push(newShape);
+      this.notifyShapeCountChange();
 
       if (this.isStandalone) {
         localStorage.setItem(
@@ -1712,6 +1718,7 @@ export class CanvasEngine {
     if (shapeIndex !== -1) {
       const erasedShape = this.existingShapes[shapeIndex];
       this.existingShapes.splice(shapeIndex, 1);
+      this.notifyShapeCountChange();
       this.clearCanvas();
 
       if (this.isStandalone) {
@@ -1791,6 +1798,7 @@ export class CanvasEngine {
 
   clearAllShapes() {
     this.existingShapes = [];
+    this.notifyShapeCountChange();
     this.clearCanvas();
     if (this.isStandalone) {
       localStorage.removeItem(LOCALSTORAGE_CANVAS_KEY);
@@ -1835,7 +1843,6 @@ export class CanvasEngine {
         }
       }
     });
-
     this.clearCanvas();
   }
 
@@ -1844,5 +1851,9 @@ export class CanvasEngine {
       (shape) => shape.id !== id
     );
     this.clearCanvas();
+  }
+
+  private notifyShapeCountChange() {
+    this.onShapeCountChange?.(this.existingShapes.length);
   }
 }
