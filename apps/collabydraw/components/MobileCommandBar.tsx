@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Button } from "./ui/button"
 import { PaletteFilled } from "./SvgIcons"
-import { BgFill, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, ToolType } from "@/types/canvas"
+import { BgFill, FillStyle, FontFamily, FontSize, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, TextAlign, ToolType } from "@/types/canvas"
 import { UserRoomsListDialog } from "./UserRoomsListDialog"
 import { RoomSharingDialog } from "./RoomSharingDialog"
 import { BASE_URL } from "@/config/constants"
@@ -35,6 +35,16 @@ interface MobileCommandBarProps {
     setStrokeEdge: React.Dispatch<React.SetStateAction<StrokeEdge>>;
     strokeStyle: StrokeStyle;
     setStrokeStyle: React.Dispatch<React.SetStateAction<StrokeStyle>>;
+    roughStyle: RoughStyle;
+    setRoughStyle: React.Dispatch<React.SetStateAction<RoughStyle>>;
+    fillStyle: FillStyle;
+    setFillStyle: React.Dispatch<React.SetStateAction<FillStyle>>;
+    fontFamily: FontFamily;
+    setFontFamily: React.Dispatch<React.SetStateAction<FontFamily>>;
+    fontSize: FontSize;
+    setFontSize: React.Dispatch<React.SetStateAction<FontSize>>;
+    textAlign: TextAlign;
+    setTextAlign: React.Dispatch<React.SetStateAction<TextAlign>>;
     roomName?: string
     isStandalone?: boolean;
     onClearCanvas?: () => void;
@@ -59,6 +69,16 @@ export function MobileCommandBar({ canvasColor,
     setStrokeEdge,
     strokeStyle,
     setStrokeStyle,
+    roughStyle,
+    setRoughStyle,
+    fillStyle,
+    setFillStyle,
+    fontFamily,
+    setFontFamily,
+    fontSize,
+    setFontSize,
+    textAlign,
+    setTextAlign,
     roomName,
     isStandalone,
     onClearCanvas,
@@ -126,6 +146,21 @@ export function MobileCommandBar({ canvasColor,
                         setStrokeEdge={setStrokeEdge}
                         strokeStyle={strokeStyle}
                         setStrokeStyle={setStrokeStyle}
+
+                        roughStyle={roughStyle}
+                        setRoughStyle={setRoughStyle}
+
+                        fillStyle={fillStyle}
+                        setFillStyle={setFillStyle}
+
+                        fontFamily={fontFamily}
+                        setFontFamily={setFontFamily}
+
+                        fontSize={fontSize}
+                        setFontSize={setFontSize}
+
+                        textAlign={textAlign}
+                        setTextAlign={setTextAlign}
                     />
                 </SheetContent>
             </Sheet>

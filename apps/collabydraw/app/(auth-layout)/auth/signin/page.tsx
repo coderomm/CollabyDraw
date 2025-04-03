@@ -1,6 +1,8 @@
 import { SignInForm } from "@/components/auth/signin-form";
+import ScreenLoading from "@/components/ScreenLoading";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default function SignInPage() {
     return (
@@ -10,7 +12,9 @@ export default function SignInPage() {
                 <CardDescription className="text-sm pb-4 text-primary text-center">Enter your email to sign in to your account</CardDescription>
             </CardHeader>
             <CardContent className="p-0 !my-0">
-                <SignInForm />
+                <Suspense fallback={<ScreenLoading />}>
+                    <SignInForm />
+                </Suspense>
             </CardContent>
             <CardFooter className="px-0 pt-2 pb-0 flex-col !mt-0 gap-2">
                 <div className="relative flex h-7 items-center justify-center gap-2">

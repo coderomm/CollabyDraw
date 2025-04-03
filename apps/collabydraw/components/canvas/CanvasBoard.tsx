@@ -410,6 +410,30 @@ export default function CanvasBoard() {
                     setStrokeStyle={(newStrokeStyle: SetStateAction<StrokeStyle>) =>
                         setCanvasEngineState(prev => ({ ...prev, strokeStyle: typeof newStrokeStyle === 'function' ? newStrokeStyle(prev.strokeStyle) : newStrokeStyle }))
                     }
+                    roughStyle={canvasEngineState.roughStyle}
+                    setRoughStyle={(newRoughStyle: SetStateAction<RoughStyle>) =>
+                        setCanvasEngineState(prev => ({ ...prev, roughStyle: typeof newRoughStyle === 'function' ? newRoughStyle(prev.roughStyle) : newRoughStyle }))
+                    }
+
+                    fillStyle={canvasEngineState.fillStyle}
+                    setFillStyle={(newFillStyle: SetStateAction<FillStyle>) =>
+                        setCanvasEngineState(prev => ({ ...prev, fillStyle: typeof newFillStyle === 'function' ? newFillStyle(prev.fillStyle) : newFillStyle }))
+                    }
+
+                    fontFamily={canvasEngineState.fontFamily}
+                    setFontFamily={(newFontFamily: SetStateAction<FontFamily>) =>
+                        setCanvasEngineState(prev => ({ ...prev, fontFamily: typeof newFontFamily === 'function' ? newFontFamily(prev.fontFamily) : newFontFamily }))
+                    }
+
+                    fontSize={canvasEngineState.fontSize}
+                    setFontSize={(newFontSize: SetStateAction<FontSize>) =>
+                        setCanvasEngineState(prev => ({ ...prev, fontSize: typeof newFontSize === 'function' ? newFontSize(prev.fontSize) : newFontSize }))
+                    }
+
+                    textAlign={canvasEngineState.textAlign}
+                    setTextAlign={(newTextAlign: SetStateAction<TextAlign>) =>
+                        setCanvasEngineState(prev => ({ ...prev, textAlign: typeof newTextAlign === 'function' ? newTextAlign(prev.textAlign) : newTextAlign }))
+                    }
                     isStandalone={mode === 'room' ? false : true}
                 />
 

@@ -3,6 +3,12 @@
   "ui": "tui",
   "tasks": {
     "build": {
+      "env": [
+        "WS_URL",
+        "JWT_SECRET",
+        "NEXTAUTH_URL",
+        "DATABASE_URL"
+      ],
       "dependsOn": [
         "^build"
       ],
