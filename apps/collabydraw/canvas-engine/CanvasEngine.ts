@@ -141,6 +141,7 @@ export class CanvasEngine {
     if (!this.isStandalone && this.token && this.roomId) {
       console.log("✅Connecting to WebSocket…");
       this.connectWebSocket();
+      console.log("✅Connected to WebSocket…");
     }
   }
 
@@ -1047,9 +1048,6 @@ export class CanvasEngine {
         textarea.style.width = `${Math.max(span!.offsetWidth + 10, 50)}px`;
         textarea.style.height = `${Math.max(span!.offsetHeight, 20)}px`;
       });
-
-      console.log("span.offsetWidth= ", span.offsetWidth);
-      console.log("textarea.style.width= ", textarea.style.width);
     };
 
     textarea.addEventListener("input", () => {
