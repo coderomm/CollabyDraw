@@ -4,6 +4,7 @@ import "./globals.css";
 import Provider from "./provider";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { baseMetadata, jsonLdSchema } from "@/utils/metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,10 +27,7 @@ const assistant = Assistant({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "CollabyDraw | Om Sharma",
-  description: "CollabyDraw Build By Om Sharma",
-};
+export const metadata: Metadata = baseMetadata;
 
 export default function RootLayout({
   children,
@@ -38,6 +36,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLdSchema)
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${assistant.variable} antialiased flex min-h-screen flex-col bg-background`}
       >

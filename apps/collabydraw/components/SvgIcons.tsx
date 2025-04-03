@@ -38,3 +38,11 @@ export function TextIcon({ className }: { className: string }) {
         </svg>
     )
 }
+
+export function EncryptedIcon({ className }: { className: string }) {
+    return (
+        <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 24 24" className={cn("size-6", className)}>
+            <path fill="currentColor" d="M11.553 22.894a.998.998 0 00.894 0s3.037-1.516 5.465-4.097C19.616 16.987 21 14.663 21 12V5a1 1 0 00-.649-.936l-8-3a.998.998 0 00-.702 0l-8 3A1 1 0 003 5v7c0 2.663 1.384 4.987 3.088 6.797 2.428 2.581 5.465 4.097 5.465 4.097zm-1.303-8.481l6.644-6.644a.856.856 0 111.212 1.212l-7.25 7.25a.856.856 0 01-1.212 0l-3.75-3.75a.856.856 0 111.212-1.212l3.144 3.144z"></path>
+        </svg>
+    )
+}
