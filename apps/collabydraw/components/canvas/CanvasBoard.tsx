@@ -229,8 +229,8 @@ export default function CanvasBoard() {
                     const handleResize = () => {
                         if (canvasRef.current) {
                             const canvas = canvasRef.current;
-                            canvas.width = window.innerWidth;
-                            canvas.height = window.innerHeight;
+                            canvas.width = window.innerWidth || document.documentElement.clientWidth;
+                            canvas.height = window.innerHeight || document.documentElement.clientHeight;
                             engine.handleResize(window.innerWidth, window.innerHeight);
                         }
                     };
@@ -452,7 +452,7 @@ export default function CanvasBoard() {
                 <ScreenLoading />
             )}
 
-            <canvas className={cn("collabydraw collabydraw-canvas", theme === 'dark' ? 'collabydraw-canvas-dark' : '')} ref={canvasRef} />
+            <canvas className={cn("collabydraw collabydraw-canvas touch-none", theme === 'dark' ? 'collabydraw-canvas-dark' : '')} ref={canvasRef} />
         </div >
     )
 };

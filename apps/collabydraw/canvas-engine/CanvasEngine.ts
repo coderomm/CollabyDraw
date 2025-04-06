@@ -296,6 +296,15 @@ export class CanvasEngine {
     this.canvas.addEventListener("wheel", this.mouseWheelHandler, {
       passive: false,
     });
+    this.canvas.addEventListener("touchstart", this.touchStartHandler, {
+      passive: false,
+    });
+    this.canvas.addEventListener("touchmove", this.touchMoveHandler, {
+      passive: false,
+    });
+    this.canvas.addEventListener("touchend", this.touchEndHandler, {
+      passive: false,
+    });
   }
 
   setTool(tool: ToolType) {
@@ -777,7 +786,7 @@ export class CanvasEngine {
 
   mouseDownHandler = (e: MouseEvent) => {
     const { x, y } = this.transformPanScale(e.clientX, e.clientY);
-
+    console.log("x, y: ", x, y);
     if (this.activeTool === "selection") {
       const selectedShape = this.SelectionController.getSelectedShape();
       if (selectedShape) {
@@ -971,6 +980,46 @@ export class CanvasEngine {
           this.startY = e.clientY;
           this.clearCanvas();
       }
+    }
+  };
+
+  touchStartHandler = (e: TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const simulatedMouse = new MouseEvent("mousedown", {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    });
+
+    console.log("Touch started at", touch.clientX, touch.clientY);
+
+    this.mouseDownHandler(simulatedMouse);
+  };
+
+  touchMoveHandler = (e: TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const simulatedMouse = new MouseEvent("mousemove", {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    });
+
+    this.mouseMoveHandler(simulatedMouse);
+  };
+
+  touchEndHandler = (e: TouchEvent) => {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    if (touch) {
+      const simulatedMouse = new MouseEvent("mouseup", {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      });
+      this.mouseUpHandler(simulatedMouse);
     }
   };
 
@@ -1767,6 +1816,9 @@ export class CanvasEngine {
     this.canvas.removeEventListener("mousemove", this.mouseMoveHandler);
     this.canvas.removeEventListener("mouseup", this.mouseUpHandler);
     this.canvas.removeEventListener("wheel", this.mouseWheelHandler);
+    this.canvas.removeEventListener("touchstart", this.touchStartHandler);
+    this.canvas.removeEventListener("touchmove", this.touchMoveHandler);
+    this.canvas.removeEventListener("touchend", this.touchEndHandler);
 
     if (this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(
