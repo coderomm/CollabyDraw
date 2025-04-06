@@ -19,6 +19,7 @@ import {
     Upload,
     Linkedin,
     Share2,
+    Star,
 } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -132,9 +133,20 @@ export function AppSidebar({ isOpen, onClose, canvasColor, setCanvasColor, isMob
                             )}
 
                             <Separator className="my-4 dark:bg-default-border-color-dark" />
-                            <SidebarLinkItem icon={Github} label="GitHub" url="https://github.com/coderomm" />
+                            <Link
+                                className={cn(
+                                    buttonVariants({ variant: "ghost" }),
+                                    "flex flex-row items-center justify-start gap-2 h-10 w-auto rounded-md px-3 text-sm font-medium transition-colors text-color-on-surface hover:text-color-on-surface bg-transparent hover:bg-button-hover-bg focus-visible:shadow-brand-color-shadow focus-visible:outline-none focus-visible:ring-0 active:bg-button-hover-bg active:border active:border-brand-active dark:hover:bg-w-button-hover-bg border border-[#705400] bg-[#FFE599]"
+                                )}
+                                href="https://github.com/coderomm/CollabyDraw"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="GitHub"
+                            >
+                                <Github className="h-4 w-4" />GitHub - <span className="flex items-center justify-start gap-1">7<Star className="h-4 w-4" /></span>
+                            </Link>
                             <SidebarLinkItem icon={Twitter} label="Twitter / X" url="https://x.com/1omsharma" />
-                            <SidebarLinkItem icon={Linkedin} label="Linkedin" url="https://www.linkedin.com/in/1omsharma/" />
+                            <SidebarLinkItem icon={Linkedin} label="Linkedin" url="https://www.linkedin.com/in/1omsharma" />
                         </nav>
                     </div>
 

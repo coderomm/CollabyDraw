@@ -3,16 +3,13 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Menu, Plus, Minus, Share2 } from "lucide-react"
+import { Menu, Plus, Minus } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Button } from "./ui/button"
 import { PaletteFilled } from "./SvgIcons"
 import { BgFill, FillStyle, FontFamily, FontSize, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, TextAlign, ToolType } from "@/types/canvas"
-import { UserRoomsListDialog } from "./UserRoomsListDialog"
-import { RoomSharingDialog } from "./RoomSharingDialog"
-import { BASE_URL } from "@/config/constants"
 import { AppSidebar } from "./AppSidebar"
 import { StyleConfigurator } from "./StyleConfigurator"
 
@@ -86,7 +83,6 @@ export function MobileCommandBar({ canvasColor,
     onImportCanvas,
 }: MobileCommandBarProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
-    const [roomsListOpen, setRoomsListOpen] = useState(false);
 
     const handleMenuButton = () => {
         setSidebarOpen(!sidebarOpen);
@@ -101,7 +97,6 @@ export function MobileCommandBar({ canvasColor,
                         {activeTool !== 'grab' && activeTool !== 'eraser' && (
                             <NavbarButton icon={PaletteFilled} label="Colors" onClick={() => setColorPickerOpen(true)} active={colorPickerOpen} />
                         )}
-                        <NavbarButton icon={Share2} label="Rooms" onClick={() => setRoomsListOpen(true)} active={roomsListOpen} />
                         <ScaleWidget scale={scale} setScale={setScale} />
                     </div>
                 </div>
@@ -109,9 +104,9 @@ export function MobileCommandBar({ canvasColor,
 
             {sidebarOpen && (
                 <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                    <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-4 py-4 overflow-auto custom-scrollbar Island">
+                    <SheetContent side="bottom" className="h-auto max-h-[80vh] w-full rounded-t-[20px] px-4 py-4 overflow-auto overflow-x-hiddenustom-scrollbar Island">
                         <SheetHeader className="mb-5">
-                            <SheetTitle>Settings</SheetTitle>
+                            <SheetTitle>App Menu</SheetTitle>
                         </SheetHeader>
                         <AppSidebar
                             isOpen={sidebarOpen}
@@ -129,9 +124,9 @@ export function MobileCommandBar({ canvasColor,
                 </Sheet>
             )}
             <Sheet open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
-                <SheetContent side="bottom" className="h-auto max-h-[80vh] rounded-t-[20px] px-4 py-4 overflow-auto custom-scrollbar Island">
+                <SheetContent side="bottom" className="h-auto max-h-[80vh] w-full rounded-t-[20px] px-4 py-4 overflow-auto overflow-x-hidden custom-scrollbar Island">
                     <SheetHeader className="mb-5">
-                        <SheetTitle>Canvas Settings</SheetTitle>
+                        <SheetTitle>Canvas Styles</SheetTitle>
                     </SheetHeader>
                     <StyleConfigurator
                         isMobile={true}
@@ -164,23 +159,6 @@ export function MobileCommandBar({ canvasColor,
                     />
                 </SheetContent>
             </Sheet>
-
-            {roomName ? (
-                <RoomSharingDialog open={roomsListOpen} onOpenChange={setRoomsListOpen} link={`${BASE_URL}/${roomName}`} />
-            ) : (
-                <Sheet open={roomsListOpen} onOpenChange={setRoomsListOpen}>
-                    <SheetContent side="bottom" className="h-auto max-h-[80vh] min-h-[50vh] rounded-t-[20px] px-6 py-6 Island">
-                        <SheetHeader className="mb-5">
-                            <SheetTitle>All Your Rooms</SheetTitle>
-                        </SheetHeader>
-                        <UserRoomsListDialog
-                            open={roomsListOpen}
-                            onOpenChange={setRoomsListOpen}
-                            isMobile={true}
-                        />
-                    </SheetContent>
-                </Sheet>
-            )}
         </>
     )
 }

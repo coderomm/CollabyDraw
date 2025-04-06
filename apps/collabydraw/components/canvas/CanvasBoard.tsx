@@ -440,6 +440,7 @@ export default function CanvasBoard() {
                         setCanvasEngineState(prev => ({ ...prev, textAlign: typeof newTextAlign === 'function' ? newTextAlign(prev.textAlign) : newTextAlign }))
                     }
                     isStandalone={mode === 'room' ? false : true}
+                    onClearCanvas={clearCanvas}
                 />
 
             )}
