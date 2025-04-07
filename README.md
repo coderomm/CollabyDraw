@@ -101,6 +101,51 @@ https://www.youtube.com/watch?v=NNVdRCoFnK0
 I want **CollabyDraw** to be open source so that other students and developers can explore and learn from it.  
 If you'd like to contribute—whether it's improving the UI, optimizing performance, or adding new features—feel free to open an issue or submit a pull request!
 
+### 🛠️ Development Setup
+
+# Clone the repository
+```bash
+git clone https://github.com/coderomm/CollabyDraw.git
+cd CollabyDraw
+```
+
+# Two options for running locally:
+
+## Docker Setup
+```bash
+docker-compose up
+```
+
+## Local Setup
+- Make sure you have a postgres database running. You can use Docker for this:
+
+```bash
+docker run --name collabydraw-db -e POSTGRES_PASSWORD=your_secure_password -e POSTGRES_DB=collabydraw -d -p 5432:5432 postgres
+```
+
+1. Install Dependencies
+```bash
+pnpm install
+```
+
+2. Set up Environment Variables (in apps/collabydraw, apps/ws, packages/db)
+```bash
+cp .env.example .env
+```
+
+3. Start the Next.js app
+```bash
+cd apps/collabydraw
+pnpm dev
+```
+4. Start the WebSocket server
+```bash
+cd apps/ws
+pnpm dev
+```
+
+
+
 ---
 
 ## 📄 License
