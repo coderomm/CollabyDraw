@@ -1,32 +1,38 @@
 # docker-compose.yml
-version: '3.8'
 
 services:
   frontend:
     build:
-      context: ./apps/collabydraw
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./docker/Dockerfile.frontend
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
+      - JWT_SECRET=SECRET
+      - DATABASE_URL=postgresql://postgres:your_secure_password@collabydraw-db:5432/collabydraw
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8080
     depends_on:
       - websocket
       - database
 
   websocket:
     build:
-      context: ./apps/ws
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./docker/Dockerfile.websocket 
     ports:
       - "8080:8080"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
+      - JWT_SECRET=SECRET
+      - DATABASE_URL=postgresql://postgres:your_secure_password@collabydraw-db:5432/collabydraw
     depends_on:
       - database
 
   database:
     image: postgres:13-alpine
+    container_name: collabydraw-db
     environment:
       POSTGRES_DB: collabydraw
       POSTGRES_PASSWORD: your_secure_password

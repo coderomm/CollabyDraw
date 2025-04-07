@@ -39,4 +39,4 @@ RUN pnpm run build
 EXPOSE 8080
 
 # Start the ws service
-CMD ["pnpm", "run", "start:ws"]
+CMD ["pnpm", "run", "dev:ws"]

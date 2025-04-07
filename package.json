@@ -7,8 +7,11 @@
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db:generate": "cd packages/db && prisma generate && cd ../..",
+    "db:migrate":"cd packages/db && prisma migrate dev && cd ../..",
     "start:collabydraw": "cd apps/collabydraw && pnpm run start",
-    "start:ws": "cd apps/ws && pnpm run start"
+    "start:ws": "cd apps/ws && pnpm run start",
+    "dev:frontend":"pnpm db:migrate && cd apps/collabydraw && pnpm dev",
+    "dev:ws":"pnpm db:migrate && pnpm start:ws"
   },
   "devDependencies": {
     "prettier": "^3.5.0",

@@ -6,8 +6,7 @@ RUN npm install -g pnpm
 WORKDIR /usr/src/app
 
 # Add ARG for DATABASE_URL
-ARG DATABASE_URL
-ARG JWT_SECRET
+
 
 # Copy necessary files for dependency installation
 COPY ./packages ./packages
@@ -34,13 +33,12 @@ RUN prisma generate
 WORKDIR /usr/src/app
 
 # Set environment variables
-ENV DATABASE_URL=${DATABASE_URL}
-ENV JWT_SECRET=${JWT_SECRET}
+
 
 # Create .env.local for Next.js
-WORKDIR /usr/src/app/apps/collabydraw
-RUN echo "JWT_SECRET=$JWT_SECRET" > .env.local
-RUN echo "DATABASE_URL=$DATABASE_URL" >> .env.local
+# WORKDIR /usr/src/app/apps/collabydraw
+# RUN echo "JWT_SECRET=$JWT_SECRET" > .env.local
+# RUN echo "DATABASE_URL=$DATABASE_URL" >> .env.local
 
 # Change back to the root directory
 WORKDIR /usr/src/app
@@ -56,10 +54,10 @@ WORKDIR /usr/src/app
 # RUN echo "DATABASE_URL: ${DATABASE_URL}" && echo "JWT_SECRET set: ${JWT_SECRET:+yes}"
 
 # Build the application with database URL
-RUN DATABASE_URL=${DATABASE_URL} JWT_SECRET=${JWT_SECRET} pnpm run build
+# RUN DATABASE_URL=${DATABASE_URL} JWT_SECRET=${JWT_SECRET} pnpm run build
 
 # Expose the port
 EXPOSE 3000
 
 # Start the collabydraw application
-CMD ["pnpm", "run", "start:collabydraw"]
+CMD ["pnpm", "run", "dev:frontend"]
