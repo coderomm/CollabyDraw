@@ -107,6 +107,7 @@ export default {
         "color-on-surface": "var(--color-on-surface)",
         "button-hover-bg": "var(--button-hover-bg)",
         "button-active-bg": "var(--button-active-bg)",
+        "color-primary-text": "var(--color-primary-text)",
       },
       textColor: {
         "collaby-textfield": "var(--CollabyTextField--color)",

@@ -186,6 +186,7 @@ h6 {
     --button-active-bg: var(--color-surface-high);
     --button-active-border: var(--brand-active);
     --color-promo: var(--color-primary);
+    --color-primary-text: #030064;
 
     --selection-box-border-color: #6965db;
     --theme-filter: none;
@@ -736,10 +737,49 @@ button {
   z-index: 2;
 }
 
-.dark .collabydraw-textEditorContainer textarea{
+.dark .collabydraw-textEditorContainer textarea {
   filter: var(--theme-filter);
 }
 
 .canvas-bg-color-item {
   filter: var(--theme-filter);
+}
+
+.bg-page-gradient-purple,
+.bg-page-gradient-yellow {
+  background-image: linear-gradient(138.59deg, #e0dfff26 4.71%, #e0dfff00 32.89%), radial-gradient(52.08% 32.07% at 97.32% 50.03%, #e0dfff26 0, #e0dfff00 100%);
+}
+
+.prose :where(p):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  line-height: 140%;
+  margin-bottom: 1.25em;
+  margin-top: .5rem;
+}
+
+.prose :where(.prose>:first-child):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  margin-top: 0;
+}
+
+.prose-xl :where(p):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  line-height: 160%;
+  margin-bottom: 1.2em;
+  margin-top: .5rem;
+}
+
+.prose-xl :where(.prose-xl>:first-child):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  margin-top: 0;
+}
+
+@media (min-width: 1025px) {
+  .lg\:prose-xl :where(p):not(:where([class~=not-prose], [class~=not-prose] *)) {
+    line-height: 160%;
+    margin-bottom: 1.2em;
+    margin-top: .5rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .lg\:prose-xl :where(.lg\:prose-xl>:first-child):not(:where([class~=not-prose], [class~=not-prose] *)) {
+    margin-top: 0;
+  }
 }
