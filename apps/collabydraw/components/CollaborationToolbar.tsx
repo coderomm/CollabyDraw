@@ -97,7 +97,7 @@ export default function CollaborationToolbar({ participants, hash }: { participa
                 </div>
             </div>
             <Button type="button" onClick={() => setIsOpen(true)}
-                className={cn("excalidraw-button collab-button relative w-auto py-2 px-3 md:py-3 md:px-4 rounded-md text-[.875rem] font-semibold shadow-none active:scale-[.98]", inRoom ? "bg-[#0fb884] dark:bg-[#0fb884] hover:bg-[#0fb884]" : "bg-color-primary hover:bg-brand-hover active:bg-brand-active")}
+                className={cn("collabydraw-button collab-button relative w-auto py-2 px-3 md:py-3 md:px-4 rounded-md text-[.875rem] font-semibold shadow-none active:scale-[.98]", inRoom ? "bg-[#0fb884] dark:bg-[#0fb884] hover:bg-[#0fb884]" : "bg-color-primary hover:bg-brand-hover active:bg-brand-active")}
                 title="Live collaboration..."><Share2 size={16} className="hidden xs670:inline md:hidden" />
                 <span className="inline-block xs670:hidden md:inline-block">Share</span> {inRoom && participants && participants.length > 0 && (
                     <div className="CollabButton-collaborators text-[.6rem] text-[#2b8a3e] bg-[#b2f2bb] font-bold font-assistant rounded-[50%] p-1 min-w-4 min-h-4 w-4 h-4 flex items-center justify-center absolute bottom-[-5px] right-[-5px]">{participants.length}</div>

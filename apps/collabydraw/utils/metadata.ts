@@ -13,7 +13,6 @@ export const baseMetadata: Metadata = {
     "online whiteboard",
     "real-time canvas",
     "digital whiteboard",
-    "Excalidraw alternative",
     "end-to-end encrypted whiteboard",
   ],
   authors: [{ name: "Om Sharma" }],
@@ -26,7 +25,7 @@ export const baseMetadata: Metadata = {
     url: "https://collabydraw.xyz",
     title: "Collabydraw — Collaborative whiteboarding made easy",
     description:
-      "Excalidraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them.",
+      "Collabydraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them.",
     siteName: "Collabydraw",
     images: [
       {
@@ -42,7 +41,7 @@ export const baseMetadata: Metadata = {
     card: "summary_large_image",
     title: "Collabydraw — Collaborative whiteboarding made easy",
     description:
-      "Excalidraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them.",
+      "Collabydraw is a virtual collaborative whiteboard tool that lets you easily sketch diagrams that have a hand-drawn feel to them.",
     creator: "@1omsharma",
     images: ["/brand/CollabyDraw1.png"],
   },

@@ -61,7 +61,7 @@ https://collabydraw.app/#room=abc123,xyz456
 
 - No one — not even the server — can read what’s drawn in a room without the key  
 - Ensures **confidentiality** for private brainstorming, teaching, or design sessions  
-- Works like **Excalidraw's E2EE rooms**, but tailored for your collaborative drawing logic
+- Works like **Collabydraw's E2EE rooms**, but tailored for your collaborative drawing logic
 
 ---
 

@@ -17,7 +17,7 @@ export default function AuthLayout({
                         <Link href="/" className="Logo flex items-center select-none is-normal is-plain underline-none text-current">
                             <div className=""><LogoSvg /></div>
                             <div className="md:flex hidden">
-                                <h1 className="brand-title ExcalidrawLogo-text font-excalifont">CollabyDraw</h1>
+                                <h1 className="brand-title CollabydrawLogo-text font-collabyfont">CollabyDraw</h1>
                             </div>
                         </Link>
                     </div>

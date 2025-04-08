@@ -156,7 +156,7 @@ export default {
         sans: "var(--font-geist-sans), system-ui, sans-serif",
         mono: "var(--font-geist-mono), monospace",
         assistant: "var(--font-assistant), sans-serif",
-        excalifont: ["Excalifont", "sans-serif"],
+        collabyfont: ["Collabyfont", "sans-serif"],
       },
       filter: {
         "canvas-theme-filter": "var(--theme-filter)",

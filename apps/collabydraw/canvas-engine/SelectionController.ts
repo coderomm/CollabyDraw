@@ -126,7 +126,7 @@ export class SelectionController {
 
         case "text":
           const calFontSize = getFontSize(shape.fontSize, 100);
-          this.ctx.font = `${calFontSize}px/1.2 ${shape.fontFamily === "normal" ? "Arial" : shape.fontFamily === "hand-drawn" ? "Excalifont, Xiaolai" : "Assistant"}`;
+          this.ctx.font = `${calFontSize}px/1.2 ${shape.fontFamily === "normal" ? "Arial" : shape.fontFamily === "hand-drawn" ? "Collabyfont, Xiaolai" : "Assistant"}`;
           const metrics = this.ctx.measureText(shape.text || "");
           bounds.x = shape.x - 10;
           bounds.y = shape.y - 10;

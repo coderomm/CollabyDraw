@@ -80,7 +80,7 @@ export default function AboutPage() {
                         <li>No one — not even the server — can read what’s drawn without the key</li>
                         <li>Ensures <strong>confidentiality</strong> for private sessions</li>
                         <li>
-                            Works like <strong>Excalidraw&apos;s E2EE rooms</strong>, but tailored for your logic
+                            Works like <strong>Collabydraw&apos;s E2EE rooms</strong>, but tailored for your logic
                         </li>
                     </ul>
 

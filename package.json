@@ -1,5 +1,5 @@
 {
-  "name": "excalidraw",
+  "name": "collabydraw",
   "private": true,
   "scripts": {
     "build": "turbo build",

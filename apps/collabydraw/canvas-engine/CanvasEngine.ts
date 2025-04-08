@@ -1058,7 +1058,7 @@ export class CanvasEngine {
     textarea.tabIndex = 0;
     textarea.wrap = "off";
     textarea.style.color = this.strokeFill;
-    const fontString = `${calFont}px/1.2 ${this.fontFamily === "normal" ? "Arial" : this.fontFamily === "hand-drawn" ? "Excalifont, Xiaolai" : "Assistant"}`;
+    const fontString = `${calFont}px/1.2 ${this.fontFamily === "normal" ? "Arial" : this.fontFamily === "hand-drawn" ? "Collabyfont, Xiaolai" : "Assistant"}`;
     textarea.style.font = fontString;
     textarea.style.zIndex = "1";
 
@@ -1746,7 +1746,7 @@ export class CanvasEngine {
     const calFontSize = getFontSize(fontSize, this.scale);
     const lineHeight = getLineHeight(calFontSize);
 
-    const fontString = `${fontStyle} ${calFontSize}px/1.2 ${fontFamily === "normal" ? "Arial" : fontFamily === "hand-drawn" ? "Excalifont, Xiaolai" : "Assistant"}`;
+    const fontString = `${fontStyle} ${calFontSize}px/1.2 ${fontFamily === "normal" ? "Arial" : fontFamily === "hand-drawn" ? "Collabyfont, Xiaolai" : "Assistant"}`;
     this.ctx.font = fontString;
     this.ctx.fillStyle = fillStyle;
     this.ctx.textAlign = textAlign;

@@ -12,7 +12,7 @@ export default function EncryptedWidget() {
                             <EncryptedIcon className="w-[1.2rem] h-[1.2rem]" />
                         </Link>
                     </TooltipTrigger>
-                    <TooltipContent className="font-excalifont">
+                    <TooltipContent className="font-collabyfont">
                         Your drawings are end-to-end encrypted so Collabydraw&apos;s servers will never see them.
                     </TooltipContent>
                 </Tooltip>

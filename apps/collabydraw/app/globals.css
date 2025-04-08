@@ -24,9 +24,9 @@ h6 {
 }
 
 @font-face {
-  font-family: "Excalifont";
-  src: url("/fonts/Excalifont-Regular.woff2") format("woff2"),
-    url("/fonts/Excalifont-Regular.ttf") format("truetype");
+  font-family: "Collabyfont";
+  src: url("/fonts/Collabyfont-Regular.woff2") format("woff2"),
+    url("/fonts/Collabyfont-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
@@ -501,8 +501,8 @@ button {
   animation-delay: 0.5s;
 }
 
-.collabydraw .excalifont {
-  font-family: Excalifont, Xiaolai;
+.collabydraw .collabyfont {
+  font-family: Collabyfont, Xiaolai;
 }
 
 .collabydraw .welcome-screen-decor {
@@ -585,7 +585,7 @@ button {
   font-size: 2.25rem;
 }
 
-.collabydraw .ExcalidrawLogo {
+.collabydraw .CollabydrawLogo {
   --logo-icon--xs: 2rem;
   --logo-text--xs: 1.5rem;
   --logo-icon--small: 2.5rem;
@@ -598,24 +598,24 @@ button {
   align-items: center;
 }
 
-.collabydraw .ExcalidrawLogo svg {
+.collabydraw .CollabydrawLogo svg {
   flex: 0 0 auto;
 }
 
-.collabydraw .ExcalidrawLogo .ExcalidrawLogo-icon {
+.collabydraw .CollabydrawLogo .CollabydrawLogo-icon {
   width: auto;
   color: var(--color-logo-icon);
 }
 
-.collabydraw .ExcalidrawLogo.is-small .ExcalidrawLogo-icon {
+.collabydraw .CollabydrawLogo.is-small .CollabydrawLogo-icon {
   height: var(--logo-icon--small);
 }
 
-.collabydraw .ExcalidrawLogo-text {
+.collabydraw .CollabydrawLogo-text {
   margin-left: .75rem;
   width: auto;
   color: var(--color-logo-text);
-  font-family: Excalifont, Xiaolai;
+  font-family: Collabyfont, Xiaolai;
   font-size: 2.25rem;
   font-weight: bolder;
   text-transform: uppercase;
