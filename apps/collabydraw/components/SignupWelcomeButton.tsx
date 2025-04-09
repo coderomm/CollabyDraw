@@ -9,7 +9,7 @@ export default function SignupWelcomeButton() {
                 session?.user.id ? (
                     <></>
                 ) : (
-                    <Link className="welcome-screen-menu-item " href="/auth/signup" target="_blank" rel="noreferrer">
+                    <Link className="welcome-screen-menu-item " href="/auth/signup">
                         <div className="welcome-screen-menu-item__icon">
                             <svg aria-hidden="true" focusable="false" role="img" viewBox="0 0 24 24" className="" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                                 <g strokeWidth="1.5">

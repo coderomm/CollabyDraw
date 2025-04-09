@@ -1,4 +1,3 @@
-import { LogoSvg } from "@/components/Branding";
 import Link from "next/link";
 
 export default function AuthLayout({
@@ -15,7 +14,7 @@ export default function AuthLayout({
                 <div className="h-fit min-h-screen w-full relative p-10 lg:p-12 overflow-hidden flex flex-col items-center justify-center">
                     <div className="relative z-10">
                         <Link href="/" className="Logo flex items-center select-none is-normal is-plain underline-none text-current">
-                            <div className=""><LogoSvg /></div>
+                            {/* <div className=""><LogoSvg /></div> */}
                             <div className="md:flex hidden">
                                 <h1 className="brand-title CollabydrawLogo-text font-collabyfont">CollabyDraw</h1>
                             </div>

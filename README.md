@@ -103,6 +103,37 @@ If you'd like to contribute—whether it's improving the UI, optimizing performa
 
 ---
 
+### 🧠 How to Contribute
+
+1. **Fork the Repo** and clone it locally
+2. Run `pnpm install` and `pnpm dev` to start the dev server
+3. Check the `Issues` tab for open tasks — especially those labeled `good first issue`
+4. Follow the `CONTRIBUTING.md` (coming soon) for guidelines
+5. Submit a Pull Request — even small improvements matter!
+
+💡 **Ideas for Contribution** (feel free to raise these as issues):
+- Add undo/redo support in standalone mode
+- Add support for duplicating a selected shape using **Ctrl + D** keyboard shortcut.
+- Fix: **Rounded corners not working for Diamond shape**
+  When the **"rounded"** option is selected for diamond shapes, the corners remain sharp. Update the rendering logic to support rounded edges for diamonds.
+
+👉 Tag your issue with `good first issue`, `help wanted`, or `enhancement` so others can discover and contribute!
+
+---
+
+### 📄 Architecture Overview (Differences from Cohort Project)
+
+- **Next.js 15 for Fullstack**: Frontend and backend are handled together using server actions. No separate HTTP services.
+- **No Mandatory Auth for Canvas Use**: Users can draw without logging in. Auth is only required for collaboration.
+- **Server Actions Instead of REST APIs**: Room creation, joining, and user management are handled through server actions.
+- **Standalone Mode with Local Storage**: For solo drawing sessions, data is stored locally and never sent to a server.
+- **Interactive Room Collaboration Mode**: Shows participant presence, names, and avatars in real-time sync only as of now.
+- **End-to-End Encrypted Collaboration**: No drawn shapes or messages are stored in any database.
+- **Database Used Only for Auth**: All other state management is client-side or ephemeral.
+- **Hookified WebSocket Layer**: Abstracts the socket connection with clean React patterns.
+
+---
+
 ## 📄 License
 
 This project is licensed under a **Custom Personal Use License** — you may view and learn from the code, but **commercial use, redistribution, or claiming authorship is strictly prohibited**.  

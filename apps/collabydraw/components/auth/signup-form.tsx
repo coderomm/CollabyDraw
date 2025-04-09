@@ -109,7 +109,9 @@ export function SignUpForm() {
                         </FormItem>
                     )}
                 />
-                <Button type="submit" className="!mt-[10px] w-full h-12 rounded-md text-sm font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]">
+                <Button disabled={isPending} 
+                type="submit" 
+                className="!mt-[10px] w-full h-12 rounded-md text-sm font-semibold shadow-none bg-color-primary hover:bg-brand-hover active:bg-brand-active active:scale-[.98]">
                     Sign Up
                 </Button>
             </form>
