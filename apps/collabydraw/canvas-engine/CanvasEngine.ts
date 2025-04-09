@@ -30,17 +30,17 @@ import {
   getDashArrayDashed,
   getDashArrayDotted,
   RECT_CORNER_RADIUS_FACTOR,
+  ROUND_RADIUS_FACTOR,
   WS_URL,
 } from "@/config/constants";
 import { MessageQueue } from "./MessageQueue";
 import { decryptData, encryptData } from "@/utils/crypto";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-import { RoughCanvas } from "roughjs/canvas";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-import { Options } from "roughjs/core";
+
 import rough from "roughjs/bin/rough";
+import { RoughCanvas } from "roughjs/bin/canvas";
+import { Options } from "roughjs/bin/core";
+import type { Point } from "roughjs/bin/geometry";
+
 import { getFontSize, getLineHeight } from "@/utils/textUtils";
 import { generateFreeDrawPath } from "./RenderElements";
 
@@ -382,11 +382,15 @@ export class CanvasEngine {
     bgFill?: string,
     strokeStyle?: StrokeStyle,
     fillStyle?: FillStyle,
-    hachureAngle: number = 60
+    hachureAngle: number = 60,
+    shapeType?: Shape["type"]
   ): Options {
+    const isCurveSensitive =
+      shapeType === "ellipse" || shapeType === "free-draw";
+
     const options: Options = {
       stroke: strokeFill,
-      strokeWidth: strokeStyle !== "solid" ? strokeWidth + 0.5 : strokeWidth,
+      strokeWidth: strokeStyle !== "solid" ? strokeWidth + 0.6 : strokeWidth,
       roughness: roughStyle,
       bowing: roughStyle === 0 ? 0 : 0.5 * roughStyle,
       fill: bgFill ?? "",
@@ -403,15 +407,25 @@ export class CanvasEngine {
           : strokeStyle === "dotted"
             ? getDashArrayDotted(strokeWidth)
             : undefined,
-    };
+      dashOffset:
+        strokeStyle === "dashed" ? 5 : strokeStyle === "dotted" ? 2 : undefined,
+      ...(isCurveSensitive
+        ? {}
+        : {
+            curveFitting: 1,
+            curveTightness: 1,
+            preserveVertices: true,
+          }),
 
-    if (strokeStyle === "dashed") {
-      options.dashOffset = 5;
-      options.dashArray = getDashArrayDashed(strokeWidth);
-    } else if (strokeStyle === "dotted") {
-      options.dashOffset = 2;
-      options.dashArray = getDashArrayDotted(strokeWidth);
-    }
+      // Ensure the sketchy path closely follows the original shape with minimal deviation
+      // curveFitting: 1,
+
+      // Tightens the curves around corner control points for smoother rounded corners
+      // curveTightness: 1,
+
+      // Prevents Rough.js from altering the actual vertex points — keeps the shape precise
+      // preserveVertices: true,
+    };
 
     return options;
   }
@@ -1369,28 +1383,19 @@ export class CanvasEngine {
       );
 
       if (rounded === "round") {
-        const radius = Math.min(
-          Math.abs(
-            Math.max(normalizedWidth, normalizedHeight) /
-              RECT_CORNER_RADIUS_FACTOR
-          ),
-          normalizedWidth / 2,
-          normalizedHeight / 2
-        );
-        options.curveFitting = 1;
-        options.curveTightness = 1;
+        const r = Math.min(normalizedWidth, normalizedHeight) * ROUND_RADIUS_FACTOR;
 
         this.roughCanvas.path(
-          `M ${posX + radius} ${posY} 
-         L ${posX + normalizedWidth - radius} ${posY} 
-         Q ${posX + normalizedWidth} ${posY} ${posX + normalizedWidth} ${posY + radius} 
-         L ${posX + normalizedWidth} ${posY + normalizedHeight - radius} 
-         Q ${posX + normalizedWidth} ${posY + normalizedHeight} ${posX + normalizedWidth - radius} ${posY + normalizedHeight} 
-         L ${posX + radius} ${posY + normalizedHeight} 
-         Q ${posX} ${posY + normalizedHeight} ${posX} ${posY + normalizedHeight - radius} 
-         L ${posX} ${posY + radius} 
-         Q ${posX} ${posY} ${posX + radius} ${posY} 
-         Z`,
+          `M ${posX + r} ${posY} 
+           L ${posX + normalizedWidth - r} ${posY} 
+           Q ${posX + normalizedWidth} ${posY}, ${posX + normalizedWidth} ${posY + r} 
+           L ${posX + normalizedWidth} ${posY + normalizedHeight - r} 
+           Q ${posX + normalizedWidth} ${posY + normalizedHeight}, ${posX + normalizedWidth - r} ${posY + normalizedHeight} 
+           L ${posX + r} ${posY + normalizedHeight} 
+           Q ${posX} ${posY + normalizedHeight}, ${posX} ${posY + normalizedHeight - r} 
+           L ${posX} ${posY + r} 
+           Q ${posX} ${posY}, ${posX + r} ${posY} 
+           Z`,
           options
         );
       } else {
@@ -1447,7 +1452,9 @@ export class CanvasEngine {
         roughStyle,
         bgFill,
         strokeStyle,
-        fillStyle
+        fillStyle,
+        60,
+        "ellipse"
       );
       this.roughCanvas.ellipse(
         x,
@@ -1589,7 +1596,7 @@ export class CanvasEngine {
         fillStyle
       );
 
-      const diamondPoints = [
+      const diamondPoints: Point[] = [
         [centerX, centerY - halfHeight],
         [centerX + halfWidth, centerY],
         [centerX, centerY + halfHeight],

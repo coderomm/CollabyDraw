@@ -1,4 +1,5 @@
 export const CORNER_RADIUS_FACTOR = 20;
+export const ROUND_RADIUS_FACTOR = 0.25;
 export const RECT_CORNER_RADIUS_FACTOR = CORNER_RADIUS_FACTOR;
 export const DIAMOND_CORNER_RADIUS_PERCENTAGE = CORNER_RADIUS_FACTOR;
 export const ERASER_TOLERANCE = 5;
@@ -15,6 +16,5 @@ export const getDashArrayDotted = (strokeWidth: number) => [
   strokeWidth * 2,
 ];
 
-export const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL;
+export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 export const WS_URL = process.env.NEXT_PUBLIC_WS_URL;
