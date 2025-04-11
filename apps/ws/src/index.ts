@@ -40,15 +40,20 @@ function authUser(token: string) {
   }
 }
 
-type User = {
+type Connection = {
+  connectionId: string;
   userId: string;
   userName: string;
   ws: WebSocket;
   rooms: string[];
 };
 
-const users: User[] = [];
+const connections: Connection[] = [];
 const roomShapes: Record<string, WebSocketMessage[]> = {};
+
+function generateConnectionId(): string {
+  return `conn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
 
 wss.on("connection", function connection(ws, req) {
   const url = req.url;
@@ -70,25 +75,29 @@ wss.on("connection", function connection(ws, req) {
     return;
   }
 
-  const existingIndex = users.findIndex((u) => u.userId === userId);
-  if (existingIndex !== -1) {
-    users.splice(existingIndex, 1);
-  }
-
-  const newUser: User = {
+  const connectionId = generateConnectionId();
+  const newConnection: Connection = {
+    connectionId,
     userId,
     userName: userId,
     ws,
     rooms: [],
   };
-  users.push(newUser);
+  connections.push(newConnection);
+
+  console.log(`New connection established: ${connectionId} for user ${userId}`);
 
   ws.on("error", (err) =>
     console.error(`WebSocket error for user ${userId}:`, err)
   );
 
   ws.on("open", () => {
-    ws.send(JSON.stringify({ type: WsDataType.CONNECTION_READY }));
+    ws.send(
+      JSON.stringify({
+        type: WsDataType.CONNECTION_READY,
+        connectionId,
+      })
+    );
   });
 
   ws.on("message", async function message(data) {
@@ -104,119 +113,146 @@ wss.on("connection", function connection(ws, req) {
         return;
       }
 
-      const user = users.find((x) => x.userId === parsedData.userId);
-      if (!user) {
-        console.error("No user found");
+      const connection = connections.find(
+        (x) => x.connectionId === connectionId
+      );
+      if (!connection) {
+        console.error("No connection found");
         ws.close();
         return;
       }
 
-      if (!parsedData.roomId || !parsedData.userId) {
-        console.error("No userId or roomId provided for WS message");
-        return;
-      }
+      if (parsedData.userName && connection.userName === userId) {
+        // Update username for this connection
+        connection.userName = parsedData.userName;
 
-      if (parsedData.userName && user.userName === userId) {
-        user.userName = parsedData.userName;
+        // Sync username across all connections for this user
+        connections
+          .filter((conn) => conn.userId === userId)
+          .forEach((conn) => {
+            conn.userName = parsedData.userName ?? parsedData.userId;
+          });
       }
 
       switch (parsedData.type) {
-        case WsDataType.JOIN:{
-          const roomCheckResponse = await client.room.findUnique({
-            where: { id: parsedData.roomId },
-          });
+        case WsDataType.JOIN:
+          {
+            const roomCheckResponse = await client.room.findUnique({
+              where: { id: parsedData.roomId },
+            });
 
-          if (!roomCheckResponse) {
-            ws.close();
-            return;
-          }
+            if (!roomCheckResponse) {
+              ws.close();
+              return;
+            }
 
-          if (!user.rooms.includes(parsedData.roomId)) {
-            user.rooms.push(parsedData.roomId);
-          }
+            if (!connection.rooms.includes(parsedData.roomId)) {
+              connection.rooms.push(parsedData.roomId);
+            }
 
-          const participants = getCurrentParticipants(parsedData.roomId);
+            const participants = getCurrentParticipants(parsedData.roomId);
 
-          if (!roomShapes[parsedData.roomId]) {
-            roomShapes[parsedData.roomId] = [];
-          }
+            if (!roomShapes[parsedData.roomId]) {
+              roomShapes[parsedData.roomId] = [];
+            }
 
-          ws.send(
-            JSON.stringify({
-              type: WsDataType.USER_JOINED,
-              roomId: parsedData.roomId,
-              userId: user.userId,
-              userName: parsedData.userName,
-              participants,
-              timestamp: new Date().toISOString(),
-            })
-          );
-
-          const shapes = roomShapes[parsedData.roomId] || [];
-          console.log(`Sending ${shapes.length} shapes to user ${userId}`);
-
-          if (shapes && shapes.length > 0) {
             ws.send(
               JSON.stringify({
-                type: WsDataType.EXISTING_SHAPES,
+                type: WsDataType.USER_JOINED,
                 roomId: parsedData.roomId,
-                message: shapes,
+                userId: connection.userId,
+                userName: connection.userName,
+                connectionId: connection.connectionId,
+                participants,
                 timestamp: new Date().toISOString(),
               })
             );
-          }
 
-            broadcastToRoom(
-              parsedData.roomId,
-              {
-                type: WsDataType.USER_JOINED,
-                roomId: parsedData.roomId,
-                userId: user.userId,
-                userName: parsedData.userName,
-                participants,
-                timestamp: new Date().toISOString(),
-                id: null,
-                message: null,
-              },
-              [user.userId],
-              true
-            );
-        }
+            const shapes = roomShapes[parsedData.roomId] || [];
+
+            if (shapes && shapes.length > 0) {
+              ws.send(
+                JSON.stringify({
+                  type: WsDataType.EXISTING_SHAPES,
+                  roomId: parsedData.roomId,
+                  message: shapes,
+                  timestamp: new Date().toISOString(),
+                })
+              );
+            }
+
+            // Don't broadcast JOIN to the user's other tabs if this is a duplicate tab
+            const isFirstTabInRoom = connections
+              .filter(
+                (conn) =>
+                  conn.userId === connection.userId &&
+                  conn.connectionId !== connection.connectionId
+              )
+              .every((conn) => !conn.rooms.includes(parsedData.roomId));
+
+            if (isFirstTabInRoom) {
+              broadcastToRoom(
+                parsedData.roomId,
+                {
+                  type: WsDataType.USER_JOINED,
+                  roomId: parsedData.roomId,
+                  userId: connection.userId,
+                  userName: connection.userName,
+                  connectionId: connection.connectionId,
+                  participants,
+                  timestamp: new Date().toISOString(),
+                  id: null,
+                  message: null,
+                },
+                [connection.connectionId],
+                true
+              );
+            }
+          }
           break;
 
         case WsDataType.LEAVE:
-          user.rooms = user.rooms.filter((r) => r !== parsedData.roomId);
+          connection.rooms = connection.rooms.filter(
+            (r) => r !== parsedData.roomId
+          );
 
+          const userHasOtherTabsInRoom = connections.some(
+            (conn) =>
+              conn.userId === connection.userId &&
+              conn.connectionId !== connection.connectionId &&
+              conn.rooms.includes(parsedData.roomId)
+          );
+
+          if (!userHasOtherTabsInRoom) {
             broadcastToRoom(
               parsedData.roomId,
               {
                 type: WsDataType.USER_LEFT,
-                userId: user.userId,
-                userName: user.userName,
+                userId: connection.userId,
+                userName: connection.userName,
+                connectionId: connection.connectionId,
                 roomId: parsedData.roomId,
                 id: null,
                 message: null,
                 participants: null,
                 timestamp: new Date().toISOString(),
               },
-              [user.userId],
+              [connection.connectionId],
               true
             );
-        
+          }
 
-          const anySessionsInRoom = users.some(
-            (u) =>
-              u.rooms.includes(parsedData.roomId) &&
-              u.userId !== user.userId
+          const anyConnectionsInRoom = connections.some((conn) =>
+            conn.rooms.includes(parsedData.roomId)
           );
 
-          if (!anySessionsInRoom) {
+          if (!anyConnectionsInRoom) {
             try {
               await client.room.delete({
                 where: { id: parsedData.roomId },
               });
               delete roomShapes[parsedData.roomId];
-              console.log(`🧹 Deleted empty room ${parsedData.roomId}`);
+              console.log(`Deleted empty room ${parsedData.roomId}`);
             } catch (err) {
               console.error(`Failed to delete room ${parsedData.roomId}`, err);
             }
@@ -224,14 +260,14 @@ wss.on("connection", function connection(ws, req) {
           break;
 
         case WsDataType.CLOSE_ROOM: {
-          const usersInRoom = users.filter((u) =>
-            u.rooms.includes(parsedData.roomId)
+          const connectionsInRoom = connections.filter((conn) =>
+            conn.rooms.includes(parsedData.roomId)
           );
 
           if (
-            usersInRoom.length === 1 &&
-            usersInRoom[0] &&
-            usersInRoom[0].userId === userId
+            connectionsInRoom.length === 1 &&
+            connectionsInRoom[0] &&
+            connectionsInRoom[0].connectionId === connectionId
           ) {
             try {
               await client.room.delete({
@@ -240,9 +276,9 @@ wss.on("connection", function connection(ws, req) {
 
               delete roomShapes[parsedData.roomId];
 
-              usersInRoom.forEach((u) => {
-                if (u.ws.readyState === WebSocket.OPEN) {
-                  u.ws.send(
+              connectionsInRoom.forEach((conn) => {
+                if (conn.ws.readyState === WebSocket.OPEN) {
+                  conn.ws.send(
                     JSON.stringify({
                       type: "ROOM_CLOSED",
                       roomId: parsedData.roomId,
@@ -251,10 +287,12 @@ wss.on("connection", function connection(ws, req) {
                   );
                 }
 
-                u.rooms = u.rooms.filter((r) => r !== parsedData.roomId);
+                conn.rooms = conn.rooms.filter((r) => r !== parsedData.roomId);
               });
 
-              console.log(`Room ${parsedData.roomId} closed by user ${userId}`);
+              console.log(
+                `Room ${parsedData.roomId} closed by connection ${connectionId}`
+              );
             } catch (err) {
               console.error("Error deleting room:", err);
             }
@@ -287,8 +325,9 @@ wss.on("connection", function connection(ws, req) {
               type: parsedData.type,
               message: parsedData.message,
               roomId: parsedData.roomId,
-              userId: userId,
-              userName: user.userName,
+              userId: connection.userId,
+              userName: connection.userName,
+              connectionId: connection.connectionId,
               timestamp: new Date().toISOString(),
               id: parsedData.id,
               participants: null,
@@ -322,8 +361,9 @@ wss.on("connection", function connection(ws, req) {
               id: parsedData.id,
               message: parsedData.message,
               roomId: parsedData.roomId,
-              userId: userId,
-              userName: user.userName,
+              userId: connection.userId,
+              userName: connection.userName,
+              connectionId: connection.connectionId,
               participants: null,
               timestamp: new Date().toISOString(),
             },
@@ -349,8 +389,9 @@ wss.on("connection", function connection(ws, req) {
               id: parsedData.id,
               type: parsedData.type,
               roomId: parsedData.roomId,
-              userId: userId,
-              userName: user.userName,
+              userId: connection.userId,
+              userName: connection.userName,
+              connectionId: connection.connectionId,
               timestamp: new Date().toISOString(),
               message: null,
               participants: null,
@@ -362,7 +403,7 @@ wss.on("connection", function connection(ws, req) {
 
         default:
           console.warn(
-            `Unknown message type received from user ${userId}:`,
+            `Unknown message type received from connection ${connectionId}:`,
             parsedData.type
           );
           break;
@@ -373,35 +414,80 @@ wss.on("connection", function connection(ws, req) {
   });
 
   ws.on("close", (code, reason) => {
-    const user = users.find((u) => u.userId === userId);
-    if (user) {
-      user.rooms.forEach((roomId) => {
-        broadcastToRoom(
-          roomId,
-          {
-            type: WsDataType.USER_LEFT,
-            userId: user.userId,
-            userName: user.userName,
-            roomId,
-            id: null,
-            message: null,
-            participants: null,
-            timestamp: Date.now().toString(),
-          },
-          [user.userId]
+    const connection = connections.find(
+      (conn) => conn.connectionId === connectionId
+    );
+    if (connection) {
+      // For each room this connection was in
+      connection.rooms.forEach((roomId) => {
+        // Check if this was the last connection from this user in the room
+        const userHasOtherConnectionsInRoom = connections.some(
+          (conn) =>
+            conn.userId === connection.userId &&
+            conn.connectionId !== connectionId &&
+            conn.rooms.includes(roomId)
         );
+
+        // Only broadcast USER_LEFT if this was the last connection for this user
+        if (!userHasOtherConnectionsInRoom) {
+          broadcastToRoom(
+            roomId,
+            {
+              type: WsDataType.USER_LEFT,
+              userId: connection.userId,
+              userName: connection.userName,
+              connectionId: connection.connectionId,
+              roomId,
+              id: null,
+              message: null,
+              participants: null,
+              timestamp: new Date().toISOString(),
+            },
+            [connectionId],
+            true
+          );
+        }
+
+        // Check if the room is now empty
+        const roomIsEmpty = !connections.some(
+          (conn) =>
+            conn.connectionId !== connectionId && conn.rooms.includes(roomId)
+        );
+
+        // Delete empty rooms
+        if (roomIsEmpty) {
+          client.room
+            .delete({
+              where: { id: roomId },
+            })
+            .then(() => {
+              delete roomShapes[roomId];
+              console.log(
+                `Deleted empty room ${roomId} after last connection left`
+              );
+            })
+            .catch((err) => {
+              console.error(`Failed to delete empty room ${roomId}:`, err);
+            });
+        }
       });
     }
 
-    const index = users.findIndex((u) => u.userId === userId);
-    if (index !== -1) users.splice(index, 1);
+    // Remove the connection from our connections array
+    const index = connections.findIndex(
+      (conn) => conn.connectionId === connectionId
+    );
+    if (index !== -1) {
+      connections.splice(index, 1);
+      console.log(`Connection ${connectionId} closed and removed`);
+    }
   });
 });
 
 function broadcastToRoom(
   roomId: string,
   message: WebSocketMessage,
-  excludeUsers: string[] = [],
+  excludeConnectionIds: string[] = [],
   includeParticipants: boolean = false
 ) {
   if (
@@ -410,14 +496,21 @@ function broadcastToRoom(
   ) {
     message.participants = getCurrentParticipants(roomId);
   }
-  users.forEach((u) => {
-    if (u.rooms.includes(roomId) && !excludeUsers.includes(u.userId)) {
+
+  connections.forEach((conn) => {
+    if (
+      conn.rooms.includes(roomId) &&
+      !excludeConnectionIds.includes(conn.connectionId)
+    ) {
       try {
-        if (u.ws.readyState === WebSocket.OPEN) {
-          u.ws.send(JSON.stringify(message));
+        if (conn.ws.readyState === WebSocket.OPEN) {
+          conn.ws.send(JSON.stringify(message));
         }
       } catch (err) {
-        console.error(`Error sending message to user ${u.userId}:`, err);
+        console.error(
+          `Error sending message to connection ${conn.connectionId}:`,
+          err
+        );
       }
     }
   });
@@ -425,10 +518,10 @@ function broadcastToRoom(
 
 function getCurrentParticipants(roomId: string) {
   const map = new Map();
-  users
-    .filter((u) => u.rooms.includes(roomId))
-    .forEach((u) =>
-      map.set(u.userId, { userId: u.userId, userName: u.userName })
+  connections
+    .filter((conn) => conn.rooms.includes(roomId))
+    .forEach((conn) =>
+      map.set(conn.userId, { userId: conn.userId, userName: conn.userName })
     );
   return Array.from(map.values());
 }

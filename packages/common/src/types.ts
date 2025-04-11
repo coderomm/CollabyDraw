@@ -68,6 +68,7 @@ export enum WsDataType {
 export interface WebSocketMessage {
   id: string | null;
   type: WsDataType;
+  connectionId: string;
   roomId: string;
   userId: string;
   userName: string | null;

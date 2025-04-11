@@ -44,6 +44,11 @@ import type { Point } from "roughjs/bin/geometry";
 import { getFontSize, getLineHeight } from "@/utils/textUtils";
 import { generateFreeDrawPath } from "./RenderElements";
 
+type WebSocketConnection = {
+  connectionId: string;
+  connected: boolean;
+};
+
 export class CanvasEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -95,6 +100,9 @@ export class CanvasEngine {
   private encryptionKey: string | null;
 
   private roughSeed: number = 1;
+
+  private connectionId: string | null = null;
+  private myConnections: WebSocketConnection[] = [];
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -180,17 +188,35 @@ export class CanvasEngine {
     this.socket.onmessage = async (event) => {
       try {
         const data: WebSocketMessage = JSON.parse(event.data);
+        if (data.type === WsDataType.CONNECTION_READY) {
+          this.connectionId = data.connectionId;
+          console.log(`Assigned connection ID: ${this.connectionId}`);
+        }
 
         switch (data.type) {
           case WsDataType.USER_JOINED:
+            if (
+              data.userId === this.userId &&
+              data.connectionId !== this.connectionId
+            ) {
+              this.myConnections.push({
+                connectionId: data.connectionId,
+                connected: true,
+              });
+              console.log(`🔁 Another tab detected: ${data.connectionId}`);
+            }
             if (data.participants && Array.isArray(data.participants)) {
               this.participants = data.participants;
               this.onParticipantsUpdate?.(this.participants);
             }
-
             break;
 
           case WsDataType.USER_LEFT:
+            if (data.userId === this.userId && data.connectionId) {
+              this.myConnections = this.myConnections.filter(
+                (c) => c.connectionId !== data.connectionId
+              );
+            }
             if (data.userId) {
               this.participants = this.participants.filter(
                 (u) => u.userId !== data.userId
@@ -225,7 +251,20 @@ export class CanvasEngine {
 
           case WsDataType.DRAW:
           case WsDataType.UPDATE:
-            if (data.userId !== this.userId && data.message) {
+            if (
+              data.userId === this.userId &&
+              data.connectionId !== this.connectionId
+            ) {
+              if (data.message) {
+                const decrypted = await decryptData(
+                  data.message,
+                  this.encryptionKey!
+                );
+                const shape = JSON.parse(decrypted);
+                this.updateShapes([shape]);
+                this.notifyShapeCountChange();
+              }
+            } else if (data.userId !== this.userId && data.message) {
               const decrypted = await decryptData(
                 data.message,
                 this.encryptionKey!
@@ -237,7 +276,14 @@ export class CanvasEngine {
             break;
 
           case WsDataType.ERASER:
-            if (data.userId !== this.userId && data.id) {
+            if (
+              data.userId === this.userId &&
+              data.connectionId !== this.connectionId
+            ) {
+              if (data.id) {
+                this.removeShape(data.id);
+              }
+            } else if (data.userId !== this.userId && data.id) {
               this.removeShape(data.id);
             }
             break;
@@ -306,6 +352,7 @@ export class CanvasEngine {
         userName: this.userName!,
         timestamp: new Date().toISOString(),
         participants: null,
+        connectionId: this.connectionId!,
       });
     }
   }
@@ -628,6 +675,7 @@ export class CanvasEngine {
                     userName: this.userName!,
                     timestamp: new Date().toISOString(),
                     participants: null,
+                    connectionId: this.connectionId!,
                   });
                   console.error("Error sending shape update ws message", e);
                 }
@@ -795,6 +843,7 @@ export class CanvasEngine {
           type: WsDataType.UPDATE,
           id: shape.id,
           message: JSON.stringify(shape),
+          connectionId: this.connectionId!,
           roomId: this.roomId,
           userId: this.userId!,
           userName: this.userName!,
@@ -1848,6 +1897,7 @@ export class CanvasEngine {
             userName: this.userName!,
             timestamp: new Date().toISOString(),
             participants: null,
+            connectionId: this.connectionId!,
           });
           console.error("Error sending shape update ws message", e);
         }
