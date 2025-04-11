@@ -48,6 +48,7 @@ type User = {
 };
 
 const users: User[] = [];
+const roomShapes: Record<string, WebSocketMessage[]> = {};
 
 wss.on("connection", function connection(ws, req) {
   const url = req.url;
@@ -98,6 +99,11 @@ wss.on("connection", function connection(ws, req) {
         return;
       }
 
+      if (!parsedData.roomId || !parsedData.userId) {
+        console.error("No userId or roomId provided for WS message");
+        return;
+      }
+
       const user = users.find((x) => x.userId === parsedData.userId);
       if (!user) {
         console.error("No user found");
@@ -115,7 +121,7 @@ wss.on("connection", function connection(ws, req) {
       }
 
       switch (parsedData.type) {
-        case WsDataType.JOIN:
+        case WsDataType.JOIN:{
           const roomCheckResponse = await client.room.findUnique({
             where: { id: parsedData.roomId },
           });
@@ -125,21 +131,15 @@ wss.on("connection", function connection(ws, req) {
             return;
           }
 
-          user.rooms.push(parsedData.roomId);
+          if (!user.rooms.includes(parsedData.roomId)) {
+            user.rooms.push(parsedData.roomId);
+          }
 
-          const uniqueParticipantsMap = new Map();
-          users
-            .filter((u) => u.rooms.includes(parsedData.roomId))
-            .forEach((u) =>
-              uniqueParticipantsMap.set(u.userId, {
-                userId: u.userId,
-                userName: u.userName,
-              })
-            );
+          const participants = getCurrentParticipants(parsedData.roomId);
 
-          const currentParticipants = Array.from(
-            uniqueParticipantsMap.values()
-          );
+          if (!roomShapes[parsedData.roomId]) {
+            roomShapes[parsedData.roomId] = [];
+          }
 
           ws.send(
             JSON.stringify({
@@ -147,45 +147,80 @@ wss.on("connection", function connection(ws, req) {
               roomId: parsedData.roomId,
               userId: user.userId,
               userName: parsedData.userName,
-              participants: currentParticipants,
+              participants,
               timestamp: new Date().toISOString(),
             })
           );
 
-          broadcastToRoom(
-            parsedData.roomId,
-            {
-              type: WsDataType.USER_JOINED,
-              roomId: parsedData.roomId,
-              userId: user.userId,
-              userName: parsedData.userName,
-              participants: currentParticipants,
-              timestamp: new Date().toISOString(),
-              id: null,
-              message: null,
-            },
-            [user.userId],
-            true
-          );
+          const shapes = roomShapes[parsedData.roomId] || [];
+          console.log(`Sending ${shapes.length} shapes to user ${userId}`);
+
+          if (shapes && shapes.length > 0) {
+            ws.send(
+              JSON.stringify({
+                type: WsDataType.EXISTING_SHAPES,
+                roomId: parsedData.roomId,
+                message: shapes,
+                timestamp: new Date().toISOString(),
+              })
+            );
+          }
+
+            broadcastToRoom(
+              parsedData.roomId,
+              {
+                type: WsDataType.USER_JOINED,
+                roomId: parsedData.roomId,
+                userId: user.userId,
+                userName: parsedData.userName,
+                participants,
+                timestamp: new Date().toISOString(),
+                id: null,
+                message: null,
+              },
+              [user.userId],
+              true
+            );
+        }
           break;
 
         case WsDataType.LEAVE:
           user.rooms = user.rooms.filter((r) => r !== parsedData.roomId);
-          broadcastToRoom(
-            parsedData.roomId,
-            {
-              type: WsDataType.USER_LEFT,
-              userId: user.userId,
-              userName: user.userName,
-              roomId: parsedData.roomId,
-              id: null,
-              message: null,
-              participants: null,
-              timestamp: new Date().toISOString(),
-            },
-            [user.userId],
-            true
+
+            broadcastToRoom(
+              parsedData.roomId,
+              {
+                type: WsDataType.USER_LEFT,
+                userId: user.userId,
+                userName: user.userName,
+                roomId: parsedData.roomId,
+                id: null,
+                message: null,
+                participants: null,
+                timestamp: new Date().toISOString(),
+              },
+              [user.userId],
+              true
+            );
+        
+
+          const anySessionsInRoom = users.some(
+            (u) =>
+              u.rooms.includes(parsedData.roomId) &&
+              u.userId !== user.userId
           );
+
+          if (!anySessionsInRoom) {
+            try {
+              await client.room.delete({
+                where: { id: parsedData.roomId },
+              });
+              delete roomShapes[parsedData.roomId];
+              console.log(`🧹 Deleted empty room ${parsedData.roomId}`);
+            } catch (err) {
+              console.error(`Failed to delete room ${parsedData.roomId}`, err);
+            }
+          }
           break;
 
         case WsDataType.CLOSE_ROOM: {
@@ -199,28 +234,51 @@ wss.on("connection", function connection(ws, req) {
             usersInRoom[0].userId === userId
           ) {
             try {
-              ws.send(
-                JSON.stringify({
-                  type: "ROOM_CLOSED",
-                  roomId: parsedData.roomId,
-                  timestamp: new Date().toISOString(),
-                })
-              );
+              await client.room.delete({
+                where: { id: parsedData.roomId },
+              });
 
-              ws.close(1000, "Room deleted");
+              delete roomShapes[parsedData.roomId];
+
+              usersInRoom.forEach((u) => {
+                if (u.ws.readyState === WebSocket.OPEN) {
+                  u.ws.send(
+                    JSON.stringify({
+                      type: "ROOM_CLOSED",
+                      roomId: parsedData.roomId,
+                      timestamp: new Date().toISOString(),
+                    })
+                  );
+                }
+
+                u.rooms = u.rooms.filter((r) => r !== parsedData.roomId);
+              });
+
+              console.log(`Room ${parsedData.roomId} closed by user ${userId}`);
             } catch (err) {
-              console.error("Error deleting room and shapes:", err);
+              console.error("Error deleting room:", err);
             }
           }
-          break;
         }
 
-        case WsDataType.DRAW:
-          if (!parsedData.message || !parsedData.id) {
+        case WsDataType.DRAW: {
+          if (!parsedData.message || !parsedData.id || !parsedData.roomId) {
             console.error(
               `Missing shape Id or shape message data for ${parsedData.type}`
             );
             return;
+          }
+
+          if (!roomShapes[parsedData.roomId]) {
+            roomShapes[parsedData.roomId] = [];
+          }
+          const shapes = (roomShapes[parsedData.roomId] ||= []);
+          const shapeIndex = shapes.findIndex((s) => s.id === parsedData.id);
+
+          if (shapeIndex !== -1) {
+            shapes[shapeIndex] = parsedData;
+          } else {
+            shapes.push(parsedData);
           }
 
           broadcastToRoom(
@@ -232,20 +290,29 @@ wss.on("connection", function connection(ws, req) {
               userId: userId,
               userName: user.userName,
               timestamp: new Date().toISOString(),
-              id: null,
+              id: parsedData.id,
               participants: null,
             },
             [],
             false
           );
           break;
-
-        case WsDataType.UPDATE:
-          if (!parsedData.message || !parsedData.id) {
+        }
+        case WsDataType.UPDATE: {
+          if (!parsedData.message || !parsedData.id || !parsedData.roomId) {
             console.error(
               `Missing shape Id or shape message data for ${parsedData.type}`
             );
             return;
+          }
+
+          const shapes = (roomShapes[parsedData.roomId] ||= []);
+          const shapeIndex = shapes.findIndex((s) => s.id === parsedData.id);
+
+          if (shapeIndex !== -1) {
+            shapes[shapeIndex] = parsedData;
+          } else {
+            shapes.push(parsedData);
           }
 
           broadcastToRoom(
@@ -264,12 +331,17 @@ wss.on("connection", function connection(ws, req) {
             false
           );
           break;
-
+        }
         case WsDataType.ERASER:
           if (!parsedData.id) {
             console.error(`Missing shape Id for ${parsedData.type}`);
             return;
           }
+
+          const shapes = (roomShapes[parsedData.roomId] ||= []);
+          roomShapes[parsedData.roomId] = shapes.filter(
+            (s) => s.id !== parsedData.id
+          );
 
           broadcastToRoom(
             parsedData.roomId,
@@ -336,18 +408,7 @@ function broadcastToRoom(
     (includeParticipants && !message.participants) ||
     message.type === WsDataType.USER_JOINED
   ) {
-    const uniqueParticipantsMap = new Map();
-    users
-      .filter((u) => u.rooms.includes(roomId))
-      .forEach((u) =>
-        uniqueParticipantsMap.set(u.userId, {
-          userId: u.userId,
-          userName: u.userName,
-        })
-      );
-
-    const currentParticipants = Array.from(uniqueParticipantsMap.values());
-    message.participants = currentParticipants;
+    message.participants = getCurrentParticipants(roomId);
   }
   users.forEach((u) => {
     if (u.rooms.includes(roomId) && !excludeUsers.includes(u.userId)) {
@@ -360,6 +421,16 @@ function broadcastToRoom(
       }
     }
   });
+}
+
+function getCurrentParticipants(roomId: string) {
+  const map = new Map();
+  users
+    .filter((u) => u.rooms.includes(roomId))
+    .forEach((u) =>
+      map.set(u.userId, { userId: u.userId, userName: u.userName })
+    );
+  return Array.from(map.values());
 }
 
 wss.on("listening", () => {

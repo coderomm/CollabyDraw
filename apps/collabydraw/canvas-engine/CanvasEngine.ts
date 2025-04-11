@@ -150,6 +150,17 @@ export class CanvasEngine {
   }
 
   private connectWebSocket() {
+    if (
+      this.socket &&
+      (this.socket.readyState === WebSocket.CONNECTING ||
+        this.socket.readyState === WebSocket.OPEN)
+    ) {
+      console.log("Connection already exists, not creating a new one");
+      return;
+    }
+
+    console.log(`Connecting to WebSocket with sessionId: ${this.token}`);
+
     const url = `${WS_URL}?token=${encodeURIComponent(this.token!)}`;
     this.socket = new WebSocket(url);
 
@@ -188,6 +199,30 @@ export class CanvasEngine {
             }
             break;
 
+          case WsDataType.EXISTING_SHAPES:
+            if (Array.isArray(data.message) && data.message.length > 0) {
+              const decryptedShapes = await Promise.all(
+                data.message.map(async (shape) => {
+                  if (shape.message) {
+                    const decrypted = await decryptData(
+                      shape.message,
+                      this.encryptionKey!
+                    );
+                    return JSON.parse(decrypted);
+                  }
+                  return null;
+                })
+              );
+              console.log("decryptedShapes = ", decryptedShapes);
+
+              const validShapes = decryptedShapes.filter((s) => s !== null);
+              if (validShapes.length > 0) {
+                this.updateShapes(validShapes);
+                this.notifyShapeCountChange();
+              }
+            }
+            break;
+
           case WsDataType.DRAW:
           case WsDataType.UPDATE:
             if (data.userId !== this.userId && data.message) {
@@ -197,6 +232,7 @@ export class CanvasEngine {
               );
               const shape = JSON.parse(decrypted);
               this.updateShapes([shape]);
+              this.notifyShapeCountChange();
             }
             break;
 
@@ -215,7 +251,7 @@ export class CanvasEngine {
       this.isConnected = false;
       this.onConnectionChange?.(false);
       console.warn("WebSocket closed:", e);
-      setTimeout(() => this.connectWebSocket(), 1000);
+      setTimeout(() => this.connectWebSocket(), 2000);
     };
 
     this.socket.onerror = (err) => {
@@ -1383,7 +1419,8 @@ export class CanvasEngine {
       );
 
       if (rounded === "round") {
-        const r = Math.min(normalizedWidth, normalizedHeight) * ROUND_RADIUS_FACTOR;
+        const r =
+          Math.min(normalizedWidth, normalizedHeight) * ROUND_RADIUS_FACTOR;
 
         this.roughCanvas.path(
           `M ${posX + r} ${posY} 
