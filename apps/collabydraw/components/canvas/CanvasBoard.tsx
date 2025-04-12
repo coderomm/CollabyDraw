@@ -52,7 +52,7 @@ export default function CanvasBoard() {
         grabbing: false,
         sidebarOpen: false,
         canvasColor: canvasBgLight[0],
-        isCanvasEmpty: true
+        isCanvasEmpty: true,
     });
     const userRef = useRef({
         roomId: null as string | null,
@@ -116,6 +116,12 @@ export default function CanvasBoard() {
     useEffect(() => {
         setCanvasEngineState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
     }, [theme])
+
+    useEffect(() => {
+        if (canvasEngineState.engine && theme) {
+            canvasEngineState.engine.setTheme(theme === 'light' ? "light" : "dark");
+        }
+    }, [theme, canvasEngineState.engine]);
 
     useEffect(() => {
         const storedShapes = localStorage.getItem(LOCALSTORAGE_CANVAS_KEY);
@@ -201,7 +207,8 @@ export default function CanvasBoard() {
                 setParticipants(updatedParticipants);
             } : null,
             mode === 'room' ? (connectionStatus) => setIsConnected(connectionStatus) : null,
-            userRef.current.encryptionKey
+            userRef.current.encryptionKey,
+            theme === 'light' ? "light" : "dark"
         );
         engine.setOnShapeCountChange((count: number) => {
             setCanvasEngineState(prev => ({
@@ -210,7 +217,7 @@ export default function CanvasBoard() {
             }));
         });
         return engine;
-    }, [canvasEngineState.canvasColor, mode]);
+    }, [canvasEngineState.canvasColor, mode, theme]);
 
     useEffect(() => {
         if (!isCanvasReady) return;

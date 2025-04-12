@@ -85,20 +85,17 @@ wss.on("connection", function connection(ws, req) {
   };
   connections.push(newConnection);
 
-  console.log(`New connection established: ${connectionId} for user ${userId}`);
+  ws.send(
+    JSON.stringify({
+      type: WsDataType.CONNECTION_READY,
+      connectionId,
+    })
+  );
+  console.log("✅ Sent CONNECTION_READY to:", connectionId);
 
   ws.on("error", (err) =>
     console.error(`WebSocket error for user ${userId}:`, err)
   );
-
-  ws.on("open", () => {
-    ws.send(
-      JSON.stringify({
-        type: WsDataType.CONNECTION_READY,
-        connectionId,
-      })
-    );
-  });
 
   ws.on("message", async function message(data) {
     try {
@@ -298,6 +295,51 @@ wss.on("connection", function connection(ws, req) {
             }
           }
         }
+
+        case WsDataType.CURSOR_MOVE:
+          if (
+            parsedData.roomId &&
+            parsedData.userId &&
+            parsedData.connectionId &&
+            parsedData.message
+          ) {
+            broadcastToRoom(
+              parsedData.roomId,
+              {
+                type: parsedData.type,
+                roomId: parsedData.roomId,
+                userId: connection.userId,
+                userName: connection.userName,
+                connectionId: connection.connectionId,
+                message: parsedData.message,
+                timestamp: new Date().toISOString(),
+                id: null,
+                participants: null,
+              },
+              [parsedData.connectionId],
+              false
+            );
+          }
+          break;
+
+        case WsDataType.STREAM_SHAPE:
+          broadcastToRoom(
+            parsedData.roomId,
+            {
+              type: parsedData.type,
+              id: parsedData.id,
+              message: parsedData.message,
+              roomId: parsedData.roomId,
+              userId: connection.userId,
+              userName: connection.userName,
+              connectionId: connection.connectionId,
+              timestamp: new Date().toISOString(),
+              participants: null,
+            },
+            [connection.connectionId],
+            false
+          );
+          break;
 
         case WsDataType.DRAW: {
           if (!parsedData.message || !parsedData.id || !parsedData.roomId) {

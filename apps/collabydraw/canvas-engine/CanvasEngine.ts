@@ -22,6 +22,8 @@ import {
 } from "@repo/common/types";
 import {
   ARROW_HEAD_LENGTH,
+  COLOR_CHARCOAL_BLACK,
+  COLOR_WHITE,
   DEFAULT_BG_FILL,
   DEFAULT_STROKE_FILL,
   DEFAULT_STROKE_WIDTH,
@@ -43,6 +45,8 @@ import type { Point } from "roughjs/bin/geometry";
 
 import { getFontSize, getLineHeight } from "@/utils/textUtils";
 import { generateFreeDrawPath } from "./RenderElements";
+import { roundRect } from "@/shape-render/roundRect";
+import { getClientColor } from "@/utils/getClientColor";
 
 type WebSocketConnection = {
   connectionId: string;
@@ -104,6 +108,19 @@ export class CanvasEngine {
   private connectionId: string | null = null;
   private myConnections: WebSocketConnection[] = [];
 
+  // private streamingShapeId: string | null = null;
+  // private streamingThrottleTimeout: number | null = null;
+  // private streamingUpdateInterval: number = 50;
+  // private remoteStreamingShapes: Map<string, Shape> = new Map();
+
+  private cursorThrottleTimeout: number | null = null;
+  private remoteCursors: Map<
+    string,
+    { x: number; y: number; userId: string; userName: string }
+  > = new Map();
+
+  private currentTheme: "light" | "dark" | null = null;
+
   constructor(
     canvas: HTMLCanvasElement,
     roomId: string | null,
@@ -115,7 +132,8 @@ export class CanvasEngine {
     isStandalone: boolean = false,
     onParticipantsUpdate: ((participants: RoomParticipants[]) => void) | null,
     onConnectionChange: ((isConnected: boolean) => void) | null,
-    encryptionKey: string | null
+    encryptionKey: string | null,
+    appTheme: "light" | "dark" | null
   ) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d")!;
@@ -138,6 +156,8 @@ export class CanvasEngine {
 
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = document.body.clientHeight;
+
+    this.currentTheme = appTheme;
 
     this.init();
     this.initMouseHandler();
@@ -193,6 +213,8 @@ export class CanvasEngine {
           console.log(`Assigned connection ID: ${this.connectionId}`);
         }
 
+        // console.log("engine this.connectionId = ", this.connectionId);
+        // console.log("engine this.userId = ", this.userId);
         switch (data.type) {
           case WsDataType.USER_JOINED:
             if (
@@ -225,6 +247,41 @@ export class CanvasEngine {
             }
             break;
 
+          case WsDataType.CURSOR_MOVE:
+            console.log("=== case WsDataType.CURSOR_MOVE ===");
+            console.log(
+              `this.userId=${this.userId} & data.userId=${data.userId}`
+            );
+            console.log(
+              `this.userName=${this.userName} & data.userName=${data.userName}`
+            );
+            console.log(
+              `this.connectionId=${this.connectionId} & data.connectionId=${data.connectionId}`
+            );
+            if (data.userId !== this.userId && data.message) {
+              // const decrypted = await decryptData(
+              //   data.message,
+              //   this.encryptionKey!
+              // );
+              console.log("coords/data.message: ", data.message);
+              const coords = JSON.parse(data.message);
+              // const coords:{x:number,y:number} = data.message;
+              console.log("coords: ", coords);
+              console.log(
+                `x: ${coords.x}, y: ${coords.y}, user: ${data.userName}`
+              );
+              const key = `${data.userId}-${data.connectionId}`;
+              this.remoteCursors.set(key, {
+                x: coords.x,
+                y: coords.y,
+                userId: data.userId,
+                userName: data.userName ?? data.userId,
+              });
+              console.log("remoteCursors map size:", this.remoteCursors.size);
+              this.clearCanvas();
+            }
+            break;
+
           case WsDataType.EXISTING_SHAPES:
             if (Array.isArray(data.message) && data.message.length > 0) {
               const decryptedShapes = await Promise.all(
@@ -239,7 +296,6 @@ export class CanvasEngine {
                   return null;
                 })
               );
-              console.log("decryptedShapes = ", decryptedShapes);
 
               const validShapes = decryptedShapes.filter((s) => s !== null);
               if (validShapes.length > 0) {
@@ -249,31 +305,73 @@ export class CanvasEngine {
             }
             break;
 
-          case WsDataType.DRAW:
-          case WsDataType.UPDATE:
-            if (
-              data.userId === this.userId &&
-              data.connectionId !== this.connectionId
-            ) {
-              if (data.message) {
-                const decrypted = await decryptData(
-                  data.message,
-                  this.encryptionKey!
-                );
-                const shape = JSON.parse(decrypted);
-                this.updateShapes([shape]);
-                this.notifyShapeCountChange();
-              }
-            } else if (data.userId !== this.userId && data.message) {
-              const decrypted = await decryptData(
-                data.message,
-                this.encryptionKey!
-              );
-              const shape = JSON.parse(decrypted);
-              this.updateShapes([shape]);
-              this.notifyShapeCountChange();
-            }
-            break;
+          // case WsDataType.STREAM_SHAPE:
+          //   if (
+          //     data.userId === this.userId &&
+          //     data.connectionId !== this.connectionId &&
+          //     data.message
+          //   ) {
+          //     try {
+          //       const decrypted = await decryptData(
+          //         data.message,
+          //         this.encryptionKey!
+          //       );
+          //       const streamedShape = JSON.parse(decrypted);
+
+          //       // Store the streamed shape with a connection-specific key
+          //       const streamKey = `${data.userId}-${data.connectionId}-${streamedShape.id}`;
+          //       this.remoteStreamingShapes.set(streamKey, streamedShape);
+
+          //       // Redraw the canvas to show the streamed shape
+          //       this.clearCanvas();
+          //     } catch (err) {
+          //       console.error("Error handling streamed shape:", err);
+          //     }
+          //   } else if (data.userId !== this.userId && data.message) {
+          //     try {
+          //       const decrypted = await decryptData(
+          //         data.message,
+          //         this.encryptionKey!
+          //       );
+          //       const streamedShape = JSON.parse(decrypted);
+
+          //       // Store the streamed shape with a connection-specific key
+          //       const streamKey = `${data.userId}-${data.connectionId}-${streamedShape.id}`;
+          //       this.remoteStreamingShapes.set(streamKey, streamedShape);
+
+          //       // Redraw the canvas to show the streamed shape
+          //       this.clearCanvas();
+          //     } catch (err) {
+          //       console.error("Error handling streamed shape:", err);
+          //     }
+          //   }
+          //   break;
+
+          // case WsDataType.DRAW:
+          // case WsDataType.UPDATE:
+          //   if (
+          //     data.userId === this.userId &&
+          //     data.connectionId !== this.connectionId
+          //   ) {
+          //     if (data.message) {
+          //       const decrypted = await decryptData(
+          //         data.message,
+          //         this.encryptionKey!
+          //       );
+          //       const shape = JSON.parse(decrypted);
+          //       this.updateShapes([shape]);
+          //       this.notifyShapeCountChange();
+          //     }
+          //   } else if (data.userId !== this.userId && data.message) {
+          //     const decrypted = await decryptData(
+          //       data.message,
+          //       this.encryptionKey!
+          //     );
+          //     const shape = JSON.parse(decrypted);
+          //     this.updateShapes([shape]);
+          //     this.notifyShapeCountChange();
+          //   }
+          //   break;
 
           case WsDataType.ERASER:
             if (
@@ -356,6 +454,38 @@ export class CanvasEngine {
       });
     }
   }
+
+  // private streamShape(shape: Shape) {
+  //   if (!this.isConnected || this.isStandalone) return;
+
+  //   if (!this.streamingShapeId) {
+  //     this.streamingShapeId = shape.id;
+  //   }
+
+  //   if (this.streamingThrottleTimeout !== null) {
+  //     return;
+  //   }
+
+  //   this.streamingThrottleTimeout = window.setTimeout(() => {
+  //     if (this.socket?.readyState === WebSocket.OPEN && this.roomId) {
+  //       const message = {
+  //         type: WsDataType.STREAM_SHAPE,
+  //         id: shape.id,
+  //         message: shape,
+  //         roomId: this.roomId,
+  //         userId: this.userId!,
+  //         userName: this.userName!,
+  //         timestamp: new Date().toISOString(),
+  //         connectionId: this.connectionId,
+  //       };
+
+  //       this.sendMessage?.(JSON.stringify(message)).catch((e) => {
+  //         console.error("Error streaming shape update", e);
+  //       });
+  //     }
+  //     this.streamingThrottleTimeout = null;
+  //   }, this.streamingUpdateInterval);
+  // }
 
   async init() {
     if (this.isStandalone) {
@@ -619,6 +749,84 @@ export class CanvasEngine {
       }
     });
 
+    // this.remoteStreamingShapes.forEach((shape) => {
+    //   if (shape.type === "rectangle") {
+    //     this.drawRect(
+    //       shape.x,
+    //       shape.y,
+    //       shape.width,
+    //       shape.height,
+    //       shape.strokeWidth || DEFAULT_STROKE_WIDTH,
+    //       shape.strokeFill || DEFAULT_STROKE_FILL,
+    //       shape.bgFill || DEFAULT_BG_FILL,
+    //       shape.rounded,
+    //       shape.strokeStyle,
+    //       shape.roughStyle,
+    //       shape.fillStyle
+    //     );
+    //   } else if (shape.type === "ellipse") {
+    //     this.drawEllipse(
+    //       shape.x,
+    //       shape.y,
+    //       shape.radX,
+    //       shape.radY,
+    //       shape.strokeWidth || DEFAULT_STROKE_WIDTH,
+    //       shape.strokeFill || DEFAULT_STROKE_FILL,
+    //       shape.bgFill || DEFAULT_BG_FILL,
+    //       shape.strokeStyle,
+    //       shape.roughStyle,
+    //       shape.fillStyle
+    //     );
+    //   } else if (shape.type === "diamond") {
+    //     this.drawDiamond(
+    //       shape.x,
+    //       shape.y,
+    //       shape.width,
+    //       shape.height,
+    //       shape.strokeWidth || DEFAULT_STROKE_WIDTH,
+    //       shape.strokeFill || DEFAULT_STROKE_FILL,
+    //       shape.bgFill || DEFAULT_BG_FILL,
+    //       shape.rounded,
+    //       shape.strokeStyle,
+    //       shape.roughStyle,
+    //       shape.fillStyle
+    //     );
+    //   } else if (shape.type === "line" || shape.type === "arrow") {
+    //     this.drawLine(
+    //       shape.x,
+    //       shape.y,
+    //       shape.toX,
+    //       shape.toY,
+    //       shape.strokeWidth || DEFAULT_STROKE_WIDTH,
+    //       shape.strokeFill || DEFAULT_STROKE_FILL,
+    //       shape.strokeStyle,
+    //       shape.roughStyle,
+    //       shape.type === "arrow"
+    //     );
+    //   } else if (shape.type === "free-draw") {
+    //     this.drawFreeDraw(
+    //       shape.points,
+    //       shape.strokeFill,
+    //       shape.bgFill,
+    //       shape.strokeStyle,
+    //       shape.fillStyle,
+    //       shape.strokeWidth
+    //     );
+    //   } else if (shape.type === "text") {
+    //     this.drawText(
+    //       shape.x,
+    //       shape.y,
+    //       shape.width,
+    //       shape.text,
+    //       shape.strokeFill,
+    //       shape.fontStyle,
+    //       shape.fontFamily,
+    //       shape.fontSize,
+    //       shape.textAlign
+    //     );
+    //   }
+    // });
+
     if (
       this.SelectionController.isShapeSelected() &&
       this.activeTool === "selection"
@@ -629,9 +837,171 @@ export class CanvasEngine {
         this.SelectionController.drawSelectionBox(bounds);
       }
     }
+
+    this.remoteCursors.forEach(({ x, y, userId, userName }) => {
+      const screenX = x * this.scale + this.panX;
+      const screenY = y * this.scale + this.panY;
+
+      const cursorColor = getClientColor({ userId, userName });
+      // const cursorColor = "#ff4081"; // pink
+      // const labelStrokeColor =
+      //   this.currentTheme === "dark" ? "#2f6330" : COLOR_DRAG_CALL;
+      const boxBackground = cursorColor;
+      const boxTextColor = COLOR_CHARCOAL_BLACK;
+
+      const pointerWidth = 12;
+      const pointerHeight = 15;
+
+      console.log("Drawing cursor for", userName, "at", screenX, screenY);
+
+      this.ctx.save();
+
+      // Draw white background for the pointer
+      this.ctx.fillStyle = COLOR_WHITE;
+      this.ctx.strokeStyle = COLOR_WHITE;
+      this.ctx.lineWidth = 6;
+      this.ctx.lineJoin = "round";
+      this.ctx.beginPath();
+      this.ctx.moveTo(screenX, screenY);
+      this.ctx.lineTo(screenX, screenY + 14);
+      this.ctx.lineTo(screenX + 4, screenY + 9);
+      this.ctx.lineTo(screenX + 11, screenY + 8);
+      this.ctx.closePath();
+      this.ctx.stroke();
+      this.ctx.fill();
+
+      // Draw actual pointer with color
+      this.ctx.fillStyle = cursorColor;
+      this.ctx.strokeStyle = cursorColor;
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(screenX, screenY);
+      this.ctx.lineTo(screenX, screenY + 14);
+      this.ctx.lineTo(screenX + 4, screenY + 9);
+      this.ctx.lineTo(screenX + 11, screenY + 8);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+
+      // Calculate label box positioning
+      const offsetX = screenX + pointerWidth / 2;
+      const offsetY = screenY + pointerHeight + 2;
+      const paddingX = 5;
+      const paddingY = 3;
+
+      this.ctx.font = "600 12px sans-serif";
+      const textMetrics = this.ctx.measureText(userName);
+      const textHeight =
+        textMetrics.actualBoundingBoxAscent +
+        textMetrics.actualBoundingBoxDescent;
+      const boxHeight = Math.max(textHeight, 12) + paddingY * 2 + 2;
+      const boxWidth = textMetrics.width + paddingX * 2 + 4;
+      const boxX = offsetX - 1;
+      const boxY = offsetY - 1;
+
+      // Draw name label box
+      if (this.ctx.roundRect) {
+        this.ctx.beginPath();
+        this.ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 8);
+        this.ctx.fillStyle = boxBackground;
+        this.ctx.fill();
+        this.ctx.strokeStyle = COLOR_WHITE;
+        this.ctx.stroke();
+
+        // Optional highlight stroke for speaker
+        // this.ctx.beginPath();
+        // this.ctx.roundRect(boxX - 2, boxY - 2, boxWidth + 4, boxHeight + 4, 8);
+        // this.ctx.strokeStyle = labelStrokeColor;
+        // this.ctx.stroke();
+      } else {
+        roundRect(this.ctx, boxX, boxY, boxWidth, boxHeight, 8, COLOR_WHITE);
+      }
+
+      // Draw username text
+      this.ctx.fillStyle = boxTextColor;
+      this.ctx.fillText(
+        userName,
+        offsetX + paddingX + 1,
+        offsetY + paddingY + textMetrics.actualBoundingBoxAscent
+      );            
+
+      this.ctx.restore();
+    });
   }
 
+  mouseDownHandler = (e: MouseEvent) => {
+    const { x, y } = this.transformPanScale(e.clientX, e.clientY);
+    console.log("x, y: ", x, y);
+    if (this.activeTool === "selection") {
+      const selectedShape = this.SelectionController.getSelectedShape();
+      if (selectedShape) {
+        const bounds = this.SelectionController.getShapeBounds(selectedShape);
+        const handle = this.SelectionController.getResizeHandleAtPoint(
+          x,
+          y,
+          bounds
+        );
+
+        if (handle) {
+          this.SelectionController.startResizing(x, y);
+          return;
+        }
+      }
+
+      for (let i = this.existingShapes.length - 1; i >= 0; i--) {
+        const shape = this.existingShapes[i];
+
+        if (this.SelectionController.isPointInShape(x, y, shape)) {
+          this.selectedShape = shape;
+          this.SelectionController.setSelectedShape(shape);
+          this.SelectionController.startDragging(x, y);
+          this.clearCanvas();
+          return;
+        }
+      }
+      this.selectedShape = null;
+      this.SelectionController.setSelectedShape(null);
+      this.clearCanvas();
+      return;
+    }
+
+    this.clicked = true;
+    this.startX = x;
+    this.startY = y;
+
+    if (this.activeTool === "free-draw") {
+      this.existingShapes.push({
+        id: uuidv4(),
+        type: "free-draw",
+        points: [{ x, y }],
+        strokeWidth: this.strokeWidth,
+        strokeFill: this.strokeFill,
+        bgFill: this.bgFill,
+        strokeStyle: this.strokeStyle,
+        fillStyle: this.fillStyle,
+      });
+    } else if (this.activeTool == "text") {
+      this.clicked = false;
+      this.handleTexty(e);
+    } else if (this.activeTool === "eraser") {
+      this.eraser(x, y);
+    } else if (this.activeTool === "grab") {
+      this.startX = e.clientX;
+      this.startY = e.clientY;
+    }
+    this.clearCanvas();
+  };
+
   mouseUpHandler = (e: MouseEvent) => {
+    // if (this.streamingShapeId) {
+    //   // Remove from remote streaming shapes when we finalize our own shape
+    //   this.remoteStreamingShapes.forEach((shape, key) => {
+    //     if (shape.id === this.streamingShapeId) {
+    //       this.remoteStreamingShapes.delete(key);
+    //     }
+    //   });
+    //   this.streamingShapeId = null;
+    // }
     if (
       this.activeTool !== "free-draw" &&
       this.activeTool !== "eraser" &&
@@ -883,69 +1253,6 @@ export class CanvasEngine {
     this.clearCanvas();
   };
 
-  mouseDownHandler = (e: MouseEvent) => {
-    const { x, y } = this.transformPanScale(e.clientX, e.clientY);
-    console.log("x, y: ", x, y);
-    if (this.activeTool === "selection") {
-      const selectedShape = this.SelectionController.getSelectedShape();
-      if (selectedShape) {
-        const bounds = this.SelectionController.getShapeBounds(selectedShape);
-        const handle = this.SelectionController.getResizeHandleAtPoint(
-          x,
-          y,
-          bounds
-        );
-
-        if (handle) {
-          this.SelectionController.startResizing(x, y);
-          return;
-        }
-      }
-
-      for (let i = this.existingShapes.length - 1; i >= 0; i--) {
-        const shape = this.existingShapes[i];
-
-        if (this.SelectionController.isPointInShape(x, y, shape)) {
-          this.selectedShape = shape;
-          this.SelectionController.setSelectedShape(shape);
-          this.SelectionController.startDragging(x, y);
-          this.clearCanvas();
-          return;
-        }
-      }
-      this.selectedShape = null;
-      this.SelectionController.setSelectedShape(null);
-      this.clearCanvas();
-      return;
-    }
-
-    this.clicked = true;
-    this.startX = x;
-    this.startY = y;
-
-    if (this.activeTool === "free-draw") {
-      this.existingShapes.push({
-        id: uuidv4(),
-        type: "free-draw",
-        points: [{ x, y }],
-        strokeWidth: this.strokeWidth,
-        strokeFill: this.strokeFill,
-        bgFill: this.bgFill,
-        strokeStyle: this.strokeStyle,
-        fillStyle: this.fillStyle,
-      });
-    } else if (this.activeTool == "text") {
-      this.clicked = false;
-      this.handleTexty(e);
-    } else if (this.activeTool === "eraser") {
-      this.eraser(x, y);
-    } else if (this.activeTool === "grab") {
-      this.startX = e.clientX;
-      this.startY = e.clientY;
-    }
-    this.clearCanvas();
-  };
-
   mouseMoveHandler = (e: MouseEvent) => {
     const { x, y } = this.transformPanScale(e.clientX, e.clientY);
 
@@ -960,14 +1267,58 @@ export class CanvasEngine {
       return;
     }
 
+    if (!this.isStandalone && this.isConnected) {
+      if (this.cursorThrottleTimeout === null) {
+        this.cursorThrottleTimeout = window.setTimeout(() => {
+          const coords = this.transformPanScale(e.clientX, e.clientY);
+
+          const message = {
+            type: WsDataType.CURSOR_MOVE,
+            roomId: this.roomId,
+            userId: this.userId!,
+            userName: this.userName!,
+            connectionId: this.connectionId,
+            message: JSON.stringify({ x: coords.x, y: coords.y }),
+          };
+
+          try {
+            if (this.socket?.readyState === WebSocket.OPEN) {
+              this.socket.send(JSON.stringify(message));
+            }
+          } catch (e) {
+            console.error("Error sending streaming CURSOR_MOVE: ", e);
+          }
+
+          this.cursorThrottleTimeout = null;
+        }, 50);
+      }
+    }
+
     if (this.clicked) {
       const width = x - this.startX;
       const height = y - this.startY;
 
       this.clearCanvas();
 
+      // let streamingShape: Shape | null = null;
+
       switch (this.activeTool) {
         case "rectangle":
+          // streamingShape = {
+          //   id: this.streamingShapeId || uuidv4(),
+          //   type: "rectangle",
+          //   x: this.startX,
+          //   y: this.startY,
+          //   width,
+          //   height,
+          //   strokeWidth: this.strokeWidth,
+          //   strokeFill: this.strokeFill,
+          //   bgFill: this.bgFill,
+          //   rounded: this.strokeEdge,
+          //   strokeStyle: this.strokeStyle,
+          //   roughStyle: this.roughStyle,
+          //   fillStyle: this.fillStyle,
+          // };
           this.drawRect(
             this.startX,
             this.startY,
@@ -984,6 +1335,20 @@ export class CanvasEngine {
           break;
 
         case "ellipse":
+          // streamingShape = {
+          //   id: this.streamingShapeId || uuidv4(),
+          //   type: "ellipse",
+          //   x: this.startX + width / 2,
+          //   y: this.startY + height / 2,
+          //   radX: Math.abs(width / 2),
+          //   radY: Math.abs(height / 2),
+          //   strokeWidth: this.strokeWidth,
+          //   strokeFill: this.strokeFill,
+          //   bgFill: this.bgFill,
+          //   strokeStyle: this.strokeStyle,
+          //   roughStyle: this.roughStyle,
+          //   fillStyle: this.fillStyle,
+          // };
           this.drawEllipse(
             this.startX + width / 2,
             this.startY + height / 2,
@@ -999,6 +1364,21 @@ export class CanvasEngine {
           break;
 
         case "diamond":
+          // streamingShape = {
+          //   id: this.streamingShapeId || uuidv4(),
+          //   type: "diamond",
+          //   x: this.startX,
+          //   y: this.startY,
+          //   width: Math.abs(x - this.startX) * 2,
+          //   height: Math.abs(y - this.startY) * 2,
+          //   strokeWidth: this.strokeWidth,
+          //   strokeFill: this.strokeFill,
+          //   bgFill: this.bgFill,
+          //   rounded: this.strokeEdge,
+          //   strokeStyle: this.strokeStyle,
+          //   roughStyle: this.roughStyle,
+          //   fillStyle: this.fillStyle,
+          // };
           this.drawDiamond(
             this.startX,
             this.startY,
@@ -1015,6 +1395,18 @@ export class CanvasEngine {
           break;
 
         case "line":
+          // streamingShape = {
+          //   id: this.streamingShapeId || uuidv4(),
+          //   type: "line",
+          //   x: this.startX,
+          //   y: this.startY,
+          //   toX: x,
+          //   toY: y,
+          //   strokeWidth: this.strokeWidth,
+          //   strokeFill: this.strokeFill,
+          //   strokeStyle: this.strokeStyle,
+          //   roughStyle: this.roughStyle,
+          // };
           this.drawLine(
             this.startX,
             this.startY,
@@ -1029,6 +1421,18 @@ export class CanvasEngine {
           break;
 
         case "arrow":
+          // streamingShape = {
+          //   id: this.streamingShapeId || uuidv4(),
+          //   type: "arrow",
+          //   x: this.startX,
+          //   y: this.startY,
+          //   toX: x,
+          //   toY: y,
+          //   strokeWidth: this.strokeWidth,
+          //   strokeFill: this.strokeFill,
+          //   strokeStyle: this.strokeStyle,
+          //   roughStyle: this.roughStyle,
+          // };
           this.drawLine(
             this.startX,
             this.startY,
@@ -1055,6 +1459,7 @@ export class CanvasEngine {
               this.fillStyle,
               this.strokeWidth
             );
+            // streamingShape = currentShape;
           }
           break;
 
@@ -1079,6 +1484,9 @@ export class CanvasEngine {
           this.startY = e.clientY;
           this.clearCanvas();
       }
+      // if (streamingShape && !this.isStandalone) {
+      //   this.streamShape(streamingShape);
+      // }
     }
   };
 
@@ -2007,5 +2415,10 @@ export class CanvasEngine {
 
   private notifyShapeCountChange() {
     this.onShapeCountChange?.(this.existingShapes.length);
+  }
+
+  public setTheme(newTheme: "light" | "dark") {
+    this.currentTheme = newTheme;
+    this.clearCanvas();
   }
 }

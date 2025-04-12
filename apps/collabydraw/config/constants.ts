@@ -7,6 +7,9 @@ export const DEFAULT_STROKE_WIDTH = 1;
 export const DEFAULT_STROKE_FILL = "rgba(255, 255, 255)";
 export const DEFAULT_BG_FILL = "rgba(18, 18, 18)";
 export const ARROW_HEAD_LENGTH = 20;
+export const COLOR_WHITE = "#ffffff";
+export const COLOR_CHARCOAL_BLACK = "#1e1e1e";
+export const COLOR_DRAG_CALL = "#a2f1a5";
 export const getDashArrayDashed = (strokeWidth: number) => [
   strokeWidth,
   strokeWidth * 4,

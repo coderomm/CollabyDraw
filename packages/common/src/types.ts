@@ -63,6 +63,8 @@ export enum WsDataType {
   CLOSE_ROOM = "CLOSE_ROOM",
   CONNECTION_READY = "CONNECTION_READY",
   EXISTING_SHAPES = "EXISTING_SHAPES",
+  STREAM_SHAPE = "STREAM_SHAPE",
+  CURSOR_MOVE = "CURSOR_MOVE",
 }
 
 export interface WebSocketMessage {
