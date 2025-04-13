@@ -40,6 +40,15 @@ export class SelectionController {
   private triggerUpdate() {
     this.onUpdateCallback();
   }
+
+  private onLiveUpdateCallback: ((shape: Tool) => void) | null = null;
+  setOnLiveUpdate(cb: (shape: Tool) => void) {
+    this.onLiveUpdateCallback = cb;
+  }
+  private onDragOrResizeCursorMove: ((x: number, y: number) => void) | null = null;
+  public setOnDragOrResizeCursorMove(cb: (x: number, y: number) => void) {
+    this.onDragOrResizeCursorMove = cb;
+  }
   constructor(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
     this.ctx = ctx;
     this.canvas = canvas;
@@ -290,7 +299,6 @@ export class SelectionController {
     }
   }
 
-  // In updateDragging()
   updateDragging(x: number, y: number) {
     if (this.isDragging && this.selectedShape) {
       const dx = x - this.dragOffset.x;
@@ -320,6 +328,10 @@ export class SelectionController {
           this.selectedShape.y = dy;
       }
       this.triggerUpdate();
+      if (this.onLiveUpdateCallback) {
+        this.onLiveUpdateCallback(this.selectedShape);
+      }
+      this.onDragOrResizeCursorMove?.(x, y);
     }
   }
 
@@ -399,6 +411,10 @@ export class SelectionController {
         }
       }
       this.triggerUpdate();
+      if (this.onLiveUpdateCallback) {
+        this.onLiveUpdateCallback(this.selectedShape);
+      }
+      this.onDragOrResizeCursorMove?.(x, y);
     }
   }
 

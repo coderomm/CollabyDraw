@@ -54,6 +54,7 @@ type WebSocketConnection = {
   connected: boolean;
 };
 
+// NOTE: Comments in this Canvas Engine are not AI generated. This are for my personal understanding.
 export class CanvasEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -126,6 +127,7 @@ export class CanvasEngine {
   private remoteClickIndicators: Map<string, number> = new Map();
 
   private currentTheme: "light" | "dark" | null = null;
+  private onLiveUpdateFromSelection?: (shape: Shape) => void;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -175,6 +177,12 @@ export class CanvasEngine {
           JSON.stringify(this.existingShapes)
         );
       }
+    });
+    this.SelectionController.setOnLiveUpdate((shape) => {
+      this.streamShapeUpdate(shape);
+    });
+    this.SelectionController.setOnDragOrResizeCursorMove((x, y) => {
+      this.sendCursorMove(x, y);
     });
     if (!this.isStandalone && this.token && this.roomId) {
       console.log("✅Connecting to WebSocket…");
@@ -332,11 +340,6 @@ export class CanvasEngine {
                 this.remoteStreamingShapes.set(streamKey, streamedShape);
                 const userConnKey = `${data.userId}-${data.connectionId}`;
                 this.remoteClickIndicators.set(userConnKey, Date.now());
-                // console.log(
-                //   "this.remoteClickIndicators = ",
-                //   this.remoteClickIndicators
-                // );
-
                 this.clearCanvas();
               } catch (err) {
                 console.error("Error handling streamed shape:", err);
@@ -375,6 +378,29 @@ export class CanvasEngine {
               } catch (err) {
                 console.error("Error handling streamed shape:", err);
               }
+            }
+            break;
+
+          case WsDataType.STREAM_UPDATE:
+            if (
+              data.userId !== this.userId &&
+              data.connectionId &&
+              data.message
+            ) {
+              const decrypted = await decryptData(
+                data.message,
+                this.encryptionKey!
+              );
+              const streamedShape = JSON.parse(decrypted);
+              const streamKey = getStreamKey({
+                userId: data.userId,
+                connectionId: data.connectionId,
+                shapeId: streamedShape.id,
+              });
+              this.remoteStreamingShapes.set(streamKey, streamedShape);
+              const userConnKey = `${data.userId}-${data.connectionId}`;
+              this.remoteClickIndicators.set(userConnKey, Date.now());
+              this.clearCanvas();
             }
             break;
 
@@ -531,6 +557,48 @@ export class CanvasEngine {
       }
       this.streamingThrottleTimeout = null;
     }, this.streamingUpdateInterval);
+  }
+
+  private streamShapeUpdate(shape: Shape) {
+    if (!this.isConnected || this.isStandalone) return;
+    if (this.streamingThrottleTimeout !== null) return;
+
+    this.streamingThrottleTimeout = window.setTimeout(() => {
+      if (this.socket?.readyState === WebSocket.OPEN && this.roomId) {
+        const message = {
+          type: WsDataType.STREAM_UPDATE,
+          id: shape.id,
+          message: shape,
+          roomId: this.roomId,
+          userId: this.userId!,
+          userName: this.userName!,
+          timestamp: new Date().toISOString(),
+          connectionId: this.connectionId,
+        };
+
+        this.sendMessage?.(JSON.stringify(message)).catch((e) => {
+          console.error("Error streaming shape update", e);
+        });
+      }
+      this.streamingThrottleTimeout = null;
+    }, this.streamingUpdateInterval);
+  }
+
+  private sendCursorMove(x: number, y: number) {
+    if (!this.isStandalone && this.isConnected) {
+      const message = {
+        type: WsDataType.CURSOR_MOVE,
+        roomId: this.roomId,
+        userId: this.userId!,
+        userName: this.userName!,
+        connectionId: this.connectionId,
+        message: JSON.stringify({ x, y }),
+      };
+
+      if (this.socket?.readyState === WebSocket.OPEN) {
+        this.socket.send(JSON.stringify(message));
+      }
+    }
   }
 
   async init() {
@@ -706,6 +774,13 @@ export class CanvasEngine {
     );
 
     this.existingShapes.map((shape: Shape) => {
+      const isBeingStreamed = [...this.remoteStreamingShapes.values()].some(
+        (streamingShape) => streamingShape.id === shape.id
+      );
+
+      if (isBeingStreamed) {
+        return;
+      }
       if (shape.type === "rectangle") {
         this.drawRect(
           shape.x,
@@ -891,7 +966,7 @@ export class CanvasEngine {
       const screenX = x * this.scale + this.panX;
       const screenY = y * this.scale + this.panY;
 
-      const cursorColor = getClientColor({ userId, userName });
+      const cursorColor: string = getClientColor({ userId, userName });
       // const labelStrokeColor = this.currentTheme === "dark" ? "#2f6330" : COLOR_DRAG_CALL;
       const boxBackground = cursorColor;
       const boxTextColor = COLOR_CHARCOAL_BLACK;
@@ -951,13 +1026,12 @@ export class CanvasEngine {
       this.ctx.fill();
       this.ctx.stroke();
 
-      // Calculate label box positioning
       const offsetX = screenX + pointerWidth / 2;
       const offsetY = screenY + pointerHeight + 2;
       const paddingX = 5;
       const paddingY = 3;
 
-      this.ctx.font = "600 12px sans-serif";
+      this.ctx.font = "600 13px sans-serif";
       const textMetrics = this.ctx.measureText(userName);
       const textHeight =
         textMetrics.actualBoundingBoxAscent +
@@ -976,7 +1050,7 @@ export class CanvasEngine {
         this.ctx.strokeStyle = COLOR_WHITE;
         this.ctx.stroke();
 
-        // Optional highlight stroke for speaker
+        // Optional highlight stroke for speaker // Option 2 for showing active indicator
         // this.ctx.beginPath();
         // this.ctx.roundRect(boxX - 2, boxY - 2, boxWidth + 4, boxHeight + 4, 8);
         // this.ctx.strokeStyle = labelStrokeColor;
@@ -995,7 +1069,7 @@ export class CanvasEngine {
 
       this.ctx.restore();
     });
-    // 🧼 Cleanup expired indicators (older than 1s)
+
     this.remoteClickIndicators.forEach((timestamp, key) => {
       if (Date.now() - timestamp > 1000) {
         this.remoteClickIndicators.delete(key);
@@ -2264,7 +2338,6 @@ export class CanvasEngine {
 
       this.ctx.restore();
     } else {
-      // // For rough/sketchy style, use the existing implementation
       const pathStr = points.reduce(
         (path, point, index) =>
           path +
@@ -2283,19 +2356,6 @@ export class CanvasEngine {
         fillStyle
       );
       this.roughCanvas.path(pathStr, options);
-
-      // For rough/sketchy style, use the improved path with rough.js
-      // const options = this.getRoughOptions(
-      //   strokeWidth,
-      //   strokeFill,
-      //   0,
-      //   bgFill,
-      //   "solid",
-      //   fillStyle
-      // );
-
-      // // Use the SVG path data from perfect-freehand with rough.js
-      // this.roughCanvas.path(svgPathData, options);
     }
   }
 

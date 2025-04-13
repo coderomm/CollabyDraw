@@ -341,6 +341,25 @@ wss.on("connection", function connection(ws, req) {
           );
           break;
 
+        case WsDataType.STREAM_UPDATE:
+          broadcastToRoom(
+            parsedData.roomId,
+            {
+              type: parsedData.type,
+              id: parsedData.id,
+              message: parsedData.message,
+              roomId: parsedData.roomId,
+              userId: connection.userId,
+              userName: connection.userName,
+              connectionId: connection.connectionId,
+              timestamp: new Date().toISOString(),
+              participants: null,
+            },
+            [connection.connectionId],
+            false
+          );
+          break;
+
         case WsDataType.DRAW: {
           if (!parsedData.message || !parsedData.id || !parsedData.roomId) {
             console.error(
