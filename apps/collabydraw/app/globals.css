@@ -236,6 +236,8 @@ h6 {
 
     --form-input: #121212;
     --form-input-hover: #141414;
+    --form-input: #fff;
+    --form-input-hover: #f1f3f5;
     --color-border-input: #212121;
     --form-color-text: #ced4da;
     --color-primary: #a8a5ff;

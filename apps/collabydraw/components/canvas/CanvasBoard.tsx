@@ -115,6 +115,7 @@ export default function CanvasBoard() {
 
     useEffect(() => {
         setCanvasEngineState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
+        console.log('Theme = ', theme)
     }, [theme])
 
     useEffect(() => {

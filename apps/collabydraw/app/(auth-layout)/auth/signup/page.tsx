@@ -6,8 +6,8 @@ export default function SignUpPage() {
     return (
         <Card className="border-0 shadow-none lg:shadow-2xl rounded-3xl m-0 mx-auto px-6 py-8 lg:p-16 relative z-10 max-w-[480px] bg-yellow-light">
             <CardHeader className="p-0">
-                <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
-                <CardDescription className="text-sm pb-4 text-primary text-center">Enter your email below to create your account</CardDescription>
+                <CardTitle className="text-2xl font-bold text-center text-[#0a0a0a]">Create an account</CardTitle>
+                <CardDescription className="text-sm pb-4 text-primary text-center text-[#171717]">Enter your email below to create your account</CardDescription>
             </CardHeader>
             <CardContent className="p-0 !my-0">
                 <SignUpForm />

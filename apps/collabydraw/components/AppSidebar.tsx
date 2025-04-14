@@ -49,6 +49,7 @@ interface SidebarProps {
 }
 
 export function AppSidebar({ isOpen, onClose, canvasColor, setCanvasColor, isMobile, roomName, isStandalone, onClearCanvas, onExportCanvas, onImportCanvas }: SidebarProps) {
+    const [stars, setStars] = useState<number | null>(null);
     const [clearDialogOpen, setClearDialogOpen] = useState(false);
     const { theme, setTheme } = useTheme();
     const { data: session } = useSession();
@@ -82,6 +83,19 @@ export function AppSidebar({ isOpen, onClose, canvasColor, setCanvasColor, isMob
         }
         return () => document.body.classList.remove("overflow-hidden")
     }, [isOpen])
+
+    useEffect(() => {
+        const fetchRepoMetaData = async () => {
+            try {
+                const res = await fetch('https://api.github.com/repos/coderomm/CollabyDraw');
+                const data = await res.json();
+                setStars(data.stargazers_count);
+            } catch (error) {
+                console.error('Error fetching GitHub repo data:', error);
+            }
+        }
+        fetchRepoMetaData();
+    }, [])
 
     return (
         <>
@@ -136,14 +150,14 @@ export function AppSidebar({ isOpen, onClose, canvasColor, setCanvasColor, isMob
                             <Link
                                 className={cn(
                                     buttonVariants({ variant: "ghost" }),
-                                    "flex flex-row items-center justify-start gap-2 h-10 w-auto rounded-md px-3 text-sm font-medium transition-colors text-color-on-surface hover:text-color-on-surface bg-transparent hover:bg-button-hover-bg focus-visible:shadow-brand-color-shadow focus-visible:outline-none focus-visible:ring-0 active:bg-button-hover-bg active:border active:border-brand-active dark:hover:bg-w-button-hover-bg border border-[#705400] bg-[#FFE599]"
+                                    "flex flex-row items-center justify-start gap-2 h-10 w-auto rounded-md px-3 text-sm font-medium transition-colors text-white dark:text-black hover:text-color-on-surface bg-transparent hover:bg-button-hover-bg focus-visible:shadow-brand-color-shadow focus-visible:outline-none focus-visible:ring-0 active:bg-button-hover-bg active:border active:border-brand-active dark:hover:bg-w-button-hover-bg border border-[#705400] bg-[#FFE599]"
                                 )}
                                 href="https://github.com/coderomm/CollabyDraw"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="GitHub"
                             >
-                                <Github className="h-4 w-4" />GitHub - <span className="flex items-center justify-start gap-1">7<Star className="h-4 w-4" /></span>
+                                <Github className="h-4 w-4" />GitHub - <span className="flex items-center justify-start gap-1">{stars}<Star className="h-4 w-4" /></span>
                             </Link>
                             <SidebarLinkItem icon={Twitter} label="Twitter / X" url="https://x.com/1omsharma" />
                             <SidebarLinkItem icon={Linkedin} label="Linkedin" url="https://www.linkedin.com/in/1omsharma" />
