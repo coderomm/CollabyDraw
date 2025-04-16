@@ -461,7 +461,12 @@ export default function CanvasBoard() {
                 <ScreenLoading />
             )}
 
-            <canvas className={cn("collabydraw collabydraw-canvas touch-none", theme === 'dark' ? 'collabydraw-canvas-dark' : '')} ref={canvasRef} />
+            <canvas className={cn("collabydraw collabydraw-canvas touch-none", theme === 'dark' ? 'collabydraw-canvas-dark' : '')}
+                style={{
+                    transform: `scale(${canvasEngineState.scale})`,
+                    transformOrigin: 'top-left'
+                }}
+            ref={canvasRef} />
         </div >
     )
 };
