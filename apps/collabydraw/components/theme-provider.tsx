@@ -19,13 +19,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }
 
   if (isAuthPath) {
+    if (typeof window !== "undefined") {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+    }
     return <>{children}</>
   }
 
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
+      defaultTheme="light"
       enableSystem
       disableTransitionOnChange
     >

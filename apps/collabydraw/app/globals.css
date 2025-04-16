@@ -236,8 +236,6 @@ h6 {
 
     --form-input: #121212;
     --form-input-hover: #141414;
-    --form-input: #fff;
-    --form-input-hover: #f1f3f5;
     --color-border-input: #212121;
     --form-color-text: #ced4da;
     --color-primary: #a8a5ff;
@@ -739,10 +737,6 @@ button {
   z-index: 2;
 }
 
-.dark .collabydraw-textEditorContainer textarea {
-  filter: var(--theme-filter);
-}
-
 .canvas-bg-color-item {
   filter: var(--theme-filter);
 }
@@ -784,4 +778,8 @@ button {
   .lg\:prose-xl :where(.lg\:prose-xl>:first-child):not(:where([class~=not-prose], [class~=not-prose] *)) {
     margin-top: 0;
   }
+}
+
+.collabydraw-texty::-webkit-scrollbar {
+  display: none;
 }

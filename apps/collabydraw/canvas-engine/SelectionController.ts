@@ -45,7 +45,8 @@ export class SelectionController {
   setOnLiveUpdate(cb: (shape: Tool) => void) {
     this.onLiveUpdateCallback = cb;
   }
-  private onDragOrResizeCursorMove: ((x: number, y: number) => void) | null = null;
+  private onDragOrResizeCursorMove: ((x: number, y: number) => void) | null =
+    null;
   public setOnDragOrResizeCursorMove(cb: (x: number, y: number) => void) {
     this.onDragOrResizeCursorMove = cb;
   }
@@ -136,11 +137,10 @@ export class SelectionController {
         case "text":
           const calFontSize = getFontSize(shape.fontSize, 100);
           this.ctx.font = `${calFontSize}px/1.2 ${shape.fontFamily === "normal" ? "Arial" : shape.fontFamily === "hand-drawn" ? "Collabyfont, Xiaolai" : "Assistant"}`;
-          const metrics = this.ctx.measureText(shape.text || "");
-          bounds.x = shape.x - 10;
-          bounds.y = shape.y - 10;
-          bounds.width = metrics.width + 20;
-          bounds.height = 48;
+          bounds.x = shape.x;
+          bounds.y = shape.y;
+          bounds.width = shape.width;
+          bounds.height = shape.height;
           break;
       }
 

@@ -33,6 +33,7 @@ import {
   getDashArrayDotted,
   RECT_CORNER_RADIUS_FACTOR,
   ROUND_RADIUS_FACTOR,
+  TEXT_ADJUSTED_HEIGHT,
   WS_URL,
 } from "@/config/constants";
 import { MessageQueue } from "./MessageQueue";
@@ -128,6 +129,9 @@ export class CanvasEngine {
 
   private currentTheme: "light" | "dark" | null = null;
   private onLiveUpdateFromSelection?: (shape: Shape) => void;
+
+  private activeTextarea: HTMLTextAreaElement | null = null;
+  private activeTextPosition: { x: number; y: number } | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -227,8 +231,6 @@ export class CanvasEngine {
           console.log(`Assigned connection ID: ${this.connectionId}`);
         }
 
-        // console.log("engine this.connectionId = ", this.connectionId);
-        // console.log("engine this.userId = ", this.userId);
         switch (data.type) {
           case WsDataType.USER_JOINED:
             if (
@@ -262,28 +264,8 @@ export class CanvasEngine {
             break;
 
           case WsDataType.CURSOR_MOVE:
-            // console.log("=== case WsDataType.CURSOR_MOVE ===");
-            // console.log(
-            //   `this.userId=${this.userId} & data.userId=${data.userId}`
-            // );
-            // console.log(
-            //   `this.userName=${this.userName} & data.userName=${data.userName}`
-            // );
-            // console.log(
-            //   `this.connectionId=${this.connectionId} & data.connectionId=${data.connectionId}`
-            // );
             if (data.userId !== this.userId && data.message) {
-              // const decrypted = await decryptData(
-              //   data.message,
-              //   this.encryptionKey!
-              // );
-              // console.log("coords/data.message: ", data.message);
               const coords = JSON.parse(data.message);
-              // const coords:{x:number,y:number} = data.message;
-              // console.log("coords: ", coords);
-              // console.log(
-              //   `x: ${coords.x}, y: ${coords.y}, user: ${data.userName}`
-              // );
               const key = `${data.userId}-${data.connectionId}`;
               this.remoteCursors.set(key, {
                 x: coords.x,
@@ -291,7 +273,6 @@ export class CanvasEngine {
                 userId: data.userId,
                 userName: data.userName ?? data.userId,
               });
-              // console.log("remoteCursors map size:", this.remoteCursors.size);
               this.clearCanvas();
             }
             break;
@@ -357,23 +338,9 @@ export class CanvasEngine {
                   connectionId: data.connectionId,
                   shapeId: streamedShape.id,
                 });
-                // console.log("STREAM_SHAPE streamKey2 = ", streamKey);
-                // console.log(
-                //   "STREAM_SHAPE this.remoteStreamingShapes before = ",
-                //   this.remoteStreamingShapes
-                // );
                 this.remoteStreamingShapes.set(streamKey, streamedShape);
-                // console.log(
-                //   "STREAM_SHAPE this.remoteStreamingShapes after = ",
-                //   this.remoteStreamingShapes
-                // );
                 const userConnKey = `${data.userId}-${data.connectionId}`;
                 this.remoteClickIndicators.set(userConnKey, Date.now());
-                // console.log(
-                //   "this.remoteClickIndicators = ",
-                //   this.remoteClickIndicators
-                // );
-
                 this.clearCanvas();
               } catch (err) {
                 console.error("Error handling streamed shape:", err);
@@ -425,21 +392,12 @@ export class CanvasEngine {
                 this.encryptionKey!
               );
               const shape = JSON.parse(decrypted);
-              // console.log(
-              //   "DRAW this.remoteStreamingShapes before = ",
-              //   this.remoteStreamingShapes
-              // );
               const streamKey = getStreamKey({
                 userId: data.userId,
                 connectionId: data.connectionId,
                 shapeId: shape.id,
               });
-              // console.log("streamKey = ", streamKey);
               this.remoteStreamingShapes.delete(streamKey);
-              // console.log(
-              //   "DRAW this.remoteStreamingShapes after = ",
-              //   this.remoteStreamingShapes
-              // );
               this.updateShapes([shape]);
               this.notifyShapeCountChange();
             }
@@ -860,6 +818,7 @@ export class CanvasEngine {
           shape.x,
           shape.y,
           shape.width,
+          shape.height,
           shape.text,
           shape.strokeFill,
           shape.fontStyle,
@@ -869,6 +828,11 @@ export class CanvasEngine {
         );
       }
     });
+
+    if (this.activeTextarea && this.activeTextPosition) {
+      const { x, y } = this.activeTextPosition;
+      this.activeTextarea.style.transform = `translate(${x * this.scale + this.panX}px, ${y * this.scale + this.panY}px)`;
+    }
 
     this.remoteStreamingShapes.forEach((shape) => {
       if (shape.type === "rectangle") {
@@ -938,6 +902,7 @@ export class CanvasEngine {
           shape.x,
           shape.y,
           shape.width,
+          shape.height,
           shape.text,
           shape.strokeFill,
           shape.fontStyle,
@@ -960,28 +925,21 @@ export class CanvasEngine {
     }
 
     this.remoteCursors.forEach((cursor, userConnKey) => {
-      // console.log("cursor = ", cursor);
-      // console.log("userConnKey = ", userConnKey);
       const { x, y, userId, userName } = cursor;
       const screenX = x * this.scale + this.panX;
       const screenY = y * this.scale + this.panY;
 
       const cursorColor: string = getClientColor({ userId, userName });
-      // const labelStrokeColor = this.currentTheme === "dark" ? "#2f6330" : COLOR_DRAG_CALL;
       const boxBackground = cursorColor;
       const boxTextColor = COLOR_CHARCOAL_BLACK;
       const pointerWidth = 12;
       const pointerHeight = 15;
 
       const lastClickTime = this.remoteClickIndicators.get(userConnKey);
-      if (lastClickTime) {
-        // console.log("lastClickTime = ", lastClickTime);
-      }
       const showClickCircle =
         !!lastClickTime && Date.now() - lastClickTime < 800;
 
       if (showClickCircle) {
-        // console.log("showClickCircle = ", showClickCircle);
         this.ctx.beginPath();
         this.ctx.arc(x, y, 14, 0, Math.PI * 2, false);
         this.ctx.lineWidth = 3;
@@ -1050,7 +1008,7 @@ export class CanvasEngine {
         this.ctx.strokeStyle = COLOR_WHITE;
         this.ctx.stroke();
 
-        // Optional highlight stroke for speaker // Option 2 for showing active indicator
+        // Highlight stroke for speaker // Option 2 for showing active indicator
         // this.ctx.beginPath();
         // this.ctx.roundRect(boxX - 2, boxY - 2, boxWidth + 4, boxHeight + 4, 8);
         // this.ctx.strokeStyle = labelStrokeColor;
@@ -1079,7 +1037,6 @@ export class CanvasEngine {
 
   mouseDownHandler = (e: MouseEvent) => {
     const { x, y } = this.transformPanScale(e.clientX, e.clientY);
-    // console.log("x, y: ", x, y);
     if (this.activeTool === "selection") {
       const selectedShape = this.SelectionController.getSelectedShape();
       if (selectedShape) {
@@ -1128,7 +1085,7 @@ export class CanvasEngine {
         strokeStyle: this.strokeStyle,
         fillStyle: this.fillStyle,
       });
-    } else if (this.activeTool == "text") {
+    } else if (this.activeTool === "text") {
       this.clicked = false;
       this.handleTexty(e);
     } else if (this.activeTool === "eraser") {
@@ -1212,7 +1169,6 @@ export class CanvasEngine {
     const height = y - this.startY;
 
     let shape: Shape | null = null;
-    // console.log("this.streamingShapeId in ");
     switch (this.activeTool) {
       case "rectangle":
         shape = {
@@ -1640,8 +1596,6 @@ export class CanvasEngine {
       clientY: touch.clientY,
     });
 
-    // console.log("Touch started at", touch.clientX, touch.clientY);
-
     this.mouseDownHandler(simulatedMouse);
   };
 
@@ -1674,40 +1628,52 @@ export class CanvasEngine {
     const { x, y } = this.transformPanScale(e.clientX, e.clientY);
 
     const textarea = document.createElement("textarea");
+    this.activeTextarea = textarea;
+    this.activeTextPosition = { x, y };
     Object.assign(textarea.style, {
       position: "absolute",
       display: "inline-block",
       backfaceVisibility: "hidden",
       margin: "0",
       padding: "0",
-      border: "0",
+      border: `1px dotted ${this.strokeFill}`,
       outline: "0",
       resize: "none",
       background: "transparent",
-      overflow: "hidden",
-      overflowWrap: "break-word",
+      overflowX: "hidden",
+      overflowY: "hidden",
+      overflowWrap: "normal",
       boxSizing: "content-box",
       wordBreak: "normal",
-      whiteSpace: "pre-wrap",
+      whiteSpace: "pre",
       transform: `translate(${x * this.scale + this.panX}px, ${y * this.scale + this.panY}px)`,
       verticalAlign: "top",
       opacity: "1",
-      filter: "var(--theme-filter)",
+      wrap: "off",
+      tabIndex: 0,
+      dir: "auto",
+      scrollbarWidth: "none", // Firefox
+      msOverflowStyle: "none", // IE/Edge
       width: "auto",
-      minHeight: "2rem",
+      minHeight: "auto",
     });
-    // console.log(
-    //   `this.fontSize= ${this.fontSize}, this.fontFamily= ${this.fontFamily}, this.textAlign=${this.textAlign}, this.scale=${this.scale}`
-    // );
     const calFont = getFontSize(this.fontSize, this.scale);
     textarea.classList.add("collabydraw-texty");
-    textarea.dir = "auto";
-    textarea.tabIndex = 0;
-    textarea.wrap = "off";
     textarea.style.color = this.strokeFill;
     const fontString = `${calFont}px/1.2 ${this.fontFamily === "normal" ? "Arial" : this.fontFamily === "hand-drawn" ? "Collabyfont, Xiaolai" : "Assistant"}`;
     textarea.style.font = fontString;
-    textarea.style.zIndex = "1";
+    textarea.style.zIndex = "100";
+
+    const rawMaxWidth =
+      window.innerWidth || document.documentElement.clientWidth;
+    const rawMaxHeight =
+      window.innerHeight || document.documentElement.clientHeight;
+
+    const calMaxWidth = rawMaxWidth - x - TEXT_ADJUSTED_HEIGHT;
+    const calMaxHeight = rawMaxHeight - y - TEXT_ADJUSTED_HEIGHT;
+
+    textarea.style.maxWidth = `${calMaxWidth}px`;
+    textarea.style.maxHeight = `${calMaxHeight}px`;
 
     const collabydrawContainer = document.querySelector(
       ".collabydraw-textEditorContainer"
@@ -1731,23 +1697,24 @@ export class CanvasEngine {
       }
 
       span = document.createElement("span");
-
       Object.assign(span.style, {
         visibility: "hidden",
         position: "absolute",
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",
         font: textarea.style.font,
-        width: "auto",
-        height: "auto",
+        padding: "0",
+        margin: "0",
+        lineHeight: "1.2",
       });
 
       span.textContent = textarea.value || " ";
       document.body.appendChild(span);
 
       requestAnimationFrame(() => {
-        textarea.style.width = `${Math.max(span!.offsetWidth + 10, 50)}px`;
-        textarea.style.height = `${Math.max(span!.offsetHeight, 20)}px`;
+        textarea.style.width = `${Math.max(span!.offsetWidth + TEXT_ADJUSTED_HEIGHT, TEXT_ADJUSTED_HEIGHT)}px`;
+        textarea.style.height = `${Math.max(span!.offsetHeight + TEXT_ADJUSTED_HEIGHT, TEXT_ADJUSTED_HEIGHT)}px`;
+        textarea.style.overflow = "scroll";
       });
     };
 
@@ -1762,7 +1729,10 @@ export class CanvasEngine {
       }
     });
 
+    let saveCalled = false;
     const save = () => {
+      if (saveCalled) return;
+      saveCalled = true;
       const text = textarea.value.trim();
       if (!text) {
         textarea.remove();
@@ -1774,12 +1744,15 @@ export class CanvasEngine {
       if (!span) {
         throw new Error("Span is null");
       }
+      this.activeTextarea = null;
+      this.activeTextPosition = null;
       const newShape: Shape = {
         id: uuidv4(),
         type: "text",
         x: x,
         y: y,
-        width: span.offsetWidth,
+        width: textarea.offsetWidth,
+        height: textarea.offsetHeight - TEXT_ADJUSTED_HEIGHT,
         text,
         fontSize: this.fontSize,
         fontFamily: this.fontFamily,
@@ -1831,6 +1804,7 @@ export class CanvasEngine {
 
     const handleClickOutside = (e: MouseEvent) => {
       if (!textarea.contains(e.target as Node)) {
+        document.removeEventListener("mousedown", handleClickOutside);
         save();
       }
     };
@@ -2363,6 +2337,7 @@ export class CanvasEngine {
     x: number,
     y: number,
     width: number,
+    height: number,
     text: string,
     fillStyle: string,
     fontStyle: FontStyle,
