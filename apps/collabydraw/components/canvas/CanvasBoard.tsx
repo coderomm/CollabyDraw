@@ -267,6 +267,21 @@ export default function CanvasBoard() {
         setCanvasEngineState(prev => ({ ...prev, sidebarOpen: !prev.sidebarOpen }));
     }, []);
 
+    const handleScaleUpdate = useCallback((newScale: number | ((prev: number) => number)) => {
+        setCanvasEngineState(prev => {
+            const finalScale = typeof newScale === 'function' ? newScale(prev.scale) : newScale;
+
+            if (prev.engine) {
+                prev.engine.setScale(finalScale); // 🔥 this handles panX, panY, canvas.clear
+            }
+
+            return {
+                ...prev,
+                scale: finalScale
+            };
+        });
+    }, []);
+
     if (isLoading) {
         return <ScreenLoading />
     }
@@ -375,12 +390,7 @@ export default function CanvasBoard() {
             {matches && (
                 <ZoomControl
                     scale={canvasEngineState.scale}
-                    setScale={(newScale: SetStateAction<number>) =>
-                        setCanvasEngineState(prev => ({
-                            ...prev,
-                            scale: typeof newScale === 'function' ? newScale(prev.scale) : newScale
-                        }))
-                    }
+                    setScale={handleScaleUpdate}
                 />
             )}
 
