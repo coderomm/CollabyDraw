@@ -205,8 +205,6 @@ export class CanvasEngine {
       return;
     }
 
-    console.log(`Connecting to WebSocket with sessionId: ${this.token}`);
-
     const url = `${WS_URL}?token=${encodeURIComponent(this.token!)}`;
     this.socket = new WebSocket(url);
 
@@ -560,6 +558,7 @@ export class CanvasEngine {
   }
 
   async init() {
+    window.addEventListener("keydown", this.handleKeyDown);
     if (this.isStandalone) {
       try {
         const storedShapes = localStorage.getItem(LOCALSTORAGE_CANVAS_KEY);
@@ -1168,158 +1167,162 @@ export class CanvasEngine {
     const width = x - this.startX;
     const height = y - this.startY;
 
-    let shape: Shape | null = null;
-    switch (this.activeTool) {
-      case "rectangle":
-        shape = {
-          id: this.streamingShapeId || uuidv4(),
-          type: "rectangle",
-          x: this.startX,
-          y: this.startY,
-          width,
-          height,
-          strokeWidth: this.strokeWidth,
-          strokeFill: this.strokeFill,
-          bgFill: this.bgFill,
-          rounded: this.strokeEdge,
-          strokeStyle: this.strokeStyle,
-          roughStyle: this.roughStyle,
-          fillStyle: this.fillStyle,
-        };
-        break;
+    const isClick = Math.abs(width) > 5 && Math.abs(height) > 5;
 
-      case "ellipse":
-        shape = {
-          id: this.streamingShapeId || uuidv4(),
-          type: "ellipse",
-          x: this.startX + width / 2,
-          y: this.startY + height / 2,
-          radX: Math.abs(width / 2),
-          radY: Math.abs(height / 2),
-          strokeWidth: this.strokeWidth,
-          strokeFill: this.strokeFill,
-          bgFill: this.bgFill,
-          strokeStyle: this.strokeStyle,
-          roughStyle: this.roughStyle,
-          fillStyle: this.fillStyle,
-        };
-        break;
-
-      case "diamond":
-        shape = {
-          id: this.streamingShapeId || uuidv4(),
-          type: "diamond",
-          x: this.startX,
-          y: this.startY,
-          width: Math.abs(x - this.startX) * 2,
-          height: Math.abs(y - this.startY) * 2,
-          strokeWidth: this.strokeWidth,
-          strokeFill: this.strokeFill,
-          bgFill: this.bgFill,
-          rounded: this.strokeEdge,
-          strokeStyle: this.strokeStyle,
-          roughStyle: this.roughStyle,
-          fillStyle: this.fillStyle,
-        };
-        break;
-
-      case "line":
-        shape = {
-          id: this.streamingShapeId || uuidv4(),
-          type: "line",
-          x: this.startX,
-          y: this.startY,
-          toX: x,
-          toY: y,
-          strokeWidth: this.strokeWidth,
-          strokeFill: this.strokeFill,
-          strokeStyle: this.strokeStyle,
-          roughStyle: this.roughStyle,
-        };
-        break;
-
-      case "arrow":
-        shape = {
-          id: this.streamingShapeId || uuidv4(),
-          type: "arrow",
-          x: this.startX,
-          y: this.startY,
-          toX: x,
-          toY: y,
-          strokeWidth: this.strokeWidth,
-          strokeFill: this.strokeFill,
-          strokeStyle: this.strokeStyle,
-          roughStyle: this.roughStyle,
-        };
-        break;
-
-      case "free-draw":
-        const currentShape =
-          this.existingShapes[this.existingShapes.length - 1];
-        if (currentShape?.type === "free-draw") {
+    if (isClick) {
+      let shape: Shape | null = null;
+      switch (this.activeTool) {
+        case "rectangle":
           shape = {
             id: this.streamingShapeId || uuidv4(),
-            type: "free-draw",
-            points: currentShape.points,
+            type: "rectangle",
+            x: this.startX,
+            y: this.startY,
+            width,
+            height,
+            strokeWidth: this.strokeWidth,
+            strokeFill: this.strokeFill,
+            bgFill: this.bgFill,
+            rounded: this.strokeEdge,
+            strokeStyle: this.strokeStyle,
+            roughStyle: this.roughStyle,
+            fillStyle: this.fillStyle,
+          };
+          break;
+
+        case "ellipse":
+          shape = {
+            id: this.streamingShapeId || uuidv4(),
+            type: "ellipse",
+            x: this.startX + width / 2,
+            y: this.startY + height / 2,
+            radX: Math.abs(width / 2),
+            radY: Math.abs(height / 2),
             strokeWidth: this.strokeWidth,
             strokeFill: this.strokeFill,
             bgFill: this.bgFill,
             strokeStyle: this.strokeStyle,
+            roughStyle: this.roughStyle,
             fillStyle: this.fillStyle,
           };
+          break;
+
+        case "diamond":
+          shape = {
+            id: this.streamingShapeId || uuidv4(),
+            type: "diamond",
+            x: this.startX,
+            y: this.startY,
+            width: Math.abs(x - this.startX) * 2,
+            height: Math.abs(y - this.startY) * 2,
+            strokeWidth: this.strokeWidth,
+            strokeFill: this.strokeFill,
+            bgFill: this.bgFill,
+            rounded: this.strokeEdge,
+            strokeStyle: this.strokeStyle,
+            roughStyle: this.roughStyle,
+            fillStyle: this.fillStyle,
+          };
+          break;
+
+        case "line":
+          shape = {
+            id: this.streamingShapeId || uuidv4(),
+            type: "line",
+            x: this.startX,
+            y: this.startY,
+            toX: x,
+            toY: y,
+            strokeWidth: this.strokeWidth,
+            strokeFill: this.strokeFill,
+            strokeStyle: this.strokeStyle,
+            roughStyle: this.roughStyle,
+          };
+          break;
+
+        case "arrow":
+          shape = {
+            id: this.streamingShapeId || uuidv4(),
+            type: "arrow",
+            x: this.startX,
+            y: this.startY,
+            toX: x,
+            toY: y,
+            strokeWidth: this.strokeWidth,
+            strokeFill: this.strokeFill,
+            strokeStyle: this.strokeStyle,
+            roughStyle: this.roughStyle,
+          };
+          break;
+
+        case "free-draw":
+          const currentShape =
+            this.existingShapes[this.existingShapes.length - 1];
+          if (currentShape?.type === "free-draw") {
+            shape = {
+              id: this.streamingShapeId || uuidv4(),
+              type: "free-draw",
+              points: currentShape.points,
+              strokeWidth: this.strokeWidth,
+              strokeFill: this.strokeFill,
+              bgFill: this.bgFill,
+              strokeStyle: this.strokeStyle,
+              fillStyle: this.fillStyle,
+            };
+          }
+          break;
+
+        case "grab":
+          this.startX = e.clientX;
+          this.startY = e.clientY;
+      }
+
+      if (!shape) {
+        return;
+      }
+
+      this.existingShapes.push(shape);
+      this.notifyShapeCountChange();
+
+      if (this.isStandalone) {
+        try {
+          localStorage.setItem(
+            LOCALSTORAGE_CANVAS_KEY,
+            JSON.stringify(this.existingShapes)
+          );
+        } catch (e) {
+          console.error("Error saving shapes to localStorage:", e);
         }
-        break;
+      } else if (this.sendMessage && this.roomId) {
+        this.clearCanvas();
 
-      case "grab":
-        this.startX = e.clientX;
-        this.startY = e.clientY;
-    }
-
-    if (!shape) {
-      return;
-    }
-
-    this.existingShapes.push(shape);
-    this.notifyShapeCountChange();
-
-    if (this.isStandalone) {
-      try {
-        localStorage.setItem(
-          LOCALSTORAGE_CANVAS_KEY,
-          JSON.stringify(this.existingShapes)
-        );
-      } catch (e) {
-        console.error("Error saving shapes to localStorage:", e);
-      }
-    } else if (this.sendMessage && this.roomId) {
-      this.clearCanvas();
-
-      const message = {
-        type: WsDataType.DRAW,
-        id: shape.id,
-        message: shape,
-        roomId: this.roomId,
-      };
-
-      try {
-        this.sendMessage?.(JSON.stringify(message));
-      } catch (e) {
-        MessageQueue.enqueue({
-          type: WsDataType.UPDATE,
+        const message = {
+          type: WsDataType.DRAW,
           id: shape.id,
-          message: JSON.stringify(shape),
-          connectionId: this.connectionId!,
+          message: shape,
           roomId: this.roomId,
-          userId: this.userId!,
-          userName: this.userName!,
-          timestamp: new Date().toISOString(),
-          participants: null,
-        });
-        console.error("Error sending shape update ws message", e);
+        };
+
+        try {
+          this.sendMessage?.(JSON.stringify(message));
+        } catch (e) {
+          MessageQueue.enqueue({
+            type: WsDataType.UPDATE,
+            id: shape.id,
+            message: JSON.stringify(shape),
+            connectionId: this.connectionId!,
+            roomId: this.roomId,
+            userId: this.userId!,
+            userName: this.userName!,
+            timestamp: new Date().toISOString(),
+            participants: null,
+          });
+          console.error("Error sending shape update ws message", e);
+        }
       }
+      this.streamingShapeId = null;
+      this.clearCanvas();
     }
-    this.streamingShapeId = null;
-    this.clearCanvas();
   };
 
   mouseWheelHandler = (e: WheelEvent) => {
@@ -2398,7 +2401,7 @@ export class CanvasEngine {
           );
         } catch (e) {
           MessageQueue.enqueue({
-            type: WsDataType.UPDATE,
+            type: WsDataType.ERASER,
             id: erasedShape.id,
             message: null,
             roomId: this.roomId,
@@ -2408,7 +2411,7 @@ export class CanvasEngine {
             participants: null,
             connectionId: this.connectionId!,
           });
-          console.error("Error sending shape update ws message", e);
+          console.error("Error sending shape erase ws message", e);
         }
       }
     }
@@ -2522,4 +2525,55 @@ export class CanvasEngine {
     this.currentTheme = newTheme;
     this.clearCanvas();
   }
+
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Delete" || e.key === "Backspace") {
+      if (
+        this.activeTool === "selection" &&
+        this.SelectionController.isShapeSelected()
+      ) {
+        const selectedShape = this.SelectionController.getSelectedShape();
+        if (selectedShape && selectedShape.id) {
+          this.removeShape(selectedShape.id);
+          this.SelectionController.setSelectedShape(null);
+          this.notifyShapeCountChange();
+
+          if (this.isStandalone) {
+            try {
+              localStorage.setItem(
+                LOCALSTORAGE_CANVAS_KEY,
+                JSON.stringify(this.existingShapes)
+              );
+            } catch (e) {
+              console.error("Error saving shapes to localStorage:", e);
+            }
+          } else if (this.sendMessage && this.roomId) {
+            try {
+              this.sendMessage?.(
+                JSON.stringify({
+                  type: WsDataType.ERASER,
+                  id: selectedShape.id,
+                  roomId: this.roomId,
+                })
+              );
+            } catch (e) {
+              MessageQueue.enqueue({
+                type: WsDataType.ERASER,
+                id: selectedShape.id,
+                message: null,
+                roomId: this.roomId,
+                userId: this.userId!,
+                userName: this.userName!,
+                timestamp: new Date().toISOString(),
+                participants: null,
+                connectionId: this.connectionId!,
+              });
+              console.error("Error sending shape erase ws message", e);
+            }
+          }
+          this.clearCanvas();
+        }
+      }
+    }
+  };
 }
