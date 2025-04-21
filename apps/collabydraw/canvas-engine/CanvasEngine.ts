@@ -189,9 +189,9 @@ export class CanvasEngine {
       this.sendCursorMove(x, y);
     });
     if (!this.isStandalone && this.token && this.roomId) {
-      console.log("✅Connecting to WebSocket…");
+      // console.log("✅Connecting to WebSocket…");
       this.connectWebSocket();
-      console.log("✅Connected to WebSocket…");
+      // console.log("✅Connected to WebSocket…");
     }
   }
 
@@ -201,7 +201,7 @@ export class CanvasEngine {
       (this.socket.readyState === WebSocket.CONNECTING ||
         this.socket.readyState === WebSocket.OPEN)
     ) {
-      console.log("Connection already exists, not creating a new one");
+      // console.log("Connection already exists, not creating a new one");
       return;
     }
 
@@ -226,7 +226,7 @@ export class CanvasEngine {
         const data: WebSocketMessage = JSON.parse(event.data);
         if (data.type === WsDataType.CONNECTION_READY) {
           this.connectionId = data.connectionId;
-          console.log(`Assigned connection ID: ${this.connectionId}`);
+          // console.log(`Assigned connection ID: ${this.connectionId}`);
         }
 
         switch (data.type) {
@@ -239,7 +239,7 @@ export class CanvasEngine {
                 connectionId: data.connectionId,
                 connected: true,
               });
-              console.log(`🔁 Another tab detected: ${data.connectionId}`);
+              // console.log(`🔁 Another tab detected: ${data.connectionId}`);
             }
             if (data.participants && Array.isArray(data.participants)) {
               this.participants = data.participants;
