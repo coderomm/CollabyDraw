@@ -48,7 +48,6 @@ interface MobileCommandBarProps {
     onExportCanvas?: () => void;
     onImportCanvas?: () => void;
     onSearchCanvas?: () => void;
-    
 }
 
 export function MobileCommandBar({ canvasColor,
