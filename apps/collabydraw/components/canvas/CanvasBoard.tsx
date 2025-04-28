@@ -9,7 +9,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { CanvasEngine } from "@/canvas-engine/CanvasEngine";
 import { RoomParticipants } from "@repo/common/types";
 import { getRoomParamsFromHash } from "@/utils/roomParams";
-import { BgFill, canvasBgLight, FillStyle, FontFamily, FontSize, LOCALSTORAGE_CANVAS_KEY, Mode, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, TextAlign, ToolType } from "@/types/canvas";
+import { BgFill, canvasBgLight, FillStyle, FontFamily, FontSize, LOCALSTORAGE_CANVAS_KEY, Mode, RoughStyle, StrokeEdge, StrokeFill, StrokeStyle, StrokeWidth, TextAlign, ToolType, Shape } from "@/types/canvas";
 import { MobileCommandBar } from "../MobileCommandBar";
 import ScreenLoading from "../ScreenLoading";
 import AppMenuButton from "../AppMenuButton";
@@ -61,7 +61,8 @@ export default function CanvasBoard() {
         token: null as string | null,
         encryptionKey: null as string | null,
     });
-
+   
+    
     useEffect(() => {
         const getHash = () => {
             if (typeof window === 'undefined') return '';
@@ -111,8 +112,9 @@ export default function CanvasBoard() {
                 window.removeEventListener('hashchange', handleHashChange);
             }
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pathname, searchParams, status, session]);
-
+   
     useEffect(() => {
         setCanvasEngineState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
         console.log('Theme = ', theme)
@@ -120,20 +122,12 @@ export default function CanvasBoard() {
 
     useEffect(() => {
         if (canvasEngineState.engine && theme) {
+            
             canvasEngineState.engine.setTheme(theme === 'light' ? "light" : "dark");
         }
     }, [theme, canvasEngineState.engine]);
-
-    useEffect(() => {
-        const storedShapes = localStorage.getItem(LOCALSTORAGE_CANVAS_KEY);
-        const isEmpty = !storedShapes || JSON.parse(storedShapes).length === 0;
-
-        setCanvasEngineState(prev => ({
-            ...prev,
-            isCanvasEmpty: isEmpty
-        }));
-    }, []);
-
+  
+   
     useEffect(() => {
         const { engine, scale } = canvasEngineState;
         if (engine) {
@@ -192,6 +186,16 @@ export default function CanvasBoard() {
         return () => clearInterval(checkCanvasInterval);
     }, []);
 
+    const saveToLocalStorageWithExpiration = (key: string, data: Shape[], expirationInHours: number) => {
+        const expirationTime = new Date().getTime() + expirationInHours * 60 * 60 * 1000;  
+        const item = {
+            data,
+            expiration: expirationTime,
+        };
+        localStorage.setItem(key, JSON.stringify(item));
+    };
+    
+  
     const initializeCanvasEngine = useCallback(() => {
         if (!canvasRef.current) return null;
 
@@ -216,6 +220,10 @@ export default function CanvasBoard() {
                 ...prev,
                 isCanvasEmpty: count === 0
             }));
+        
+            // Save canvas data to localStorage with a 12-hour expiration
+            const shapes = engine.getShapes(); // Assuming `getShapes` retrieves the canvas data
+            saveToLocalStorageWithExpiration(LOCALSTORAGE_CANVAS_KEY, shapes, 12);
         });
         return engine;
     }, [canvasEngineState.canvasColor, mode, theme]);
@@ -281,11 +289,48 @@ export default function CanvasBoard() {
             };
         });
     }, []);
-
+    const getFromLocalStorageWithExpiration = (key: string) => {
+        const itemStr = localStorage.getItem(key);
+        if (!itemStr) return null;
+    
+        try {
+            const item = JSON.parse(itemStr);
+            console.log("Parsed data from localStorage:", item);
+    
+            const currentTime = new Date().getTime();
+    
+            // If item is an array (legacy or raw data), return it directly
+            if (Array.isArray(item)) {
+                return item;
+            }
+    
+            // If item is object with expiration, check expiration
+            if (item.expiration && currentTime > item.expiration) {
+                localStorage.removeItem(key);
+                return null;
+            }
+    
+            // Return data if present
+            return item.data || null;
+        } catch (error) {
+            console.error("Error parsing localStorage data:", error);
+            return null;
+        }
+    };
+    
+    useEffect(() => {
+        const storedShapes = getFromLocalStorageWithExpiration("standalone_canvas_shapes");
+        const isEmpty = !storedShapes || storedShapes.length === 0;
+        console.log("Stored Shapes:", storedShapes);
+        setCanvasEngineState(prev => ({
+            ...prev,
+            isCanvasEmpty: isEmpty
+        }));
+    }, []);
     if (isLoading) {
         return <ScreenLoading />
     }
-
+   
     return (
         <div className={cn("collabydraw h-screen overflow-hidden",
             canvasEngineState.activeTool === "eraser"
@@ -386,6 +431,7 @@ export default function CanvasBoard() {
                     <ToolMenuWelcome />
                 </div>
             )}
+            
 
             {matches && (
                 <ZoomControl
