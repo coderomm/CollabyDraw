@@ -47,6 +47,8 @@ interface MobileCommandBarProps {
     onClearCanvas?: () => void;
     onExportCanvas?: () => void;
     onImportCanvas?: () => void;
+    onSearchCanvas?: () => void;
+    
 }
 
 export function MobileCommandBar({ canvasColor,
@@ -81,6 +83,7 @@ export function MobileCommandBar({ canvasColor,
     onClearCanvas,
     onExportCanvas,
     onImportCanvas,
+    onSearchCanvas,
 }: MobileCommandBarProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
@@ -119,6 +122,7 @@ export function MobileCommandBar({ canvasColor,
                             onClearCanvas={onClearCanvas}
                             onExportCanvas={onExportCanvas}
                             onImportCanvas={onImportCanvas}
+                            onSearchCanvas={onSearchCanvas}
                         />
                     </SheetContent>
                 </Sheet>
