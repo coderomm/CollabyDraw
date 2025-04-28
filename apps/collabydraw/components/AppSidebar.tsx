@@ -17,6 +17,7 @@ import {
     TrashIcon,
     DownloadIcon,
     Upload,
+    Search,
     Linkedin,
     Share2,
     Star,
@@ -46,9 +47,10 @@ interface SidebarProps {
     onClearCanvas?: () => void;
     onExportCanvas?: () => void;
     onImportCanvas?: () => void;
+    onSearchCanvas?: () => void;
 }
 
-export function AppSidebar({ isOpen, onClose, canvasColor, setCanvasColor, isMobile, roomName, isStandalone, onClearCanvas, onExportCanvas, onImportCanvas }: SidebarProps) {
+export function AppSidebar({ isOpen, onClose, canvasColor, setCanvasColor, isMobile, roomName, isStandalone, onClearCanvas, onExportCanvas, onImportCanvas,onSearchCanvas }: SidebarProps) {
     const [stars, setStars] = useState<number | null>(null);
     const [clearDialogOpen, setClearDialogOpen] = useState(false);
     const { theme, setTheme } = useTheme();
@@ -118,6 +120,7 @@ export function AppSidebar({ isOpen, onClose, canvasColor, setCanvasColor, isMob
                                     <SidebarItem icon={TrashIcon} label="Clear canvas" onClick={() => setClearDialogOpen(true)} />
                                     <SidebarItem icon={DownloadIcon} label="Export Drawing" onClick={onExportCanvas} />
                                     <SidebarItem icon={Upload} label="Import Drawing" onClick={onImportCanvas} />
+                                    <SidebarItem icon={Search} label="Find on canvas" onClick={onSearchCanvas} />
                                     <SidebarItem icon={Share2} label="Live collaboration" onClick={() => setIsShareOpen(true)} />
                                     {session?.user && session?.user.id ? (
                                         <CreateRoomDialog open={isShareOpen} onOpenChange={setIsShareOpen} />
