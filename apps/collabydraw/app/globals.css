@@ -25,7 +25,8 @@ h6 {
 
 @font-face {
   font-family: "Collabyfont";
-  src: url("/fonts/Collabyfont-Regular.woff2") format("woff2"),
+  src:
+    url("/fonts/Collabyfont-Regular.woff2") format("woff2"),
     url("/fonts/Collabyfont-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
@@ -226,7 +227,10 @@ h6 {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --surface-box-shadow: #121212;
-    --shadow-island: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
+    --shadow-island:
+      0px 0px 0.9310142993927002px 0px rgba(0, 0, 0, 0.17),
+      0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, 0.08),
+      0px 7px 14px 0px rgba(0, 0, 0, 0.05);
 
     --color-primary-darker: #b2aeff;
     --color-primary-darkest: #beb9ff;
@@ -300,7 +304,6 @@ h6 {
   }
 }
 
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -313,10 +316,27 @@ h6 {
 
 @layer utilities {
   .bg-transparent-checkerboard {
-    background-image: linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd),
-      linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd);
+    background-image:
+      linear-gradient(
+        45deg,
+        #ddd 25%,
+        transparent 25%,
+        transparent 75%,
+        #ddd 75%,
+        #ddd
+      ),
+      linear-gradient(
+        45deg,
+        #ddd 25%,
+        transparent 25%,
+        transparent 75%,
+        #ddd 75%,
+        #ddd
+      );
     background-size: 10px 10px;
-    background-position: 0 0, 5px 5px;
+    background-position:
+      0 0,
+      5px 5px;
   }
 }
 
@@ -389,36 +409,42 @@ h6 {
 
 .Island {
   background-color: #ffffff;
-  box-shadow: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
-  transition: box-shadow .5s ease-in-out;
+  box-shadow:
+    0px 0px 0.9310142993927002px 0px rgba(0, 0, 0, 0.17),
+    0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, 0.08),
+    0px 7px 14px 0px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.5s ease-in-out;
 }
 
 .dark .Island {
   background-color: var(--island-bg-color);
-  box-shadow: 0px 0px .9310142993927002px 0px rgba(0, 0, 0, .17), 0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, .08), 0px 7px 14px 0px rgba(0, 0, 0, .05);
-  transition: box-shadow .5s ease-in-out;
+  box-shadow:
+    0px 0px 0.9310142993927002px 0px rgba(0, 0, 0, 0.17),
+    0px 0px 3.1270833015441895px 0px rgba(0, 0, 0, 0.08),
+    0px 7px 14px 0px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.5s ease-in-out;
 }
 
 ::-webkit-scrollbar {
   width: 4px;
-  height: 3px
+  height: 3px;
 }
 
 select::-webkit-scrollbar {
-  width: 10px
+  width: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 10px
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover)
+  background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: var(--scrollbar-thumb)
+  background: var(--scrollbar-thumb);
 }
 
 button {
@@ -428,7 +454,7 @@ button {
 }
 
 .color-picker__button {
-  --radius: .25rem;
+  --radius: 0.25rem;
   padding: 0;
   margin: 0;
   width: 1.35rem;
@@ -466,7 +492,7 @@ button {
 }
 
 .color-picker__button.is-transparent {
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==)
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3uCTZhw1gGGYhAGBZIA/nYDCgBDAm9BGDWAAJyRCgLaBCAAgXwixzAS0pgAAAABJRU5ErkJggg==);
 }
 
 .color-picker__button.active-color {
@@ -519,11 +545,11 @@ button {
   width: 320px;
   font-size: 1rem;
   top: 100%;
-  margin-top: .25rem;
-  margin-inline-start: .6rem;
+  margin-top: 0.25rem;
+  margin-inline-start: 0.6rem;
   display: flex;
   align-items: flex-end;
-  gap: .5rem;
+  gap: 0.5rem;
 }
 
 .collabydraw .welcome-screen-decor-hint--menu svg {
@@ -532,7 +558,9 @@ button {
 }
 
 @media (max-width: 860px) {
-  .collabydraw .welcome-screen-decor-hint--menu .welcome-screen-decor-hint__label {
+  .collabydraw
+    .welcome-screen-decor-hint--menu
+    .welcome-screen-decor-hint__label {
     max-width: 160px;
   }
 }
@@ -552,10 +580,12 @@ button {
   height: 78px;
 }
 
-.collabydraw .welcome-screen-decor-hint--toolbar .welcome-screen-decor-hint__label {
+.collabydraw
+  .welcome-screen-decor-hint--toolbar
+  .welcome-screen-decor-hint__label {
   width: 120px;
   position: relative;
-  top: -.5rem;
+  top: -0.5rem;
 }
 
 .collabydraw .welcome-screen-center {
@@ -581,7 +611,7 @@ button {
 .collabydraw .welcome-screen-center__logo {
   display: flex;
   align-items: center;
-  column-gap: .75rem;
+  column-gap: 0.75rem;
   font-size: 2.25rem;
 }
 
@@ -612,7 +642,7 @@ button {
 }
 
 .collabydraw .CollabydrawLogo-text {
-  margin-left: .75rem;
+  margin-left: 0.75rem;
   width: auto;
   color: var(--color-logo-text);
   font-family: Collabyfont, Xiaolai;
@@ -639,7 +669,7 @@ button {
   box-sizing: border-box;
   pointer-events: all;
   color: var(--color-gray-50);
-  font-size: .875rem;
+  font-size: 0.875rem;
   width: 100%;
   min-width: 300px;
   max-width: 400px;
@@ -648,9 +678,9 @@ button {
   justify-content: space-between;
   background: none;
   border: 1px solid transparent;
-  padding: .75rem;
-  border-radius: .375rem;
-  grid-template-columns: calc(var(--default-icon-size) + .5rem) 1fr 3rem;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  grid-template-columns: calc(var(--default-icon-size) + 0.5rem) 1fr 3rem;
 }
 
 .collabydraw .welcome-screen-menu-item:hover {
@@ -692,13 +722,13 @@ button {
   align-items: center;
   margin-right: auto;
   text-align: left;
-  column-gap: .5rem;
+  column-gap: 0.5rem;
 }
 
 .collabydraw .welcome-screen-menu-item__shortcut {
   margin-left: auto;
   color: var(--color-gray-40);
-  font-size: .75rem;
+  font-size: 0.75rem;
 }
 
 .dark .collabydraw .welcome-screen-menu-item,
@@ -706,27 +736,49 @@ button {
   color: var(--color-gray-60);
 }
 
-.collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__shortcut,
+.collabydraw
+  .welcome-screen-menu-item:hover
+  .welcome-screen-menu-item__shortcut,
 .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__icon,
 .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__text {
   color: var(--color-gray-100);
 }
 
-.collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__shortcut,
+.collabydraw
+  .welcome-screen-menu-item:active
+  .welcome-screen-menu-item__shortcut,
 .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__icon,
 .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__text {
   color: var(--color-gray-100);
 }
 
-.dark .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__shortcut,
-.dark .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__icon,
-.dark .collabydraw .welcome-screen-menu-item:hover .welcome-screen-menu-item__text {
+.dark
+  .collabydraw
+  .welcome-screen-menu-item:hover
+  .welcome-screen-menu-item__shortcut,
+.dark
+  .collabydraw
+  .welcome-screen-menu-item:hover
+  .welcome-screen-menu-item__icon,
+.dark
+  .collabydraw
+  .welcome-screen-menu-item:hover
+  .welcome-screen-menu-item__text {
   color: var(--color-gray-10);
 }
 
-.dark .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__shortcut,
-.dark .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__icon,
-.dark .collabydraw .welcome-screen-menu-item:active .welcome-screen-menu-item__text {
+.dark
+  .collabydraw
+  .welcome-screen-menu-item:active
+  .welcome-screen-menu-item__shortcut,
+.dark
+  .collabydraw
+  .welcome-screen-menu-item:active
+  .welcome-screen-menu-item__icon,
+.dark
+  .collabydraw
+  .welcome-screen-menu-item:active
+  .welcome-screen-menu-item__text {
   color: var(--color-gray-10);
 }
 
@@ -743,43 +795,80 @@ button {
 
 .bg-page-gradient-purple,
 .bg-page-gradient-yellow {
-  background-image: linear-gradient(138.59deg, #e0dfff26 4.71%, #e0dfff00 32.89%), radial-gradient(52.08% 32.07% at 97.32% 50.03%, #e0dfff26 0, #e0dfff00 100%);
+  background-image:
+    linear-gradient(138.59deg, #e0dfff26 4.71%, #e0dfff00 32.89%),
+    radial-gradient(52.08% 32.07% at 97.32% 50.03%, #e0dfff26 0, #e0dfff00 100%);
 }
 
-.prose :where(p):not(:where([class~=not-prose], [class~=not-prose] *)) {
+.prose :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   line-height: 140%;
   margin-bottom: 1.25em;
-  margin-top: .5rem;
+  margin-top: 0.5rem;
 }
 
-.prose :where(.prose>:first-child):not(:where([class~=not-prose], [class~=not-prose] *)) {
+.prose
+  :where(.prose > :first-child):not(
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
   margin-top: 0;
 }
 
-.prose-xl :where(p):not(:where([class~=not-prose], [class~=not-prose] *)) {
+.prose-xl :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   line-height: 160%;
   margin-bottom: 1.2em;
-  margin-top: .5rem;
+  margin-top: 0.5rem;
 }
 
-.prose-xl :where(.prose-xl>:first-child):not(:where([class~=not-prose], [class~=not-prose] *)) {
+.prose-xl
+  :where(.prose-xl > :first-child):not(
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
   margin-top: 0;
 }
 
 @media (min-width: 1025px) {
-  .lg\:prose-xl :where(p):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  .lg\:prose-xl
+    :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
     line-height: 160%;
     margin-bottom: 1.2em;
-    margin-top: .5rem;
+    margin-top: 0.5rem;
   }
 }
 
 @media (min-width: 1025px) {
-  .lg\:prose-xl :where(.lg\:prose-xl>:first-child):not(:where([class~=not-prose], [class~=not-prose] *)) {
+  .lg\:prose-xl
+    :where(.lg\:prose-xl > :first-child):not(
+      :where([class~="not-prose"], [class~="not-prose"] *)
+    ) {
     margin-top: 0;
   }
 }
 
 .collabydraw-texty::-webkit-scrollbar {
   display: none;
+}
+
+.collabydraw-textEditorContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.collabydraw-texty {
+  font-family: inherit;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  padding: 4px 8px !important;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s;
+  pointer-events: auto;
+}
+
+.collabydraw-texty:focus {
+  border-style: solid !important;
 }

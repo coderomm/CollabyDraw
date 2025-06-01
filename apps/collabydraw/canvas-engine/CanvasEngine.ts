@@ -1633,47 +1633,69 @@ export class CanvasEngine {
     const textarea = document.createElement("textarea");
     this.activeTextarea = textarea;
     this.activeTextPosition = { x, y };
+
+    const calFont = getFontSize(this.fontSize, this.scale);
+    const fontString = `${calFont}px/1.2 ${
+      this.fontFamily === "normal"
+        ? "Arial"
+        : this.fontFamily === "hand-drawn"
+          ? "Collabyfont, Xiaolai"
+          : "Assistant"
+    }`;
+
+    // Create temporary span to measure initial height
+    const tempSpan = document.createElement("span");
+    Object.assign(tempSpan.style, {
+      visibility: "hidden",
+      position: "absolute",
+      font: fontString,
+      lineHeight: "1.2",
+      padding: "4px 8px",
+      whiteSpace: "pre",
+    });
+    tempSpan.textContent = "X"; // Single character for height measurement
+    document.body.appendChild(tempSpan);
+    const initialHeight = tempSpan.offsetHeight;
+    document.body.removeChild(tempSpan);
+
     Object.assign(textarea.style, {
       position: "absolute",
-      display: "inline-block",
+      display: "block",
       backfaceVisibility: "hidden",
       margin: "0",
-      padding: "0",
+      padding: "4px 8px",
       border: `1px dotted ${this.strokeFill}`,
       outline: "0",
       resize: "none",
       background: "transparent",
-      overflowX: "hidden",
-      overflowY: "hidden",
-      overflowWrap: "normal",
-      boxSizing: "content-box",
-      wordBreak: "normal",
-      whiteSpace: "pre",
+      overflow: "hidden",
+      boxSizing: "border-box",
+      wordBreak: "break-word",
+      whiteSpace: "pre-wrap",
       transform: `translate(${x * this.scale + this.panX}px, ${y * this.scale + this.panY}px)`,
       verticalAlign: "top",
       opacity: "1",
-      wrap: "off",
-      tabIndex: 0,
-      dir: "auto",
-      scrollbarWidth: "none", // Firefox
-      msOverflowStyle: "none", // IE/Edge
+      lineHeight: "1.2",
+      font: fontString,
+      color: this.strokeFill,
       width: "auto",
-      minHeight: "auto",
+      minWidth: "1px",
+      height: `${initialHeight}px`, // Set initial height
+      minHeight: `${initialHeight}px`, // Set minimum height
+      tabIndex: 0,
+      zIndex: "100",
     });
-    const calFont = getFontSize(this.fontSize, this.scale);
+
     textarea.classList.add("collabydraw-texty");
-    textarea.style.color = this.strokeFill;
-    const fontString = `${calFont}px/1.2 ${this.fontFamily === "normal" ? "Arial" : this.fontFamily === "hand-drawn" ? "Collabyfont, Xiaolai" : "Assistant"}`;
-    textarea.style.font = fontString;
-    textarea.style.zIndex = "100";
 
     const rawMaxWidth =
       window.innerWidth || document.documentElement.clientWidth;
     const rawMaxHeight =
       window.innerHeight || document.documentElement.clientHeight;
+    const padding = 20;
 
-    const calMaxWidth = rawMaxWidth - x - TEXT_ADJUSTED_HEIGHT;
-    const calMaxHeight = rawMaxHeight - y - TEXT_ADJUSTED_HEIGHT;
+    const calMaxWidth = rawMaxWidth - x - padding;
+    const calMaxHeight = rawMaxHeight - y - padding;
 
     textarea.style.maxWidth = `${calMaxWidth}px`;
     textarea.style.maxHeight = `${calMaxHeight}px`;
@@ -1691,7 +1713,6 @@ export class CanvasEngine {
     }
 
     let hasUnsavedChanges = false;
-
     let span: HTMLSpanElement | null = null;
 
     const resizeTextarea = () => {
@@ -1706,18 +1727,26 @@ export class CanvasEngine {
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",
         font: textarea.style.font,
-        padding: "0",
-        margin: "0",
-        lineHeight: "1.2",
+        padding: textarea.style.padding,
+        border: textarea.style.border,
+        boxSizing: "border-box",
+        lineHeight: textarea.style.lineHeight,
       });
 
-      span.textContent = textarea.value || " ";
+      const content = textarea.value || " ";
+      span.textContent = content;
       document.body.appendChild(span);
 
       requestAnimationFrame(() => {
-        textarea.style.width = `${Math.max(span!.offsetWidth + TEXT_ADJUSTED_HEIGHT, TEXT_ADJUSTED_HEIGHT)}px`;
-        textarea.style.height = `${Math.max(span!.offsetHeight + TEXT_ADJUSTED_HEIGHT, TEXT_ADJUSTED_HEIGHT)}px`;
-        textarea.style.overflow = "scroll";
+        if (!span) return;
+        const buffer = 2;
+        const newWidth = Math.max(span.offsetWidth + buffer, 20);
+        const newHeight = content.trim()
+          ? Math.max(span.offsetHeight + buffer, initialHeight)
+          : initialHeight;
+
+        textarea.style.width = `${newWidth}px`;
+        textarea.style.height = `${newHeight}px`;
       });
     };
 
@@ -1725,17 +1754,12 @@ export class CanvasEngine {
       hasUnsavedChanges = true;
       resizeTextarea();
     });
-    textarea.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        hasUnsavedChanges = true;
-        resizeTextarea();
-      }
-    });
 
     let saveCalled = false;
     const save = () => {
       if (saveCalled) return;
       saveCalled = true;
+
       const text = textarea.value.trim();
       if (!text) {
         textarea.remove();
@@ -1744,18 +1768,25 @@ export class CanvasEngine {
         }
         return;
       }
-      if (!span) {
-        throw new Error("Span is null");
-      }
+
       this.activeTextarea = null;
       this.activeTextPosition = null;
+
+      const computedStyle = window.getComputedStyle(textarea);
+      const paddingX =
+        parseFloat(computedStyle.paddingLeft) +
+        parseFloat(computedStyle.paddingRight);
+      const paddingY =
+        parseFloat(computedStyle.paddingTop) +
+        parseFloat(computedStyle.paddingBottom);
+
       const newShape: Shape = {
         id: uuidv4(),
         type: "text",
         x: x,
         y: y,
-        width: textarea.offsetWidth,
-        height: textarea.offsetHeight - TEXT_ADJUSTED_HEIGHT,
+        width: textarea.offsetWidth - paddingX,
+        height: textarea.offsetHeight - paddingY,
         text,
         fontSize: this.fontSize,
         fontFamily: this.fontFamily,
@@ -1793,10 +1824,6 @@ export class CanvasEngine {
       this.clearCanvas();
       hasUnsavedChanges = false;
     };
-
-    textarea.addEventListener("input", () => {
-      hasUnsavedChanges = true;
-    });
 
     textarea.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -2349,24 +2376,68 @@ export class CanvasEngine {
     textAlign: TextAlign
   ) {
     const calFontSize = getFontSize(fontSize, this.scale);
-    const lineHeight = getLineHeight(calFontSize);
+    const lineHeight = calFontSize * 1.2; // consistent with textarea
 
-    const fontString = `${fontStyle} ${calFontSize}px/1.2 ${fontFamily === "normal" ? "Arial" : fontFamily === "hand-drawn" ? "Collabyfont, Xiaolai" : "Assistant"}`;
+    const fontString = `${fontStyle} ${calFontSize}px ${
+      fontFamily === "normal"
+        ? "Arial"
+        : fontFamily === "hand-drawn"
+          ? "Collabyfont, Xiaolai"
+          : "Assistant"
+    }`;
+
     this.ctx.font = fontString;
     this.ctx.fillStyle = fillStyle;
-    this.ctx.textAlign = textAlign;
+    this.ctx.textAlign = textAlign as CanvasTextAlign;
+    this.ctx.textBaseline = "top";
 
-    const lines = text.split("\n");
+    const words = text.split(/\s+/);
+    const lines: string[] = [];
+    let currentLine = words[0] || "";
 
+    // Word wrap
+    for (let i = 1; i < words.length; i++) {
+      const word = words[i];
+      const testLine = currentLine + " " + word;
+      const metrics = this.ctx.measureText(testLine);
+
+      if (metrics.width > width) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    lines.push(currentLine);
+
+    // Draw each line
     lines.forEach((line, index) => {
       let tx = x;
-      if (textAlign === "center") {
-        tx = x + width / 2;
-      } else if (textAlign === "right") {
-        tx = x + width;
+      const ty = y + index * lineHeight;
+
+      switch (textAlign) {
+        case "center":
+          tx = x + width / 2;
+          break;
+        case "right":
+          tx = x + width;
+          break;
       }
-      const ty = y + (index + 1) * lineHeight;
+
+      this.ctx.save();
+      this.ctx.globalAlpha = 1;
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.imageSmoothingQuality = "high";
+
+      if (fontFamily === "hand-drawn") {
+        this.ctx.shadowColor = "rgba(0, 0, 0, 0.1)";
+        this.ctx.shadowBlur = 2;
+        this.ctx.shadowOffsetX = 1;
+        this.ctx.shadowOffsetY = 1;
+      }
+
       this.ctx.fillText(line, tx, ty);
+      this.ctx.restore();
     });
   }
 
