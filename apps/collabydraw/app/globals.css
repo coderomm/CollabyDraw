@@ -867,6 +867,17 @@ button {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: border-color 0.2s;
   pointer-events: auto;
+  resize: none;
+  overflow: hidden;
+
+  white-space: pre-wrap;
+  word-break: normal;
+  overflow-wrap: break-word;
+
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+  box-sizing: border-box;
 }
 
 .collabydraw-texty:focus {

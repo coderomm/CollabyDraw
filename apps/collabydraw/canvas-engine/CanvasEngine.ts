@@ -127,6 +127,8 @@ export class CanvasEngine {
    */
   private remoteClickIndicators: Map<string, number> = new Map();
 
+  private _updateTextyPosition?: () => void;
+
   private currentTheme: "light" | "dark" | null = null;
   private onLiveUpdateFromSelection?: (shape: Shape) => void;
 
@@ -1629,7 +1631,6 @@ export class CanvasEngine {
 
   private handleTexty(e: MouseEvent) {
     const { x, y } = this.transformPanScale(e.clientX, e.clientY);
-
     const textarea = document.createElement("textarea");
     this.activeTextarea = textarea;
     this.activeTextPosition = { x, y };
@@ -1643,7 +1644,6 @@ export class CanvasEngine {
           : "Assistant"
     }`;
 
-    // Create temporary span to measure initial height
     const tempSpan = document.createElement("span");
     Object.assign(tempSpan.style, {
       visibility: "hidden",
@@ -1653,10 +1653,12 @@ export class CanvasEngine {
       padding: "4px 8px",
       whiteSpace: "pre",
     });
-    tempSpan.textContent = "X"; // Single character for height measurement
+    tempSpan.textContent = "X";
     document.body.appendChild(tempSpan);
     const initialHeight = tempSpan.offsetHeight;
     document.body.removeChild(tempSpan);
+
+    const fixedWidth = 200;
 
     Object.assign(textarea.style, {
       position: "absolute",
@@ -1670,57 +1672,46 @@ export class CanvasEngine {
       background: "transparent",
       overflow: "hidden",
       boxSizing: "border-box",
-      wordBreak: "break-word",
       whiteSpace: "pre-wrap",
-      transform: `translate(${x * this.scale + this.panX}px, ${y * this.scale + this.panY}px)`,
+      overflowWrap: "break-word",
+      wordBreak: "break-word",
       verticalAlign: "top",
       opacity: "1",
       lineHeight: "1.2",
       font: fontString,
       color: this.strokeFill,
-      width: "auto",
-      minWidth: "1px",
-      height: `${initialHeight}px`, // Set initial height
-      minHeight: `${initialHeight}px`, // Set minimum height
+      width: `${fixedWidth}px`,
+      minWidth: `${fixedWidth}px`,
+      maxWidth: `${fixedWidth}px`,
+      height: `${initialHeight}px`,
+      minHeight: `${initialHeight}px`,
       tabIndex: 0,
       zIndex: "100",
+      pointerEvents: "auto",
     });
 
     textarea.classList.add("collabydraw-texty");
 
-    const rawMaxWidth =
-      window.innerWidth || document.documentElement.clientWidth;
-    const rawMaxHeight =
-      window.innerHeight || document.documentElement.clientHeight;
-    const padding = 20;
-
-    const calMaxWidth = rawMaxWidth - x - padding;
-    const calMaxHeight = rawMaxHeight - y - padding;
-
-    textarea.style.maxWidth = `${calMaxWidth}px`;
-    textarea.style.maxHeight = `${calMaxHeight}px`;
-
-    const collabydrawContainer = document.querySelector(
+    const container = document.querySelector(
       ".collabydraw-textEditorContainer"
     );
-
-    if (collabydrawContainer) {
-      collabydrawContainer.appendChild(textarea);
-      setTimeout(() => textarea.focus(), 0);
-    } else {
+    if (!container) {
       console.error("Text editor container not found");
       return;
     }
 
+    container.appendChild(textarea);
+    setTimeout(() => textarea.focus(), 0);
+
     let hasUnsavedChanges = false;
-    let span: HTMLSpanElement | null = null;
+    let span: HTMLDivElement | null = null;
 
     const resizeTextarea = () => {
       if (span && document.body.contains(span)) {
         document.body.removeChild(span);
       }
 
-      span = document.createElement("span");
+      span = document.createElement("div");
       Object.assign(span.style, {
         visibility: "hidden",
         position: "absolute",
@@ -1731,21 +1722,23 @@ export class CanvasEngine {
         border: textarea.style.border,
         boxSizing: "border-box",
         lineHeight: textarea.style.lineHeight,
+        width: textarea.style.width,
       });
 
       const content = textarea.value || " ";
-      span.textContent = content;
+      span.innerHTML = content
+        .split("\n")
+        .map((line) =>
+          line === "" ? "&nbsp;<br>" : line.replace(/ /g, "&nbsp;") + "<br>"
+        )
+        .join("");
+
       document.body.appendChild(span);
 
       requestAnimationFrame(() => {
         if (!span) return;
         const buffer = 2;
-        const newWidth = Math.max(span.offsetWidth + buffer, 20);
-        const newHeight = content.trim()
-          ? Math.max(span.offsetHeight + buffer, initialHeight)
-          : initialHeight;
-
-        textarea.style.width = `${newWidth}px`;
+        const newHeight = Math.max(span.offsetHeight + buffer, initialHeight);
         textarea.style.height = `${newHeight}px`;
       });
     };
@@ -1755,12 +1748,30 @@ export class CanvasEngine {
       resizeTextarea();
     });
 
+    // Position update method
+    const updateActiveTextareaPosition = () => {
+      if (!this.activeTextarea || !this.activeTextPosition) return;
+      const { x, y } = this.activeTextPosition;
+      this.activeTextarea.style.transform = `translate(${x * this.scale + this.panX}px, ${y * this.scale + this.panY}px)`;
+    };
+
+    // Call initially
+    updateActiveTextareaPosition();
+
+    // Add scroll listener
+    window.addEventListener("scroll", updateActiveTextareaPosition);
+
+    // Optional: expose it to pan/zoom handlers
+    this._updateTextyPosition = updateActiveTextareaPosition;
+
     let saveCalled = false;
     const save = () => {
       if (saveCalled) return;
       saveCalled = true;
 
       const text = textarea.value.trim();
+      window.removeEventListener("scroll", updateActiveTextareaPosition);
+
       if (!text) {
         textarea.remove();
         if (span && document.body.contains(span)) {
@@ -1814,8 +1825,8 @@ export class CanvasEngine {
         );
       }
 
-      if (collabydrawContainer?.contains(textarea)) {
-        collabydrawContainer.removeChild(textarea);
+      if (container.contains(textarea)) {
+        container.removeChild(textarea);
         if (span && document.body.contains(span)) {
           document.body.removeChild(span);
         }
@@ -1826,9 +1837,22 @@ export class CanvasEngine {
     };
 
     textarea.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        save();
+      if (e.key === "Enter") {
+        if (e.shiftKey) {
+          e.preventDefault();
+          const { selectionStart, selectionEnd, value } = textarea;
+          const newValue =
+            value.substring(0, selectionStart) +
+            "\n" +
+            value.substring(selectionEnd);
+          textarea.value = newValue;
+          textarea.setSelectionRange(selectionStart + 1, selectionStart + 1);
+          hasUnsavedChanges = true;
+          resizeTextarea();
+        } else {
+          e.preventDefault();
+          save();
+        }
       }
     });
 
@@ -1845,9 +1869,7 @@ export class CanvasEngine {
 
     textarea.addEventListener("blur", () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      if (hasUnsavedChanges) {
-        save();
-      }
+      if (hasUnsavedChanges) save();
     });
   }
 
