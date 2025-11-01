@@ -1665,7 +1665,8 @@ export class CanvasEngine {
     textarea.style.color = this.strokeFill;
     const fontString = `${calFont}px/1.2 ${this.fontFamily === "normal" ? "Arial" : this.fontFamily === "hand-drawn" ? "Collabyfont, Xiaolai" : "Assistant"}`;
     textarea.style.font = fontString;
-    textarea.style.zIndex = "100";
+    // Set z-index to 40 to ensure it stays below mobile menu (z-50) and sidebar (z-20+)
+    textarea.style.zIndex = "40";
 
     const rawMaxWidth =
       window.innerWidth || document.documentElement.clientWidth;

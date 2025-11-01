@@ -1,5 +1,5 @@
 export default function CollabydrawTextEditorContainer() {
     return (
-        <div className="collabydraw-textEditorContainer"></div>
+        <div className="collabydraw-textEditorContainer z-10"></div>
     )
 }
