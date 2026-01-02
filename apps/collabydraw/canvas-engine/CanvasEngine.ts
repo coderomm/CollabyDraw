@@ -194,7 +194,22 @@ export class CanvasEngine {
       // console.log("✅Connected to WebSocket…");
     }
   }
+ 
+public getShapes(): Shape[] {
+  return this.existingShapes;
+}
+  public loadShapes(shapes: Shape[]): void {
+    if (!shapes || !Array.isArray(shapes)) {
+        console.error("Invalid shapes data provided to loadShapes.");
+        return;
+    }
 
+     
+    this.existingShapes = shapes;
+ 
+    this.notifyShapeCountChange();
+    this.clearCanvas();
+}
   private connectWebSocket() {
     if (
       this.socket &&
