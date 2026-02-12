@@ -111,7 +111,7 @@ export default function CanvasBoard() {
                 window.removeEventListener('hashchange', handleHashChange);
             }
         };
-    }, [pathname, searchParams, status, session]);
+    }, [pathname, searchParams, status, session, router]);
 
     useEffect(() => {
         setCanvasEngineState(prev => ({ ...prev, canvasColor: canvasBgLight[0] }));
